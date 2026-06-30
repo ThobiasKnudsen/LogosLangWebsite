@@ -28,7 +28,7 @@ export const STATUS_LABELS: Record<ChipStatus, string> = {
 
 const ROADMAP_LABEL = "roadmap";
 const BLURB_MARKER = /<!--\s*roadmap:\s*([\s\S]*?)\s*-->/i;
-const BLURB_MAX = 160;
+const BLURB_MAX = 500;
 
 /** Defensive: GitHub labels arrive as `{name}` objects (or occasionally strings). */
 function labelNames(raw: any): string[] {

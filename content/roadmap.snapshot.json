@@ -2,7 +2,7 @@
   {
     "number": 29,
     "title": "Dyad",
-    "blurb": "The fundamental node constructing the entire Logic Graph. It is a struct only containing two fields: type and value. The type explains how the value should be…",
+    "blurb": "The fundamental node constructing the entire Logic Graph. It is a struct only containing two fields: type and value. The type explains how the value should be interpreted. It is named Dyad because it contains exactly two fields",
     "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/29",
     "state": "open",
     "blockedBy": [],
@@ -22,7 +22,7 @@
   {
     "number": 27,
     "title": "the Lexer",
-    "blurb": "The lexer is based on a trie just that each node can also be a regex pattern so that nearly all string identifications you want to do could be represented. Sin…",
+    "blurb": "The lexer is based on a trie just that each node can also be a regex pattern so that nearly all string identifications you want to do could be represented. Since its a trie its both fast but also mutable. The default way to identify anything in any string of any language is through this global lexer. It resolves multiple equal strings by checking what context in the Logic Graph it is declared.",
     "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/27",
     "state": "open",
     "blockedBy": [

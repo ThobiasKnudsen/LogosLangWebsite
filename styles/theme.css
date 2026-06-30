@@ -584,7 +584,7 @@ a {
 	border-left: 3px solid var(--hairline);
 	border-radius: 10px;
 	background: var(--bg);
-	overflow: hidden;
+	overflow: visible;
 	text-decoration: none;
 	color: inherit;
 	transition: border-color 0.15s ease, box-shadow 0.15s ease;
@@ -604,20 +604,12 @@ a {
 	line-height: 1.25;
 	color: var(--heading);
 	margin: 0.1rem 0 0.3rem;
-	display: -webkit-box;
-	-webkit-line-clamp: 2;
-	-webkit-box-orient: vertical;
-	overflow: hidden;
 }
 .depnode__desc {
 	margin: 0;
 	font-size: 0.82rem;
 	line-height: 1.4;
 	color: var(--muted);
-	display: -webkit-box;
-	-webkit-line-clamp: 4;
-	-webkit-box-orient: vertical;
-	overflow: hidden;
 }
 .depnode--done {
 	border-left-color: var(--ok-text);

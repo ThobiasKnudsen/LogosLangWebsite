@@ -14,6 +14,16 @@ export const OG_IMAGE = '/og.png';
 const SITE_NAME = 'Logos';
 const DEFAULT_DESC = 'Logos: a self-hosting systems language built on radical unification.';
 
+// Hashed asset URLs, set by the build after bundling (build/build.ts) so a fresh
+// deploy never serves stale CSS/JS from a cached fixed filename. Defaults are the
+// unhashed names so anything calling page() without a build still resolves.
+let ASSET_CSS = '/assets/theme.css';
+let ASSET_JS = '/assets/main.js';
+export function setAssetUrls(cssHref: string, jsHref: string): void {
+	ASSET_CSS = cssHref;
+	ASSET_JS = jsHref;
+}
+
 // Analytics IDs, injected at build time (set them in the Cloudflare Pages env).
 // Both empty -> analytics is fully off: no consent banner, no scripts, no cookies.
 // Set GA4_ID (G-XXXXXXXXXX) and/or CLARITY_ID (the Clarity project id) to enable.
@@ -169,7 +179,7 @@ export function page(opts: PageOptions): string {
 <title>${escapeHtml(title)}</title>
 <meta name="description" content="${escapeHtml(desc)}" />
 <link rel="icon" href="/favicon.svg" />${canonical}${social}
-<link rel="stylesheet" href="/assets/theme.css" />${jsonLd}
+<link rel="stylesheet" href="${ASSET_CSS}" />${jsonLd}
 ${THEME_INIT}${ANALYTICS_CONFIG}
 </head>
 <body class="${opts.bodyClass ?? ''}">
@@ -180,7 +190,7 @@ ${opts.main}
 </main>
 ${opts.footer === false ? '' : footerHtml()}
 ${ANALYTICS_ENABLED ? consentBannerHtml() : ''}
-<script type="module" src="/assets/main.js"></script>
+<script type="module" src="${ASSET_JS}"></script>
 </body>
 </html>`;
 }

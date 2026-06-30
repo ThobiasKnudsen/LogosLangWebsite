@@ -282,22 +282,22 @@ export function privacyPage(): string {
 // readable and wraps); dagre lays them out and routes edges *around* them, and the
 // edges are drawn in an SVG layer underneath. Width is fixed; height is estimated
 // from the wrapped title + (clamped) blurb so dagre reserves the right room.
-const NODE_W = 234;
-const TITLE_CPL = 26; // ~chars per line at the title font/width
-const BLURB_CPL = 34; // ~chars per line at the blurb font/width
-const TITLE_MAX_LINES = 2;
-const BLURB_MAX_LINES = 4;
+const NODE_W = 250;
+// Conservative chars-per-line (fewer than the box truly fits) so the estimated
+// height OVER-reserves rather than under: nodes never clip their text and dagre
+// never lets them overlap. No line caps — the whole blurb is shown.
+const TITLE_CPL = 24;
+const BLURB_CPL = 30;
 
-function clampLines(text: string, cpl: number, max: number): number {
-  if (!text) return 0;
-  return Math.min(max, Math.max(1, Math.ceil(text.length / cpl)));
+function estLines(text: string, cpl: number): number {
+  return text ? Math.max(1, Math.ceil(text.length / cpl)) : 0;
 }
 
 function nodeHeight(s: Station): number {
-  const titleLines = clampLines(s.title, TITLE_CPL, TITLE_MAX_LINES);
-  const blurbLines = clampLines(s.blurb, BLURB_CPL, BLURB_MAX_LINES);
-  // padding (12*2) + num line (16) + title + (gap 5 + blurb)
-  return 24 + 16 + titleLines * 18 + (blurbLines ? 5 + blurbLines * 16 : 0);
+  const titleLines = estLines(s.title, TITLE_CPL);
+  const blurbLines = estLines(s.blurb, BLURB_CPL);
+  // padding + num line + title + (gap + blurb) + slack
+  return 22 + 18 + titleLines * 19 + (blurbLines ? 6 + blurbLines * 18 : 0) + 8;
 }
 
 /** The dependency map: dagre layout, HTML node cards over an SVG edge layer. */

@@ -16,7 +16,7 @@ import {
   type SemVer,
 } from "./version.ts";
 import { renderMarkdown } from "./markdown.ts";
-import { page, SITE_URL, absUrl } from "./templates.ts";
+import { page, SITE_URL, absUrl, setAssetUrls } from "./templates.ts";
 import {
   homePage,
   visionPage,
@@ -286,30 +286,57 @@ async function renderDocs(): Promise<{
   return { sectionCount: sections.length, versions, docEntries };
 }
 
-async function bundleAssets() {
-  await esbuild.build({
+/**
+ * Bundle the client JS + CSS with content-hashed filenames (e.g. theme-AB12CD.css)
+ * so a fresh deploy never collides with a stale copy cached at a fixed URL. Returns
+ * the hashed asset paths for the page shell to link.
+ */
+async function bundleAssets(): Promise<{ cssHref: string; jsHref: string }> {
+  const assetsDir = path.join(DIST, "assets");
+  const hrefOf = (
+    meta: { outputs: Record<string, unknown> },
+    ext: string,
+  ): string => {
+    const key = Object.keys(meta.outputs).find((k) => k.endsWith(ext));
+    if (!key) throw new Error(`bundleAssets: no ${ext} output emitted`);
+    return `/assets/${path.basename(key)}`;
+  };
+
+  const js = await esbuild.build({
     entryPoints: [path.join(ROOT, "client/main.ts")],
     bundle: true,
     format: "esm",
     target: ["es2020"],
     minify: true,
-    outfile: path.join(DIST, "assets/main.js"),
+    outdir: assetsDir,
+    entryNames: "[name]-[hash]",
+    metafile: true,
     logLevel: "silent",
   });
-  await esbuild.build({
+  const css = await esbuild.build({
     entryPoints: [path.join(ROOT, "styles/theme.css")],
     bundle: true,
     minify: true,
-    outfile: path.join(DIST, "assets/theme.css"),
+    outdir: assetsDir,
+    entryNames: "[name]-[hash]",
     loader: { ".woff2": "file", ".woff": "file" },
     assetNames: "fonts/[name]-[hash]",
+    metafile: true,
     logLevel: "silent",
   });
+  return {
+    jsHref: hrefOf(js.metafile, ".js"),
+    cssHref: hrefOf(css.metafile, ".css"),
+  };
 }
 
 export async function build(): Promise<void> {
   await fs.rm(DIST, { recursive: true, force: true });
   await fs.mkdir(path.join(DIST, "assets"), { recursive: true });
+
+  // Bundle first so the hashed asset URLs are known before any page is rendered.
+  const assets = await bundleAssets();
+  setAssetUrls(assets.cssHref, assets.jsHref);
 
   const homeDesc =
     "Logos is a self-hosting systems programming language built on radical unification: programs, types, proofs, the optimizer, the standard library, and the compiler itself all live in one reflectable structure, the Logic Graph.";
@@ -458,7 +485,6 @@ export async function build(): Promise<void> {
   await writeSitemap([...allEntries.map((e) => e.path), "/privacy/"]);
   await writeLlmsTxt(marketing, docsLanding, docs.docEntries);
 
-  await bundleAssets();
   await copyDir(path.join(ROOT, "public"), DIST);
 
   console.log(
