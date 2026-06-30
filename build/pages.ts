@@ -13,12 +13,9 @@ import {
   type Asset,
 } from "./releases.ts";
 import {
-  LINE_ORDER,
-  LINE_LABELS,
-  v1DueOn,
+  tiersOf,
+  STATUS_LABELS,
   type Station,
-  type Zone,
-  type ChipStatus,
 } from "./roadmap.ts";
 
 const DOWNLOAD = "/download/";
@@ -233,71 +230,169 @@ export function playgroundPage(releases: Release[]): string {
 </section>`;
 }
 
-// The roadmap is a metro map generated from LogosLang GitHub issues (see
-// build/roadmap.ts + fetch-roadmap.ts), so the issue tracker is the single source
-// of truth. The eight themed lines and the v0/v1 milestone framing are fixed
-// presentation; issues only fill stations into them via `area:<key>` labels. A
-// station's band (toward-v1 vs after-v1) comes from its milestone, and its chip
-// (Done / In progress / Planned) from its issue state.
+// ── Privacy & Cookies page ────────────────────────────────────────────────────
+// A reviewable template describing the consent-gated analytics. Set PRIVACY_CONTACT
+// in the build env to surface a contact email; otherwise it points at GitHub issues.
+export function privacyPage(): string {
+  const contact = process.env.PRIVACY_CONTACT || "";
+  const contactLine = contact
+    ? `<a href="mailto:${escapeHtml(contact)}">${escapeHtml(contact)}</a>`
+    : `the maintainers via the <a href="${GITHUB}/issues">GitHub repository</a>`;
+  return `<article class="legal">
+  <h1 class="legal__title">Privacy &amp; Cookies</h1>
+  <p class="legal__updated">Applies to logoslang.dev.</p>
 
-function chipLabel(status: ChipStatus): string {
-  return status === "done"
-    ? "Done"
-    : status === "prog"
-      ? "In progress"
-      : "Planned";
+  <p>This is the documentation and marketing site for the Logos language. We keep data collection to a minimum and never sell it. Analytics run <strong>only if you accept</strong> in the cookie banner.</p>
+
+  <h2>What we collect (only with your consent)</h2>
+  <p>If you accept analytics cookies, two third-party tools help us understand how the site is used:</p>
+  <ul>
+    <li><strong>Microsoft Clarity</strong> — aggregated usage, heatmaps, and session replays (clicks, scrolling, navigation), with text input masked.</li>
+    <li><strong>Google Analytics 4</strong> — aggregated traffic: pages viewed, referrer / traffic source, approximate (city-level) location derived from your IP, and device, browser, and operating system.</li>
+  </ul>
+  <p>We do <strong>not</strong> collect your name, email, or other identifying details from ordinary browsing, and we do not attempt to identify individual visitors.</p>
+
+  <h2>Cookies we use</h2>
+  <ul>
+    <li><code>consent</code> — remembers your accept/reject choice (strictly necessary). ~180 days.</li>
+    <li><strong>Microsoft Clarity:</strong> <code>_clck</code>, <code>_clsk</code> and related — set only after you accept.</li>
+    <li><strong>Google Analytics:</strong> <code>_ga</code>, <code>_ga_*</code> — set only after you accept.</li>
+  </ul>
+
+  <h2>Legal basis and your choices</h2>
+  <p>Analytics cookies are used on the basis of your <strong>consent</strong>. You can reject them (the site works fully without them), and change your mind at any time via <strong>“Cookie settings”</strong> in the footer. Rejecting or withdrawing stops new analytics cookies; you can clear existing ones in your browser.</p>
+
+  <h2>Where your data goes</h2>
+  <p>When enabled, data is processed by Microsoft (Clarity) and Google (Google Analytics) as our processors, which may involve transfer outside your country. See the <a href="https://privacy.microsoft.com/privacystatement" target="_blank" rel="noopener noreferrer">Microsoft Privacy Statement</a> and the <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">Google Privacy Policy</a>.</p>
+
+  <h2>Your rights</h2>
+  <p>Depending on where you live (for example, the EEA or UK under the GDPR), you may have the right to access, correct, or erase your data, to object to or restrict processing, and to withdraw consent. To exercise these rights, contact ${contactLine}.</p>
+
+  <h2>Changes</h2>
+  <p>We may update this page as the site evolves; material changes will be reflected here.</p>
+</article>`;
 }
 
-function stationHtml(s: Station): string {
-  return `<li class="stop"><span class="stop__dot"></span><div class="stop__body"><h3 class="stop__name">${escapeHtml(s.title)}</h3><p class="stop__desc">${escapeHtml(s.body)}</p><span class="chip chip--${s.status}">${chipLabel(s.status)}</span></div></li>`;
+// The roadmap is the DEPENDENCY GRAPH of LogosLang's `roadmap`-labelled GitHub
+// issues (build/roadmap.ts + fetch-roadmap.ts) — the issue tracker is the single
+// source of truth, and there are no categories. Each issue is a node; its
+// "blocked by" links are the edges. Nodes are laid out in dependency tiers (build
+// order) with arrows pointing from a blocker down to what it unblocks; status is
+// derived from the graph (Done / Ready / Blocked). Before any dependency is linked
+// the graph is edgeless, so we show a plain readiness grid until edges exist.
+
+// Layout geometry for the SVG dependency map (a viewBox unit ≈ 1px at full size).
+const NODE_W = 188;
+const NODE_H = 60;
+const H_GAP = 26;
+const V_GAP = 56;
+
+/** Greedy-wrap a node title to <= maxLines lines of ~max chars; ellipsize overflow. */
+function wrapTitle(title: string, max = 22, maxLines = 2): string[] {
+  const words = title.split(/\s+/).filter(Boolean);
+  const lines: string[] = [];
+  let cur = "";
+  for (const w of words) {
+    const trial = cur ? `${cur} ${w}` : w;
+    if (trial.length <= max || !cur) {
+      cur = trial;
+    } else {
+      lines.push(cur);
+      cur = w;
+      if (lines.length === maxLines) break;
+    }
+  }
+  if (lines.length < maxLines && cur) lines.push(cur);
+  const consumed = lines.join(" ").split(/\s+/).filter(Boolean).length;
+  if (consumed < words.length && lines.length) {
+    const l = lines[lines.length - 1]!;
+    lines[lines.length - 1] = `${(l.length > max ? l.slice(0, max - 1).trimEnd() : l)}…`;
+  } else {
+    lines.forEach((l, i) => {
+      if (l.length > max) lines[i] = `${l.slice(0, max - 1).trimEnd()}…`;
+    });
+  }
+  return lines.length ? lines : [title];
 }
 
-function zoneHtml(stations: Station[], zone: Zone): string {
-  return LINE_ORDER.map((key) => {
-    const stops = stations.filter((s) => s.line === key && s.zone === zone);
-    if (stops.length === 0) return "";
-    return `<section class="line" data-line="${key}"><h2 class="line__theme">${LINE_LABELS[key]}</h2><ol class="line__stops">${stops
-      .map(stationHtml)
-      .join("")}</ol></section>`;
-  }).join("");
+/** The bespoke layered dependency map as a single self-contained SVG (no JS). */
+function depMapSvg(stations: Station[]): string {
+  const tiers = tiersOf(stations);
+  const maxCount = Math.max(1, ...tiers.map((t) => t.length));
+  const totalW = maxCount * (NODE_W + H_GAP) - H_GAP;
+  const totalH = Math.max(NODE_H, tiers.length * (NODE_H + V_GAP) - V_GAP);
+
+  const pos = new Map<number, { x: number; y: number; cx: number }>();
+  tiers.forEach((tier, t) => {
+    const tierW = tier.length * (NODE_W + H_GAP) - H_GAP;
+    const offX = (totalW - tierW) / 2;
+    tier.forEach((s, i) => {
+      const x = offX + i * (NODE_W + H_GAP);
+      const y = t * (NODE_H + V_GAP);
+      pos.set(s.number, { x, y, cx: x + NODE_W / 2 });
+    });
+  });
+
+  const edges = stations
+    .flatMap((s) => s.blockedBy.map((b) => ({ from: b, to: s.number })))
+    .filter((e) => pos.has(e.from) && pos.has(e.to))
+    .map((e) => {
+      const a = pos.get(e.from)!;
+      const b = pos.get(e.to)!;
+      const y1 = a.y + NODE_H;
+      const y2 = b.y;
+      const dy = Math.max(16, (y2 - y1) * 0.5);
+      return `<path class="depedge" d="M${a.cx.toFixed(1)},${y1.toFixed(1)} C${a.cx.toFixed(1)},${(y1 + dy).toFixed(1)} ${b.cx.toFixed(1)},${(y2 - dy).toFixed(1)} ${b.cx.toFixed(1)},${y2.toFixed(1)}" marker-end="url(#dep-arrow)" />`;
+    })
+    .join("");
+
+  const nodes = stations
+    .map((s) => {
+      const p = pos.get(s.number)!;
+      const tspans = wrapTitle(s.title)
+        .map((ln, i) => `<tspan x="13" dy="${i === 0 ? 0 : 15}">${escapeHtml(ln)}</tspan>`)
+        .join("");
+      const tip = escapeHtml(`#${s.number} ${s.title}${s.blurb ? ` — ${s.blurb}` : ""}`);
+      const href = s.url
+        ? ` href="${escapeHtml(s.url)}" target="_blank" rel="noopener noreferrer"`
+        : "";
+      return `<a class="depnode depnode--${s.status}"${href}><g transform="translate(${p.x.toFixed(1)},${p.y.toFixed(1)})"><title>${tip}</title><rect class="depnode__box" width="${NODE_W}" height="${NODE_H}" rx="11" /><circle class="depnode__dot" cx="${NODE_W - 13}" cy="14" r="4" /><text class="depnode__num" x="13" y="18">#${s.number}</text><text class="depnode__title" x="13" y="36">${tspans}</text></g></a>`;
+    })
+    .join("");
+
+  return `<div class="depmap-scroll"><svg class="depmap" width="${Math.max(1, totalW).toFixed(0)}" height="${totalH.toFixed(0)}" viewBox="0 0 ${Math.max(1, totalW).toFixed(0)} ${totalH.toFixed(0)}" role="img" aria-label="Roadmap dependency graph" preserveAspectRatio="xMidYMin meet"><defs><marker id="dep-arrow" viewBox="0 0 8 8" refX="6.5" refY="4" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L8,4 L0,8 z" /></marker></defs>${edges}${nodes}</svg></div>`;
 }
 
-function milestoneHtml(name: string, note: string, cls: string): string {
-  return `<div class="milestone ${cls}"><span class="milestone__dot"></span><span class="milestone__name">${name}</span><span class="milestone__note">${note}</span></div>`;
-}
-
-function formatDue(iso: string): string {
-  const d = new Date(iso);
-  return Number.isNaN(d.getTime())
-    ? ""
-    : d.toLocaleDateString("en-US", {
-        month: "short",
-        year: "numeric",
-        timeZone: "UTC",
-      });
+/** Edgeless fallback: a readiness-grouped card grid until dependencies are linked. */
+function depGrid(stations: Station[]): string {
+  const cards = stations
+    .map((s) => {
+      const href = s.url
+        ? `href="${escapeHtml(s.url)}" target="_blank" rel="noopener noreferrer"`
+        : "";
+      const desc = s.blurb ? `<p class="depcard__desc">${escapeHtml(s.blurb)}</p>` : "";
+      return `<li class="depcard depcard--${s.status}"><a class="depcard__link" ${href}><span class="depcard__num">#${s.number}</span><h3 class="depcard__title">${escapeHtml(s.title)}</h3>${desc}<span class="chip chip--${s.status}">${STATUS_LABELS[s.status]}</span></a></li>`;
+    })
+    .join("");
+  return `<ul class="depgrid">${cards}</ul>`;
 }
 
 export function roadmapPage(stations: Station[]): string {
   if (stations.length === 0) {
     return `<article class="roadmap">
   <h1 class="roadmap__title">Roadmap</h1>
-  <p class="roadmap__lead">The roadmap is generated from the project's GitHub issues and will appear here once they are published.</p>
+  <p class="roadmap__lead">The roadmap is generated from the project's GitHub issues and will appear here once they're published.</p>
 </article>`;
   }
-  const due = v1DueOn(stations);
-  const v1Note =
-    due && formatDue(due)
-      ? `first self-hosting release &middot; target ${formatDue(due)}`
-      : "first self-hosting release";
+  const hasEdges = stations.some((s) => s.blockedBy.length > 0);
+  const lead = hasEdges
+    ? `The headline is the destination, not the current release. Logos is pre-alpha — nothing here ships yet. Each box is a tracked issue and the arrows point from a piece of work down to what it unblocks, so the top rows are buildable now and the lower rows wait on them.`
+    : `The headline is the destination, not the current release. Logos is pre-alpha — nothing here ships yet. These are the tracked issues; as their <em>blocked by</em> links are added on GitHub, this becomes a build-order dependency graph.`;
+  const legend = `<ul class="depmap-legend"><li class="is-done">Done</li><li class="is-ready">Ready</li><li class="is-blocked">Blocked</li></ul>`;
   return `<article class="roadmap">
   <h1 class="roadmap__title">Roadmap</h1>
-  <p class="roadmap__lead">The headline is the destination, not the current release. Logos is pre-alpha and nothing here ships yet. Everything above the v1 interchange is in progress now; everything below it is planned, landing across later versions.</p>
-  <div class="metro">
-    ${milestoneHtml("v0", "bootstrap begins", "milestone--origin")}
-    <div class="metro-lines">${zoneHtml(stations, "v1")}</div>
-    ${milestoneHtml("v1", v1Note, "milestone--v1")}
-    <div class="metro-lines">${zoneHtml(stations, "later")}</div>
-    <p class="metro-future">Branch lines release across v1.X &middot; v2 &middot; v3.</p>
-  </div>
+  <p class="roadmap__lead">${lead}</p>
+  ${legend}
+  ${hasEdges ? depMapSvg(stations) : depGrid(stations)}
 </article>`;
 }

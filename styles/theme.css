@@ -491,109 +491,11 @@ a {
 	max-width: 52ch;
 }
 
-/* ── Roadmap metro map ──────────────────────────────────────────────────── */
-/* A "route" is a vertical list of stops. Each stop draws its own rail segment
-   down to the next stop's dot, so the line ends cleanly at the last station
-   regardless of content height. Colour comes from --rail-color, set per line. */
-.metro {
-	--dot: 1rem;
-	--col: 1.6rem;
-	--rail: 3px;
-}
-.line__stops {
-	list-style: none;
-	margin: 0;
-	padding: 0;
-}
-.stop {
-	position: relative;
-	display: grid;
-	grid-template-columns: var(--col) 1fr;
-	column-gap: 0.9rem;
-	padding-bottom: 1.5rem;
-}
-.stop::before {
-	content: "";
-	position: absolute;
-	left: calc(var(--col) / 2 - var(--rail) / 2);
-	top: 0.8rem;
-	height: 100%;
-	width: var(--rail);
-	background: var(--rail-color);
-	z-index: 0;
-}
-.stop:last-child {
-	padding-bottom: 0;
-}
-.stop:last-child::before {
-	display: none;
-}
-.stop__dot {
-	grid-column: 1;
-	justify-self: center;
-	width: var(--dot);
-	height: var(--dot);
-	margin-top: 0.3rem;
-	border-radius: 50%;
-	background: var(--bg);
-	box-shadow: 0 0 0 var(--rail) var(--rail-color);
-	position: relative;
-	z-index: 1;
-}
-.stop__body {
-	grid-column: 2;
-	min-width: 0;
-}
-.stop__name {
-	font-family: var(--serif);
-	font-size: 1.12rem;
-	line-height: 1.25;
-	color: var(--heading);
-	margin: 0;
-}
-.stop__desc {
-	margin: 0.3rem 0 0.5rem;
-	font-size: 0.95rem;
-	line-height: 1.55;
-	color: var(--muted);
-}
-/* v0 origin and v1 interchange: full-width milestone bands separating the
-   in-progress zone above from the planned zone below. */
-.milestone {
-	display: flex;
-	align-items: baseline;
-	gap: 0.7rem;
-	margin: 0.25rem 0 1.4rem;
-}
-.milestone__dot {
-	flex: none;
-	align-self: center;
-	width: 1.5rem;
-	height: 1.5rem;
-	border-radius: 50%;
-	background: var(--metro-main);
-}
-.milestone__name {
-	font-family: var(--serif);
-	font-size: 1.6rem;
-	color: var(--heading);
-}
-.milestone__note {
-	font-size: 0.95rem;
-	color: var(--muted);
-}
-.milestone--v1 {
-	margin-top: 2.25rem;
-	padding-top: 2.25rem;
-	border-top: 1px solid var(--hairline);
-}
-.milestone--v1 .milestone__dot {
-	box-shadow: 0 0 0 4px var(--bg), 0 0 0 6px var(--metro-main);
-}
-.milestone--v1 .milestone__name {
-	font-size: 2rem;
-	color: var(--accent);
-}
+/* ── Roadmap dependency graph ───────────────────────────────────────────────
+   The roadmap is the dependency graph of the project's GitHub issues. Nodes are
+   laid out in build-order tiers (the SVG built by depMapSvg) with arrows from a
+   blocker down to what it unblocks; before any edges exist we show the readiness
+   grid below. Status colours: done = green, ready = accent, blocked = amber. */
 .chip {
 	display: inline-block;
 	font-size: 0.68rem;
@@ -604,90 +506,165 @@ a {
 	border-radius: 999px;
 	line-height: 1.2;
 }
-.chip--prog {
-	background: var(--warn-bg);
-	color: var(--warn-text);
-}
-.chip--plan {
-	background: var(--code-bg);
-	color: var(--muted);
-	box-shadow: inset 0 0 0 1px var(--hairline);
-}
 .chip--done {
 	background: var(--ok-bg);
 	color: var(--ok-text);
 }
-.metro-lines {
-	margin-top: 0.75rem;
-	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
-	gap: 1.75rem 2rem;
+.chip--ready {
+	background: var(--code-bg);
+	color: var(--accent);
+	box-shadow: inset 0 0 0 1px var(--accent);
 }
-.line {
-	--rail-color: var(--accent);
+.chip--blocked {
+	background: var(--warn-bg);
+	color: var(--warn-text);
 }
-.line[data-line='graph'] {
-	--rail-color: var(--metro-main);
-}
-.line[data-line='parse'] {
-	--rail-color: var(--line-parse);
-}
-.line[data-line='exec'] {
-	--rail-color: var(--line-exec);
-}
-.line[data-line='compile'] {
-	--rail-color: var(--line-compile);
-}
-.line[data-line='memory'] {
-	--rail-color: var(--line-memory);
-}
-.line[data-line='proofs'] {
-	--rail-color: var(--line-proofs);
-}
-.line[data-line='interop'] {
-	--rail-color: var(--line-interop);
-}
-.line[data-line='tooling'] {
-	--rail-color: var(--line-tooling);
-}
-.line__theme {
-	position: relative;
-	font-family: var(--sans);
+
+.depmap-legend {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 1.1rem;
+	list-style: none;
+	margin: 0 0 1.75rem;
+	padding: 0;
 	font-size: 0.82rem;
-	font-weight: 700;
-	letter-spacing: 0.06em;
-	text-transform: uppercase;
-	color: var(--rail-color);
-	margin: 0 0 0.9rem;
-	padding-left: calc(var(--col) + 0.9rem);
+	color: var(--muted);
 }
-.line__theme::before {
+.depmap-legend li {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.4rem;
+}
+.depmap-legend li::before {
 	content: "";
-	position: absolute;
-	left: calc(var(--col) / 2 - var(--dot) / 2);
-	top: 50%;
-	transform: translateY(-50%);
-	width: var(--dot);
-	height: var(--dot);
+	width: 0.7rem;
+	height: 0.7rem;
 	border-radius: 50%;
-	background: var(--rail-color);
 }
-.metro-future {
-	margin-top: 2.5rem;
-	text-align: center;
-	font-size: 0.95rem;
-	font-style: italic;
+.depmap-legend .is-done::before {
+	background: var(--ok-text);
+}
+.depmap-legend .is-ready::before {
+	background: var(--accent);
+}
+.depmap-legend .is-blocked::before {
+	background: var(--warn-border);
+}
+
+/* The layered SVG map: rendered at natural size, scrolled horizontally if wide. */
+.depmap-scroll {
+	overflow-x: auto;
+	padding-bottom: 0.5rem;
+}
+svg.depmap {
+	display: block;
+	max-width: none;
+	height: auto;
+}
+.depedge {
+	fill: none;
+	stroke: var(--hairline);
+	stroke-width: 2;
+}
+#dep-arrow path {
+	fill: var(--muted);
+}
+.depnode {
+	cursor: pointer;
+}
+.depnode__box {
+	fill: var(--code-bg);
+	stroke: var(--hairline);
+	stroke-width: 1.5;
+	transition: stroke-width 0.15s ease;
+}
+.depnode:hover .depnode__box {
+	stroke-width: 2.5;
+}
+.depnode__num {
+	fill: var(--muted);
+	font-family: var(--mono, monospace);
+	font-size: 11px;
+}
+.depnode__title {
+	fill: var(--heading);
+	font-family: var(--sans);
+	font-size: 12.5px;
+	font-weight: 600;
+}
+.depnode__dot {
+	fill: var(--hairline);
+}
+.depnode--done .depnode__box {
+	stroke: var(--ok-text);
+}
+.depnode--done .depnode__dot {
+	fill: var(--ok-text);
+}
+.depnode--ready .depnode__box {
+	stroke: var(--accent);
+}
+.depnode--ready .depnode__dot {
+	fill: var(--accent);
+}
+.depnode--blocked .depnode__box {
+	stroke: var(--warn-border);
+}
+.depnode--blocked .depnode__dot {
+	fill: var(--warn-text);
+}
+
+/* Edgeless fallback: readiness-coloured cards until dependencies are linked. */
+.depgrid {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+	gap: 1rem;
+}
+.depcard {
+	border: 1px solid var(--hairline);
+	border-left: 3px solid var(--hairline);
+	border-radius: 10px;
+	background: var(--code-bg);
+}
+.depcard--done {
+	border-left-color: var(--ok-text);
+}
+.depcard--ready {
+	border-left-color: var(--accent);
+}
+.depcard--blocked {
+	border-left-color: var(--warn-border);
+}
+.depcard__link {
+	display: block;
+	padding: 0.9rem 1rem;
+	text-decoration: none;
+	color: inherit;
+}
+.depcard__num {
+	font-family: var(--mono, monospace);
+	font-size: 0.78rem;
+	color: var(--muted);
+}
+.depcard__title {
+	font-family: var(--serif);
+	font-size: 1.08rem;
+	line-height: 1.25;
+	color: var(--heading);
+	margin: 0.15rem 0 0.4rem;
+}
+.depcard__desc {
+	margin: 0 0 0.6rem;
+	font-size: 0.92rem;
+	line-height: 1.5;
 	color: var(--muted);
 }
 @media (max-width: 34rem) {
-	.metro-lines {
-		grid-template-columns: 1fr;
-	}
-	.milestone__name {
-		font-size: 1.35rem;
-	}
-	.milestone--v1 .milestone__name {
-		font-size: 1.6rem;
+	svg.depmap {
+		max-width: 100%;
 	}
 }
 
@@ -1497,4 +1474,102 @@ mark.search-hit {
 	border-radius: 8px;
 	padding: 0.7rem 0.9rem;
 	max-width: 70ch;
+}
+
+/* ── Footer legal links ───────────────────────────────────────────────────── */
+.footer-links {
+	display: inline-flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 1rem;
+	margin-left: 1.25rem;
+}
+.footer-link {
+	font-family: var(--sans);
+	font-size: 0.85rem;
+	color: var(--muted);
+	background: none;
+	border: none;
+	padding: 0;
+	cursor: pointer;
+	text-decoration: none;
+}
+.footer-link:hover {
+	color: var(--logo);
+	text-decoration: underline;
+}
+
+/* ── Cookie consent banner ────────────────────────────────────────────────── */
+.consent {
+	position: fixed;
+	inset-inline: 1rem;
+	inset-block-end: 1rem;
+	z-index: 80;
+	max-width: 30rem;
+	margin-inline: auto;
+	display: flex;
+	flex-direction: column;
+	gap: 0.85rem;
+	padding: 1rem 1.1rem;
+	background: var(--dock-bg);
+	border: 1.5px solid var(--dock-border);
+	border-radius: 12px;
+	backdrop-filter: blur(12px);
+	box-shadow: 0 8px 30px rgba(0, 0, 0, 0.18);
+}
+.consent[hidden] {
+	display: none;
+}
+.consent__text {
+	margin: 0;
+	font-size: 0.88rem;
+	line-height: 1.5;
+	color: var(--text);
+}
+.consent__text a {
+	color: var(--accent);
+}
+.consent__actions {
+	display: flex;
+	justify-content: flex-end;
+	gap: 0.6rem;
+}
+
+/* ── Legal / privacy page ─────────────────────────────────────────────────── */
+.legal {
+	max-width: 48rem;
+	margin-inline: auto;
+	padding: clamp(2rem, 6vw, 4rem) 1.5rem 5rem;
+}
+.legal__title {
+	font-family: var(--serif);
+	font-size: clamp(2rem, 5vw, 3rem);
+	margin: 0;
+	color: var(--heading);
+}
+.legal__updated {
+	color: var(--muted);
+	font-size: 0.9rem;
+	margin: 0.25rem 0 2rem;
+}
+.legal h2 {
+	font-family: var(--serif);
+	font-size: 1.5rem;
+	color: var(--heading);
+	margin: 2rem 0 0.5rem;
+}
+.legal p,
+.legal li {
+	line-height: 1.7;
+	color: var(--text);
+}
+.legal a {
+	color: var(--accent);
+}
+.legal code {
+	font-family: var(--mono);
+	font-size: 0.88em;
+	background: var(--code-bg);
+	padding: 0.1em 0.35em;
+	border-radius: 4px;
 }

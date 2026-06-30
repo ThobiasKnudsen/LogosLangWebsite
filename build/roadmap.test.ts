@@ -1,11 +1,11 @@
 // Run with: npm run test:roadmap
-// Unit tests for the GitHub-issues -> roadmap-stations model. Pure, no network.
+// Unit tests for the GitHub-issues -> dependency-graph roadmap model. Pure, no network.
 import assert from "node:assert/strict";
 import {
   roadmapFromApi,
-  v1DueOn,
+  tiersOf,
   isStationArray,
-  LINE_ORDER,
+  STATUS_LABELS,
   type Station,
 } from "./roadmap.ts";
 
@@ -16,123 +16,69 @@ function test(name: string, fn: () => void) {
   console.log(`  ok  ${name}`);
 }
 
-// A minimal GitHub Issues API fixture exercising every parse path.
+// Fixture: raw issues with `blockedBy` already attached (numbers), as fetch-roadmap.ts does.
 const api = [
-  {
-    number: 1,
-    title: "One structure for everything",
-    state: "open",
-    html_url: "https://github.com/ThobiasKnudsen/LogosLang/issues/1",
-    body: "The Logic Graph: one structure holding programs, types, and the compiler's own logic.\n\nMore detail below.",
-    labels: [{ name: "roadmap" }, { name: "area:graph" }],
-    milestone: { title: "v1", due_on: "2026-09-01T00:00:00Z" },
-  },
-  {
-    number: 2,
-    title: "Dependent types and a proof kernel",
-    state: "open",
-    html_url: "u2",
-    body: "<!-- roadmap: Propositions as types, proofs as programs, checked by a small kernel. -->\nLong design notes that should NOT be the blurb.",
-    labels: [{ name: "roadmap" }, { name: "area:proofs" }],
-    milestone: { title: "after v1", due_on: null },
-  },
-  {
-    number: 3,
-    title: "Shipped lexer",
-    state: "closed",
-    html_url: "u3",
-    body: "Done already.",
-    labels: ["roadmap", "area:parse"], // string labels also allowed
-    milestone: { title: "v1", due_on: "2026-08-01T00:00:00Z" },
-  },
-  {
-    number: 4,
-    title: "No area label",
-    state: "open",
-    html_url: "u4",
-    body: "Has roadmap but no area:* label, should be skipped.",
-    labels: [{ name: "roadmap" }],
-    milestone: null,
-  },
-  {
-    number: 5,
-    title: "Not on the roadmap",
-    state: "open",
-    html_url: "u5",
-    body: "An ordinary bug.",
-    labels: [{ name: "bug" }],
-    milestone: null,
-  },
-  {
-    number: 6,
-    title: "A pull request, not an issue",
-    state: "open",
-    html_url: "u6",
-    body: "Should be skipped — it's a PR.",
-    labels: [{ name: "roadmap" }, { name: "area:graph" }],
-    pull_request: { url: "…" },
-    milestone: { title: "v1", due_on: null },
-  },
-  {
-    number: 7,
-    title: "Ordered first via order label",
-    state: "open",
-    html_url: "u7",
-    body: "Carries order:1 so it sorts before issue #1 in the graph line… but different due dates win first.",
-    labels: [{ name: "roadmap" }, { name: "area:graph" }, { name: "order:1" }],
-    milestone: { title: "v1", due_on: "2026-09-01T00:00:00Z" },
-  },
+  { number: 1, title: "Node model", state: "open", html_url: "u1", body: "<!-- roadmap: The dyad cell. -->\nlong notes", labels: [{ name: "roadmap" }], blockedBy: [] },
+  { number: 2, title: "Parser", state: "open", html_url: "u2", body: "A one-pass parser.\n\nmore", labels: ["roadmap"], blockedBy: [1] },
+  { number: 3, title: "Interpreter", state: "open", html_url: "u3", body: "Tree-walk.", labels: [{ name: "roadmap" }], blockedBy: [1, 2] },
+  { number: 4, title: "Dyad cell", state: "closed", html_url: "u4", body: "Done.", labels: [{ name: "roadmap" }], blockedBy: [] },
+  { number: 5, title: "Rewrite engine", state: "open", html_url: "u5", body: "egg.", labels: [{ name: "roadmap" }], blockedBy: [3] },
+  { number: 6, title: "Uses a finished thing", state: "open", html_url: "u6", body: "x", labels: [{ name: "roadmap" }], blockedBy: [4] },
+  { number: 7, title: "External blocker only", state: "open", html_url: "u7", body: "x", labels: [{ name: "roadmap" }], blockedBy: [99] },
+  { number: 8, title: "A PR", state: "open", html_url: "u8", body: "x", labels: [{ name: "roadmap" }], pull_request: { url: "…" }, blockedBy: [] },
+  { number: 9, title: "Not on roadmap", state: "open", html_url: "u9", body: "x", labels: [{ name: "bug" }], blockedBy: [] },
+  { number: 10, title: "Self loop", state: "open", html_url: "u10", body: "x", labels: [{ name: "roadmap" }], blockedBy: [10] },
+  { number: 11, title: "Cycle a", state: "open", html_url: "u11", body: "x", labels: [{ name: "roadmap" }], blockedBy: [12] },
+  { number: 12, title: "Cycle b", state: "open", html_url: "u12", body: "x", labels: [{ name: "roadmap" }], blockedBy: [11] },
 ];
 
 const stations = roadmapFromApi(api);
+const byNum = new Map(stations.map((s) => [s.number, s]));
 
-test("keeps only roadmap-labelled, area-labelled, non-PR issues", () => {
-  const numbers = stations.map((s) => s.number).sort((a, b) => a - b);
-  assert.deepEqual(numbers, [1, 2, 3, 7]); // 4 (no area), 5 (no roadmap), 6 (PR) dropped
-});
-
-test("maps area:<key> to the line", () => {
-  assert.equal(stations.find((s) => s.number === 1)!.line, "graph");
-  assert.equal(stations.find((s) => s.number === 2)!.line, "proofs");
-  assert.equal(stations.find((s) => s.number === 3)!.line, "parse");
-});
-
-test("milestone v1 -> zone v1, anything else/none -> later", () => {
-  assert.equal(stations.find((s) => s.number === 1)!.zone, "v1");
-  assert.equal(stations.find((s) => s.number === 2)!.zone, "later");
-});
-
-test("status: closed -> done; open v1 -> prog; open later -> plan", () => {
-  assert.equal(stations.find((s) => s.number === 3)!.status, "done");
-  assert.equal(stations.find((s) => s.number === 1)!.status, "prog");
-  assert.equal(stations.find((s) => s.number === 2)!.status, "plan");
-});
-
-test("blurb: marker overrides body, else first paragraph; markdown stripped", () => {
-  assert.equal(
-    stations.find((s) => s.number === 2)!.body,
-    "Propositions as types, proofs as programs, checked by a small kernel.",
-  );
-  assert.equal(
-    stations.find((s) => s.number === 1)!.body,
-    "The Logic Graph: one structure holding programs, types, and the compiler's own logic.",
+test("keeps only roadmap-labelled, non-PR issues", () => {
+  assert.deepEqual(
+    stations.map((s) => s.number).sort((a, b) => a - b),
+    [1, 2, 3, 4, 5, 6, 7, 10, 11, 12], // 8 (PR) and 9 (no roadmap) dropped
   );
 });
 
-test("order:NN overrides the issue-number sort key", () => {
-  assert.equal(stations.find((s) => s.number === 7)!.order, 1);
-  assert.equal(stations.find((s) => s.number === 1)!.order, 1); // falls back to its number
+test("edges are filtered to the node set; external + self edges dropped", () => {
+  assert.deepEqual(byNum.get(2)!.blockedBy, [1]);
+  assert.deepEqual(byNum.get(3)!.blockedBy, [1, 2]);
+  assert.deepEqual(byNum.get(7)!.blockedBy, []); // #99 not a roadmap node
+  assert.deepEqual(byNum.get(10)!.blockedBy, []); // self-edge removed
 });
 
-test("sort: by line, then due date (nulls last), then order, then number", () => {
-  // graph line: #1 and #7 share due 2026-09-01 and order 1; tie broken by number -> 1 before 7.
-  const graph = stations.filter((s) => s.line === "graph").map((s) => s.number);
-  assert.deepEqual(graph, [1, 7]);
+test("status: closed -> done; open w/ open blocker -> blocked; else ready", () => {
+  assert.equal(byNum.get(4)!.status, "done"); // closed
+  assert.equal(byNum.get(2)!.status, "blocked"); // blocked by open #1
+  assert.equal(byNum.get(1)!.status, "ready"); // no blockers
+  assert.equal(byNum.get(6)!.status, "ready"); // its only blocker (#4) is closed
+  assert.equal(byNum.get(7)!.status, "ready"); // external blocker dropped
 });
 
-test("v1DueOn returns the first v1-band station's due date in sorted order", () => {
-  // graph (line 0) sorts before parse (line 1), so #1's 2026-09-01 wins over #3's 2026-08-01.
-  assert.equal(v1DueOn(stations), "2026-09-01T00:00:00Z");
+test("tier = longest dependency depth", () => {
+  assert.equal(byNum.get(1)!.tier, 0);
+  assert.equal(byNum.get(2)!.tier, 1);
+  assert.equal(byNum.get(3)!.tier, 2); // max(dep(1)=0, dep(2)=1) + 1
+  assert.equal(byNum.get(5)!.tier, 3); // 1->2->3->5
+  assert.equal(byNum.get(6)!.tier, 1); // depends on #4 (tier 0)
+});
+
+test("blurb: marker overrides body, else first paragraph", () => {
+  assert.equal(byNum.get(1)!.blurb, "The dyad cell.");
+  assert.equal(byNum.get(2)!.blurb, "A one-pass parser.");
+});
+
+test("dependency cycles are broken (finite tiers, no hang)", () => {
+  assert.ok(Number.isInteger(byNum.get(11)!.tier));
+  assert.ok(Number.isInteger(byNum.get(12)!.tier));
+});
+
+test("tiersOf groups by tier, sorted by number within a tier", () => {
+  const tiers = tiersOf(stations);
+  assert.deepEqual(tiers[0]!.map((s) => s.number), [1, 4, 7, 10]); // all tier-0 nodes
+  assert.equal(tiers[1]!.includes(byNum.get(2)!), true);
 });
 
 test("non-array and empty inputs are safe", () => {
@@ -149,9 +95,8 @@ test("isStationArray validates snapshot shape", () => {
   assert.ok(isStationArray([]));
 });
 
-// Touch the imported type + constant so the unused-import check stays quiet.
 const _used: Station[] = stations;
 void _used;
-void LINE_ORDER;
+void STATUS_LABELS;
 
 console.log(`\n${passed} tests passed.`);
