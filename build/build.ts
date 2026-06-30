@@ -27,6 +27,7 @@ import {
 } from "./pages.ts";
 import { renderDocsMain } from "./docs-render.ts";
 import { fetchReleases } from "./fetch-releases.ts";
+import { fetchRoadmap } from "./fetch-roadmap.ts";
 
 export const ROOT = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -323,6 +324,10 @@ export async function build(): Promise<void> {
   // Released builds, baked into the download page. Never fails the build (see
   // fetch-releases.ts); a release fires a deploy hook that rebuilds this page.
   const releases = await fetchReleases();
+  // Roadmap stations, generated from LogosLang's `roadmap`-labelled GitHub issues.
+  // Falls back to content/roadmap.snapshot.json if GitHub is unreachable, so the
+  // page never blanks (see fetch-roadmap.ts).
+  const roadmap = await fetchRoadmap();
 
   await writePage(
     "index.html",
@@ -375,7 +380,7 @@ export async function build(): Promise<void> {
       active: "roadmap",
       path: "/roadmap/",
       description: roadmapDesc,
-      main: roadmapPage(),
+      main: roadmapPage(roadmap),
     }),
   );
   await writePage(

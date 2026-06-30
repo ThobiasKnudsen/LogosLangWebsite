@@ -12,6 +12,14 @@ import {
   type Os,
   type Asset,
 } from "./releases.ts";
+import {
+  LINE_ORDER,
+  LINE_LABELS,
+  v1DueOn,
+  type Station,
+  type Zone,
+  type ChipStatus,
+} from "./roadmap.ts";
 
 const DOWNLOAD = "/download/";
 const GITHUB = "https://github.com/ThobiasKnudsen/LogosLang";
@@ -225,226 +233,70 @@ export function playgroundPage(releases: Release[]): string {
 </section>`;
 }
 
-// The roadmap is a metro map and the site's honest counterweight to the hero.
-// Work is grouped into themed colored lines; every station carries its own
-// status. In-progress stations sit in the "toward v1" zone above the v1
-// interchange; planned stations fan out below it, releasing across v1.X / v2 /
-// v3 (those versions are deliberately not nodes here). Nothing ships yet.
-// Overlapping claims are merged into a single station each; keep statuses
-// current as work lands.
-type Status = "prog" | "plan";
-type Station = { status: Status; title: string; body: string };
-type Line = { theme: string; line: string; stations: Station[] };
+// The roadmap is a metro map generated from LogosLang GitHub issues (see
+// build/roadmap.ts + fetch-roadmap.ts), so the issue tracker is the single source
+// of truth. The eight themed lines and the v0/v1 milestone framing are fixed
+// presentation; issues only fill stations into them via `area:<key>` labels. A
+// station's band (toward-v1 vs after-v1) comes from its milestone, and its chip
+// (Done / In progress / Planned) from its issue state.
 
-const LINES: Line[] = [
-  {
-    theme: "The Logic Graph",
-    line: "graph",
-    stations: [
-      {
-        status: "prog",
-        title: "One structure for everything",
-        body: `The Logic Graph: one structure holding programs, types, the standard library, and the compiler's own logic, all traversed by the same operations.`,
-      },
-      {
-        status: "prog",
-        title: "A tiny seed that self-hosts",
-        body: `A minimal Rust seed bootstraps the system and processes Logos until it compiles itself; its primitives ship as opaque native code and are ported to reflectable Logos source over time.`,
-      },
-      {
-        status: "prog",
-        title: "The mutability and construction model",
-        body: `mut as a recursive type modifier and an undefined-to-defined-to-frozen lifecycle, so immutability is the default and frozen is final.`,
-      },
-      {
-        status: "prog",
-        title: "Source and runtime graphs",
-        body: `A persistent file-backed source graph that is the program's identity, plus an ephemeral arena-allocated runtime graph cleaned up by scope lifetimes, no GC.`,
-      },
-    ],
-  },
-  {
-    theme: "Parsing & identity",
-    line: "parse",
-    stations: [
-      {
-        status: "prog",
-        title: "Syntax is data",
-        body: `The grammar lives in the graph, so a new operator, constructor, or macro is ordinary library work rather than a change to the language.`,
-      },
-      {
-        status: "plan",
-        title: "The identity-recognition engine",
-        body: `One engine for parsing, reflection, and rewrite matching: a merged, stratified recognizer that returns every identity matching at a node.`,
-      },
-      {
-        status: "plan",
-        title: "Incremental re-identification",
-        body: `Edits touch only the tokens they change; each cached identity is a reader, invalidated exactly when the tokens or rules it consulted change.`,
-      },
-    ],
-  },
-  {
-    theme: "Execution",
-    line: "exec",
-    stations: [
-      {
-        status: "prog",
-        title: "Interpret by default, JIT on demand",
-        body: `Logic Graph code is interpreted directly; a frozen region JIT-compiles via Cranelift and stays reflectable through the graph it came from. Hot regions are promoted to native code automatically and deoptimized back to interpretation when a structural write invalidates them — the choice is profitability, never semantics.`,
-      },
-      {
-        status: "prog",
-        title: "Compile-time evaluation and metaprogramming",
-        body: `A comptime marker bakes results into the artifact, with the whole language available at parse time over real Logic Graph rather than a macro sublanguage.`,
-      },
-    ],
-  },
-  {
-    theme: "Compilation & optimization",
-    line: "compile",
-    stations: [
-      {
-        status: "prog",
-        title: "The compiler is a library",
-        body: `The checker, optimizer, and the lowerings to native code are ordinary Logos over the graph, not a sealed black box.`,
-      },
-      {
-        status: "prog",
-        title: "One rewriting engine",
-        body: `A single equality-saturation engine for compiler optimization, computer algebra, and user transforms, with first-class rule sets and cost functions.`,
-      },
-      {
-        status: "prog",
-        title: "The Logos IR",
-        body: `A target-agnostic intermediate layer with explicit basic blocks, control flow, memory operations, and types, itself a stratum of the graph. One backend interface consumes it, so Cranelift (the default), LLVM, and other targets are interchangeable and mixable per function or module.`,
-      },
-    ],
-  },
-  {
-    theme: "Memory & concurrency",
-    line: "memory",
-    stations: [
-      {
-        status: "prog",
-        title: "User-replaceable allocators",
-        body: `Arena, bump, pool, system, and custom allocators behind one interface, with arenas carrying the graph's cyclic structures.`,
-      },
-      {
-        status: "plan",
-        title: "The borrow checker, one read/write rule",
-        body: `Lexical lifetimes, ownership, and moves with no GC; place- and reference-granular borrows; the same many-readers-or-one-writer rule that also governs visibility and reflection.`,
-      },
-      {
-        status: "prog",
-        title: "Multithreading and task scheduling",
-        body: `Two concurrency shapes the borrow checker proves race-free. parallel for spreads work over disjoint indices, with threads reading shared graph structure through ordinary shared borrows while writes stay exclusive. Stackless async tasks run on user-controlled executor pools, pausing at an explicit .await, with preemption and cancellation at the boundaries where a task's live state is materialized as graph data.`,
-      },
-    ],
-  },
-  {
-    theme: "Types & proofs",
-    line: "proofs",
-    stations: [
-      {
-        status: "plan",
-        title: "Capability and effect tracking",
-        body: `Effects as capabilities (pure, total, async, thread-pinned, GPU-subset, allocator-bound) tracked through the call graph, so compile-time code is I/O-free and builds reproduce.`,
-      },
-      {
-        status: "plan",
-        title: "Pay only for what you verify",
-        body: `Opt-in strata: refinement types with SMT discharge, then pre- and post-conditions, then termination measures. Lower code is never burdened by higher guarantees.`,
-      },
-      {
-        status: "plan",
-        title: "Dependent types and a proof kernel",
-        body: `Propositions as types and proofs as programs, checked by a small trusted kernel and erased before codegen, with a stratified universe hierarchy.`,
-      },
-      {
-        status: "plan",
-        title: "The ecumenical proof system",
-        body: `Many theories in one graph, including contradictory ones, each proof carrying the axioms it rests on so that only consistent results combine.`,
-      },
-    ],
-  },
-  {
-    theme: "Interop & errors",
-    line: "interop",
-    stations: [
-      {
-        status: "prog",
-        title: "Errors are values",
-        body: `Fallible functions return tagged unions (T | Error), handled explicitly via match; no exceptions and no implicit propagation in the core.`,
-      },
-      {
-        status: "prog",
-        title: "Native interop and the Rust bridge",
-        body: `Calling existing native code in-process across the C ABI with no linker step, independent of which backend compiled either side.`,
-      },
-    ],
-  },
-  {
-    theme: "Tooling",
-    line: "tooling",
-    stations: [
-      {
-        status: "plan",
-        title: "A batteries-included standard library",
-        body: `Single canonical solutions decided and documented before release: collections, strings, numerics, symbolic math, allocators, concurrency, I/O, and verification.`,
-      },
-      {
-        status: "plan",
-        title: "LSP-first editor support",
-        body: `A Logos-written language server bringing rich highlighting, errors, autocomplete, and refactoring to any LSP editor.`,
-      },
-      {
-        status: "plan",
-        title: "Debugger and profiler integration",
-        body: `Standard-protocol DAP debugging, samplers, and flamegraphs, so users keep the tools they already know.`,
-      },
-      {
-        status: "plan",
-        title: "A documentation generator",
-        body: `Generated from the same graph that holds types, examples, capabilities, and proofs, so docs carry verified examples and proof obligations.`,
-      },
-      {
-        status: "plan",
-        title: "A Logos-native structural editor",
-        body: `Semantic editing directly on Logic Graphs and an IDE customizable in Logos: the long-term goal, not on the critical path.`,
-      },
-    ],
-  },
-];
-
-function milestoneHtml(name: string, note: string, cls: string): string {
-  return `<div class="milestone ${cls}"><span class="milestone__dot"></span><span class="milestone__name">${name}</span><span class="milestone__note">${note}</span></div>`;
+function chipLabel(status: ChipStatus): string {
+  return status === "done"
+    ? "Done"
+    : status === "prog"
+      ? "In progress"
+      : "Planned";
 }
 
 function stationHtml(s: Station): string {
-  const label = s.status === "prog" ? "In progress" : "Planned";
-  return `<li class="stop"><span class="stop__dot"></span><div class="stop__body"><h3 class="stop__name">${s.title}</h3><p class="stop__desc">${s.body}</p><span class="chip chip--${s.status}">${label}</span></div></li>`;
+  return `<li class="stop"><span class="stop__dot"></span><div class="stop__body"><h3 class="stop__name">${escapeHtml(s.title)}</h3><p class="stop__desc">${escapeHtml(s.body)}</p><span class="chip chip--${s.status}">${chipLabel(s.status)}</span></div></li>`;
 }
 
-function zoneHtml(status: Status): string {
-  return LINES.map((l) => {
-    const stops = l.stations.filter((s) => s.status === status);
+function zoneHtml(stations: Station[], zone: Zone): string {
+  return LINE_ORDER.map((key) => {
+    const stops = stations.filter((s) => s.line === key && s.zone === zone);
     if (stops.length === 0) return "";
-    return `<section class="line" data-line="${l.line}"><h2 class="line__theme">${l.theme}</h2><ol class="line__stops">${stops
+    return `<section class="line" data-line="${key}"><h2 class="line__theme">${LINE_LABELS[key]}</h2><ol class="line__stops">${stops
       .map(stationHtml)
       .join("")}</ol></section>`;
   }).join("");
 }
 
-export function roadmapPage(): string {
+function milestoneHtml(name: string, note: string, cls: string): string {
+  return `<div class="milestone ${cls}"><span class="milestone__dot"></span><span class="milestone__name">${name}</span><span class="milestone__note">${note}</span></div>`;
+}
+
+function formatDue(iso: string): string {
+  const d = new Date(iso);
+  return Number.isNaN(d.getTime())
+    ? ""
+    : d.toLocaleDateString("en-US", {
+        month: "short",
+        year: "numeric",
+        timeZone: "UTC",
+      });
+}
+
+export function roadmapPage(stations: Station[]): string {
+  if (stations.length === 0) {
+    return `<article class="roadmap">
+  <h1 class="roadmap__title">Roadmap</h1>
+  <p class="roadmap__lead">The roadmap is generated from the project's GitHub issues and will appear here once they are published.</p>
+</article>`;
+  }
+  const due = v1DueOn(stations);
+  const v1Note =
+    due && formatDue(due)
+      ? `first self-hosting release &middot; target ${formatDue(due)}`
+      : "first self-hosting release";
   return `<article class="roadmap">
   <h1 class="roadmap__title">Roadmap</h1>
   <p class="roadmap__lead">The headline is the destination, not the current release. Logos is pre-alpha and nothing here ships yet. Everything above the v1 interchange is in progress now; everything below it is planned, landing across later versions.</p>
   <div class="metro">
     ${milestoneHtml("v0", "bootstrap begins", "milestone--origin")}
-    <div class="metro-lines">${zoneHtml("prog")}</div>
-    ${milestoneHtml("v1", "first self-hosting release", "milestone--v1")}
-    <div class="metro-lines">${zoneHtml("plan")}</div>
+    <div class="metro-lines">${zoneHtml(stations, "v1")}</div>
+    ${milestoneHtml("v1", v1Note, "milestone--v1")}
+    <div class="metro-lines">${zoneHtml(stations, "later")}</div>
     <p class="metro-future">Branch lines release across v1.X &middot; v2 &middot; v3.</p>
   </div>
 </article>`;
