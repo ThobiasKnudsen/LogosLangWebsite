@@ -6,10 +6,23 @@
 // fetch + pushState, and the "Version" selector pins the whole site to a chosen
 // global version (re-skinning the tree and re-deriving the off-version warning).
 
+import {
+	OS_ORDER,
+	OS_LABELS,
+	ARCH_LABELS,
+	assetsForOs,
+	installCommand,
+	type Release,
+	type Os,
+	type Asset,
+} from '../build/releases.ts';
+
 initThemeToggle();
 initHeroRotator();
 initScrollbars();
 if (document.getElementById('docs-app')) initDocs();
+if (document.getElementById('dl-grid')) initDownload();
+if (document.getElementById('pg-run')) initPlayground();
 
 // ── Hero headline rotator ─────────────────────────────────────────────────────
 // Cycles the tail of "Logos is ___" through its phrases: the current phrase
@@ -24,7 +37,7 @@ function initHeroRotator(): void {
 	const items = [...rotator.querySelectorAll<HTMLElement>('.hero__rot-item')];
 	if (items.length < 2) return;
 
-	const INTERVAL = 7000;
+	const INTERVAL = 4500;
 	let i = 0;
 
 	// Pin the box to the current phrase's intrinsic width; the CSS width
@@ -122,6 +135,112 @@ function initThemeToggle(): void {
 		const theme = input.checked ? 'dark' : 'light';
 		document.documentElement.dataset.theme = theme;
 		document.cookie = `theme=${theme}; path=/; max-age=31536000; samesite=lax`;
+	});
+}
+
+// ── Download page ─────────────────────────────────────────────────────────────
+// Re-render the OS/arch grid when the version changes, highlight the visitor's own
+// OS, and wire the copy buttons. The release data is baked into a JSON island at
+// build time (build/pages.ts); with JS off the latest version's grid already works.
+function detectOs(): Os {
+	const ua = navigator.userAgent;
+	if (/Mac|iPhone|iPad|iPod/i.test(ua)) return 'macos';
+	if (/Win/i.test(ua)) return 'windows';
+	return 'linux';
+}
+
+function formatDate(iso: string): string {
+	const d = new Date(iso);
+	if (Number.isNaN(d.getTime())) return '';
+	return new Intl.DateTimeFormat('en', { year: 'numeric', month: 'short', day: 'numeric' }).format(d);
+}
+
+function dlRowHtml(asset: Asset): string {
+	return `<div class="dl-row" data-arch="${asset.arch}">
+      <div class="dl-row__head"><span class="dl-row__arch">${escapeHtml(ARCH_LABELS[asset.arch])}</span><a class="logos-btn logos-btn--download dl-row__dl" href="${escapeHtml(asset.url)}" download>Download .${escapeHtml(asset.ext)}</a></div>
+      <div class="dl-cmd"><pre class="dl-cmd__pre"><code>${escapeHtml(installCommand(asset))}</code></pre><button class="dl-copy" type="button" data-copy aria-label="Copy command">Copy</button></div>
+    </div>`;
+}
+
+function dlCardHtml(release: Release, os: Os): string {
+	const assets = assetsForOs(release, os);
+	const body = assets.length
+		? assets.map(dlRowHtml).join('')
+		: `<p class="dl-card__none">No ${escapeHtml(OS_LABELS[os])} build for ${escapeHtml(release.version)}.</p>`;
+	return `<article class="dl-card" data-os="${os}"><h3 class="dl-card__os">${escapeHtml(OS_LABELS[os])}</h3>${body}</article>`;
+}
+
+function initDownload(): void {
+	const grid = document.getElementById('dl-grid');
+	const select = document.getElementById('dl-version') as HTMLSelectElement | null;
+	const meta = document.getElementById('dl-meta');
+	const dataEl = document.getElementById('logos-releases');
+	if (!grid || !dataEl) return;
+
+	let releases: Release[];
+	try {
+		releases = JSON.parse(dataEl.textContent || '[]') as Release[];
+	} catch {
+		return; // server-rendered latest grid stays in place
+	}
+	if (!releases.length) return;
+
+	const detected = detectOs();
+
+	function render(version: string): void {
+		const release = releases.find((r) => r.version === version) ?? releases[0]!;
+		grid!.innerHTML = OS_ORDER.map((os) => dlCardHtml(release, os)).join('');
+		grid!.querySelector(`.dl-card[data-os="${detected}"]`)?.classList.add('is-recommended');
+		if (meta) meta.textContent = release.publishedAt ? `released ${formatDate(release.publishedAt)}` : `version ${release.version}`;
+	}
+
+	render(select?.value || releases[0]!.version);
+	select?.addEventListener('change', () => render(select.value));
+
+	grid.addEventListener('click', (e) => {
+		const btn = (e.target as Element)?.closest?.('[data-copy]') as HTMLButtonElement | null;
+		if (!btn) return;
+		const code = btn.parentElement?.querySelector('code')?.textContent ?? '';
+		if (!code || !navigator.clipboard) return;
+		void navigator.clipboard.writeText(code).then(() => {
+			const prev = btn.textContent;
+			btn.textContent = 'Copied';
+			btn.classList.add('is-copied');
+			window.setTimeout(() => {
+				btn.textContent = prev;
+				btn.classList.remove('is-copied');
+			}, 1200);
+		});
+	});
+}
+
+// ── Playground ────────────────────────────────────────────────────────────────
+// The version picker and editor are live; running is stubbed until Logos ships a
+// real WebAssembly runtime. Each version <option> carries its wasm asset URL in
+// data-wasm, so the future harness only has to: fetch that URL, instantiate it in
+// a Web Worker (with a timeout/terminate kill-switch for runaway code), feed it the
+// editor source, and write the result to #pg-output.
+function initPlayground(): void {
+	const runBtn = document.getElementById('pg-run');
+	const select = document.getElementById('pg-version') as HTMLSelectElement | null;
+	const output = document.getElementById('pg-output');
+	const meta = document.getElementById('pg-meta');
+	if (!runBtn || !output) return;
+
+	const selectedVersion = (): string => select?.value || '';
+	const updateMeta = (): void => {
+		if (meta) meta.textContent = selectedVersion() ? `runtime ${selectedVersion()} · placeholder` : '';
+	};
+	updateMeta();
+	select?.addEventListener('change', updateMeta);
+
+	runBtn.addEventListener('click', () => {
+		const v = selectedVersion() || 'this version';
+		// TODO: load select.selectedOptions[0].dataset.wasm in a Worker and evaluate
+		// the #pg-editor source against it. Stubbed until Logos targets WebAssembly.
+		output.textContent =
+			`The Logos runtime for ${v} is a placeholder build — in-browser execution isn't available yet.\n` +
+			`Your code will run here once Logos compiles to WebAssembly.`;
 	});
 }
 

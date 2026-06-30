@@ -6,7 +6,11 @@
   "scripts": {
     "dev": "tsx build/server.ts",
     "build": "tsx build/build.ts",
-    "test:docs-model": "tsx build/version.test.ts"
+    "test:docs-model": "tsx build/version.test.ts",
+    "test:ci-check": "tsx build/ci-check.test.ts",
+    "test:releases": "tsx build/releases.test.ts",
+    "test:new-doc": "tsx build/new-doc.test.ts",
+    "new-doc": "tsx build/new-doc.ts"
   },
   "devDependencies": {
     "@fontsource-variable/eb-garamond": "^5.2.7",

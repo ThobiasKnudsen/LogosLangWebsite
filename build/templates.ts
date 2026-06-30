@@ -2,7 +2,7 @@
 // the pre-paint theme script, and the full-document shell.
 
 const GITHUB = 'https://github.com/ThobiasKnudsen/LogosLang';
-const RELEASES = `${GITHUB}/releases`;
+const DOWNLOAD = '/download/';
 
 // Absolute production origin, used for canonical URLs, Open Graph / Twitter tags,
 // the sitemap, and llms.txt. Overridable for local or preview builds via
@@ -29,6 +29,7 @@ export function escapeHtml(s: string): string {
 
 const NAV = [
 	{ key: 'vision', label: 'Vision', href: '/vision/' },
+	{ key: 'roadmap', label: 'Roadmap', href: '/roadmap/' },
 	{ key: 'examples', label: 'Examples', href: '/examples/' },
 	{ key: 'playground', label: 'Playground', href: '/playground/' },
 	{ key: 'docs', label: 'Docs', href: '/docs/' },
@@ -62,7 +63,7 @@ function dockHtml(active: string): string {
   <a class="wordmark" href="/" aria-label="Logos home">Λόγος</a>
   <nav class="nav" aria-label="Primary">${links}</nav>
   <div class="dock-right">
-    <a class="logos-btn logos-btn--download" href="${RELEASES}">Download</a>
+    <a class="logos-btn logos-btn--download" href="${DOWNLOAD}">Download</a>
   </div>
 </header>`;
 }
