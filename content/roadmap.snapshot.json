@@ -1,249 +1,19 @@
 [
   {
-    "number": 1,
-    "title": "One structure for everything",
-    "blurb": "The Logic Graph: one structure holding programs, types, the standard library, and the compiler's own logic, all traversed by the same operations.",
-    "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/1",
+    "number": 29,
+    "title": "Dyad",
+    "blurb": "The fundamental node constructing the entire Logic Graph. It is a struct only containing two fields: type and value. The type explains how the value should be…",
+    "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/29",
     "state": "open",
     "blockedBy": [],
     "status": "ready",
     "tier": 0
   },
   {
-    "number": 3,
-    "title": "The mutability and construction model",
-    "blurb": "mut as a recursive type modifier and an undefined-to-defined-to-frozen lifecycle, so immutability is the default and frozen is final.",
-    "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/3",
-    "state": "open",
-    "blockedBy": [],
-    "status": "ready",
-    "tier": 0
-  },
-  {
-    "number": 4,
-    "title": "Source and runtime graphs",
-    "blurb": "A persistent file-backed source graph that is the program's identity, plus an ephemeral arena-allocated runtime graph cleaned up by scope lifetimes, no GC.",
-    "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/4",
-    "state": "open",
-    "blockedBy": [],
-    "status": "ready",
-    "tier": 0
-  },
-  {
-    "number": 5,
-    "title": "Syntax is data",
-    "blurb": "The grammar lives in the graph, so a new operator, constructor, or macro is ordinary library work rather than a change to the language.",
-    "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/5",
-    "state": "open",
-    "blockedBy": [],
-    "status": "ready",
-    "tier": 0
-  },
-  {
-    "number": 6,
-    "title": "The identity-recognition engine",
-    "blurb": "One engine for parsing, reflection, and rewrite matching: a merged, stratified recognizer that returns every identity matching at a node.",
-    "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/6",
-    "state": "open",
-    "blockedBy": [],
-    "status": "ready",
-    "tier": 0
-  },
-  {
-    "number": 7,
-    "title": "Incremental re-identification",
-    "blurb": "Edits touch only the tokens they change; each cached identity is a reader, invalidated exactly when the tokens or rules it consulted change.",
-    "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/7",
-    "state": "open",
-    "blockedBy": [],
-    "status": "ready",
-    "tier": 0
-  },
-  {
-    "number": 8,
-    "title": "Interpret by default, JIT on demand",
-    "blurb": "Logic Graph code is interpreted directly; a frozen region JIT-compiles via Cranelift and stays reflectable through the graph it came from. Hot regions are prom…",
-    "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/8",
-    "state": "open",
-    "blockedBy": [],
-    "status": "ready",
-    "tier": 0
-  },
-  {
-    "number": 9,
-    "title": "Compile-time evaluation and metaprogramming",
-    "blurb": "A comptime marker bakes results into the artifact, with the whole language available at parse time over real Logic Graph rather than a macro sublanguage.",
-    "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/9",
-    "state": "open",
-    "blockedBy": [],
-    "status": "ready",
-    "tier": 0
-  },
-  {
-    "number": 10,
-    "title": "The compiler is a library",
-    "blurb": "The checker, optimizer, and the lowerings to native code are ordinary Logos over the graph, not a sealed black box.",
-    "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/10",
-    "state": "open",
-    "blockedBy": [],
-    "status": "ready",
-    "tier": 0
-  },
-  {
-    "number": 11,
-    "title": "One rewriting engine",
-    "blurb": "A single equality-saturation engine for compiler optimization, computer algebra, and user transforms, with first-class rule sets and cost functions.",
-    "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/11",
-    "state": "open",
-    "blockedBy": [],
-    "status": "ready",
-    "tier": 0
-  },
-  {
-    "number": 12,
-    "title": "The Logos IR",
-    "blurb": "A target-agnostic intermediate layer with explicit basic blocks, control flow, memory operations, and types, itself a stratum of the graph. One backend interfa…",
-    "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/12",
-    "state": "open",
-    "blockedBy": [],
-    "status": "ready",
-    "tier": 0
-  },
-  {
-    "number": 13,
-    "title": "User-replaceable allocators",
-    "blurb": "Arena, bump, pool, system, and custom allocators behind one interface, with arenas carrying the graph's cyclic structures.",
-    "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/13",
-    "state": "open",
-    "blockedBy": [],
-    "status": "ready",
-    "tier": 0
-  },
-  {
-    "number": 14,
-    "title": "The borrow checker, one read/write rule",
-    "blurb": "Lexical lifetimes, ownership, and moves with no GC; place- and reference-granular borrows; the same many-readers-or-one-writer rule that also governs visibilit…",
-    "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/14",
-    "state": "open",
-    "blockedBy": [],
-    "status": "ready",
-    "tier": 0
-  },
-  {
-    "number": 15,
-    "title": "Multithreading and task scheduling",
-    "blurb": "Two concurrency shapes the borrow checker proves race-free. parallel for spreads work over disjoint indices, with threads reading shared graph structure throug…",
-    "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/15",
-    "state": "open",
-    "blockedBy": [],
-    "status": "ready",
-    "tier": 0
-  },
-  {
-    "number": 16,
-    "title": "Capability and effect tracking",
-    "blurb": "Effects as capabilities (pure, total, async, thread-pinned, GPU-subset, allocator-bound) tracked through the call graph, so compile-time code is I/O-free and b…",
-    "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/16",
-    "state": "open",
-    "blockedBy": [],
-    "status": "ready",
-    "tier": 0
-  },
-  {
-    "number": 17,
-    "title": "Pay only for what you verify",
-    "blurb": "Opt-in strata: refinement types with SMT discharge, then pre- and post-conditions, then termination measures. Lower code is never burdened by higher guarantees.",
-    "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/17",
-    "state": "open",
-    "blockedBy": [],
-    "status": "ready",
-    "tier": 0
-  },
-  {
-    "number": 18,
-    "title": "Dependent types and a proof kernel",
-    "blurb": "Propositions as types and proofs as programs, checked by a small trusted kernel and erased before codegen, with a stratified universe hierarchy.",
-    "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/18",
-    "state": "open",
-    "blockedBy": [],
-    "status": "ready",
-    "tier": 0
-  },
-  {
-    "number": 19,
-    "title": "The ecumenical proof system",
-    "blurb": "Many theories in one graph, including contradictory ones, each proof carrying the axioms it rests on so that only consistent results combine.",
-    "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/19",
-    "state": "open",
-    "blockedBy": [],
-    "status": "ready",
-    "tier": 0
-  },
-  {
-    "number": 20,
-    "title": "Errors are values",
-    "blurb": "Fallible functions return tagged unions (T | Error), handled explicitly via match; no exceptions and no implicit propagation in the core.",
-    "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/20",
-    "state": "open",
-    "blockedBy": [],
-    "status": "ready",
-    "tier": 0
-  },
-  {
-    "number": 21,
-    "title": "Native interop and the Rust bridge",
-    "blurb": "Calling existing native code in-process across the C ABI with no linker step, independent of which backend compiled either side.",
-    "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/21",
-    "state": "open",
-    "blockedBy": [],
-    "status": "ready",
-    "tier": 0
-  },
-  {
-    "number": 22,
-    "title": "A batteries-included standard library",
-    "blurb": "Single canonical solutions decided and documented before release: collections, strings, numerics, symbolic math, allocators, concurrency, I/O, and verification.",
-    "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/22",
-    "state": "open",
-    "blockedBy": [],
-    "status": "ready",
-    "tier": 0
-  },
-  {
-    "number": 23,
-    "title": "LSP-first editor support",
-    "blurb": "A Logos-written language server bringing rich highlighting, errors, autocomplete, and refactoring to any LSP editor.",
-    "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/23",
-    "state": "open",
-    "blockedBy": [],
-    "status": "ready",
-    "tier": 0
-  },
-  {
-    "number": 24,
-    "title": "Debugger and profiler integration",
-    "blurb": "Standard-protocol DAP debugging, samplers, and flamegraphs, so users keep the tools they already know.",
-    "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/24",
-    "state": "open",
-    "blockedBy": [],
-    "status": "ready",
-    "tier": 0
-  },
-  {
-    "number": 25,
-    "title": "A documentation generator",
-    "blurb": "Generated from the same graph that holds types, examples, capabilities, and proofs, so docs carry verified examples and proof obligations.",
-    "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/25",
-    "state": "open",
-    "blockedBy": [],
-    "status": "ready",
-    "tier": 0
-  },
-  {
-    "number": 26,
-    "title": "A Logos-native structural editor",
-    "blurb": "Semantic editing directly on Logic Graphs and an IDE customizable in Logos: the long-term goal, not on the critical path.",
-    "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/26",
+    "number": 30,
+    "title": "the Type",
+    "blurb": "Everything in Logos has a type and is used to explain the value. The type of type is type itself so that.",
+    "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/30",
     "state": "open",
     "blockedBy": [],
     "status": "ready",
@@ -255,20 +25,36 @@
     "blurb": "The lexer is based on a trie just that each node can also be a regex pattern so that nearly all string identifications you want to do could be represented. Sin…",
     "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/27",
     "state": "open",
-    "blockedBy": [],
-    "status": "ready",
-    "tier": 0
-  },
-  {
-    "number": 2,
-    "title": "A seed that self-hosts",
-    "blurb": "A minimal Rust seed bootstraps the system and processes Logos until it compiles itself; its primitives ship as opaque native code and are ported to reflectable…",
-    "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/2",
-    "state": "open",
     "blockedBy": [
-      11
+      29
     ],
     "status": "blocked",
     "tier": 1
+  },
+  {
+    "number": 28,
+    "title": "the Parser",
+    "blurb": "The parser needs to know what each token from the lexer means and therefore all tokens needs to have a defined type.",
+    "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/28",
+    "state": "open",
+    "blockedBy": [
+      27,
+      30
+    ],
+    "status": "blocked",
+    "tier": 2
+  },
+  {
+    "number": 31,
+    "title": "compilation",
+    "blurb": "Compiling the Logic Graph to binary code. Only functions can be compiled. A set of identities are leafs which represents the IR primitives.",
+    "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/31",
+    "state": "open",
+    "blockedBy": [
+      29,
+      28
+    ],
+    "status": "blocked",
+    "tier": 3
   }
 ]
