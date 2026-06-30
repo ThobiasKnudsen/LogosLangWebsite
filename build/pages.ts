@@ -12,11 +12,8 @@ import {
   type Os,
   type Asset,
 } from "./releases.ts";
-import {
-  tiersOf,
-  STATUS_LABELS,
-  type Station,
-} from "./roadmap.ts";
+import dagre from "@dagrejs/dagre";
+import { STATUS_LABELS, type Station } from "./roadmap.ts";
 
 const DOWNLOAD = "/download/";
 const GITHUB = "https://github.com/ThobiasKnudsen/LogosLang";
@@ -281,86 +278,96 @@ export function privacyPage(): string {
 // derived from the graph (Done / Ready / Blocked). Before any dependency is linked
 // the graph is edgeless, so we show a plain readiness grid until edges exist.
 
-// Layout geometry for the SVG dependency map (a viewBox unit ≈ 1px at full size).
-const NODE_W = 188;
-const NODE_H = 60;
-const H_GAP = 26;
-const V_GAP = 56;
+// Node sizing for the dependency map. Nodes are HTML cards (so the whole blurb is
+// readable and wraps); dagre lays them out and routes edges *around* them, and the
+// edges are drawn in an SVG layer underneath. Width is fixed; height is estimated
+// from the wrapped title + (clamped) blurb so dagre reserves the right room.
+const NODE_W = 234;
+const TITLE_CPL = 26; // ~chars per line at the title font/width
+const BLURB_CPL = 34; // ~chars per line at the blurb font/width
+const TITLE_MAX_LINES = 2;
+const BLURB_MAX_LINES = 4;
 
-/** Greedy-wrap a node title to <= maxLines lines of ~max chars; ellipsize overflow. */
-function wrapTitle(title: string, max = 22, maxLines = 2): string[] {
-  const words = title.split(/\s+/).filter(Boolean);
-  const lines: string[] = [];
-  let cur = "";
-  for (const w of words) {
-    const trial = cur ? `${cur} ${w}` : w;
-    if (trial.length <= max || !cur) {
-      cur = trial;
-    } else {
-      lines.push(cur);
-      cur = w;
-      if (lines.length === maxLines) break;
-    }
-  }
-  if (lines.length < maxLines && cur) lines.push(cur);
-  const consumed = lines.join(" ").split(/\s+/).filter(Boolean).length;
-  if (consumed < words.length && lines.length) {
-    const l = lines[lines.length - 1]!;
-    lines[lines.length - 1] = `${(l.length > max ? l.slice(0, max - 1).trimEnd() : l)}…`;
-  } else {
-    lines.forEach((l, i) => {
-      if (l.length > max) lines[i] = `${l.slice(0, max - 1).trimEnd()}…`;
-    });
-  }
-  return lines.length ? lines : [title];
+function clampLines(text: string, cpl: number, max: number): number {
+  if (!text) return 0;
+  return Math.min(max, Math.max(1, Math.ceil(text.length / cpl)));
 }
 
-/** The bespoke layered dependency map as a single self-contained SVG (no JS). */
+function nodeHeight(s: Station): number {
+  const titleLines = clampLines(s.title, TITLE_CPL, TITLE_MAX_LINES);
+  const blurbLines = clampLines(s.blurb, BLURB_CPL, BLURB_MAX_LINES);
+  // padding (12*2) + num line (16) + title + (gap 5 + blurb)
+  return 24 + 16 + titleLines * 18 + (blurbLines ? 5 + blurbLines * 16 : 0);
+}
+
+/** The dependency map: dagre layout, HTML node cards over an SVG edge layer. */
 function depMapSvg(stations: Station[]): string {
-  const tiers = tiersOf(stations);
-  const maxCount = Math.max(1, ...tiers.map((t) => t.length));
-  const totalW = maxCount * (NODE_W + H_GAP) - H_GAP;
-  const totalH = Math.max(NODE_H, tiers.length * (NODE_H + V_GAP) - V_GAP);
+  const g = new dagre.graphlib.Graph();
+  g.setGraph({ rankdir: "TB", ranksep: 52, nodesep: 30, edgesep: 18, marginx: 18, marginy: 18 });
+  g.setDefaultEdgeLabel(() => ({}));
+  const heights = new Map<number, number>();
+  for (const s of stations) {
+    const h = nodeHeight(s);
+    heights.set(s.number, h);
+    g.setNode(String(s.number), { width: NODE_W, height: h });
+  }
+  // Edge blocker -> dependent, so an arrow points from a blocker down to what it unblocks.
+  for (const s of stations) {
+    for (const b of s.blockedBy) {
+      if (heights.has(b)) g.setEdge(String(b), String(s.number));
+    }
+  }
+  dagre.layout(g);
 
-  const pos = new Map<number, { x: number; y: number; cx: number }>();
-  tiers.forEach((tier, t) => {
-    const tierW = tier.length * (NODE_W + H_GAP) - H_GAP;
-    const offX = (totalW - tierW) / 2;
-    tier.forEach((s, i) => {
-      const x = offX + i * (NODE_W + H_GAP);
-      const y = t * (NODE_H + V_GAP);
-      pos.set(s.number, { x, y, cx: x + NODE_W / 2 });
-    });
-  });
+  // Bounding box over node rects AND routed edge points (dagre can route slightly
+  // outside the node area); translate everything into a 0-based, padded canvas.
+  let minX = Infinity;
+  let minY = Infinity;
+  let maxX = -Infinity;
+  let maxY = -Infinity;
+  const see = (x: number, y: number) => {
+    if (x < minX) minX = x;
+    if (y < minY) minY = y;
+    if (x > maxX) maxX = x;
+    if (y > maxY) maxY = y;
+  };
+  for (const s of stations) {
+    const n = g.node(String(s.number));
+    see(n.x - n.width / 2, n.y - n.height / 2);
+    see(n.x + n.width / 2, n.y + n.height / 2);
+  }
+  const edgePts: { x: number; y: number }[][] = g.edges().map((e) => g.edge(e).points);
+  for (const pts of edgePts) for (const p of pts) see(p.x, p.y);
+  const pad = 8;
+  const offX = pad - minX;
+  const offY = pad - minY;
+  const W = Math.ceil(maxX - minX + pad * 2);
+  const H = Math.ceil(maxY - minY + pad * 2);
 
-  const edges = stations
-    .flatMap((s) => s.blockedBy.map((b) => ({ from: b, to: s.number })))
-    .filter((e) => pos.has(e.from) && pos.has(e.to))
-    .map((e) => {
-      const a = pos.get(e.from)!;
-      const b = pos.get(e.to)!;
-      const y1 = a.y + NODE_H;
-      const y2 = b.y;
-      const dy = Math.max(16, (y2 - y1) * 0.5);
-      return `<path class="depedge" d="M${a.cx.toFixed(1)},${y1.toFixed(1)} C${a.cx.toFixed(1)},${(y1 + dy).toFixed(1)} ${b.cx.toFixed(1)},${(y2 - dy).toFixed(1)} ${b.cx.toFixed(1)},${y2.toFixed(1)}" marker-end="url(#dep-arrow)" />`;
+  const edgesSvg = edgePts
+    .map((pts) => {
+      const d = pts
+        .map((p, i) => `${i === 0 ? "M" : "L"}${(p.x + offX).toFixed(1)},${(p.y + offY).toFixed(1)}`)
+        .join(" ");
+      return `<path class="depedge" d="${d}" marker-end="url(#dep-arrow)" />`;
     })
     .join("");
 
-  const nodes = stations
+  const nodesHtml = stations
     .map((s) => {
-      const p = pos.get(s.number)!;
-      const tspans = wrapTitle(s.title)
-        .map((ln, i) => `<tspan x="13" dy="${i === 0 ? 0 : 15}">${escapeHtml(ln)}</tspan>`)
-        .join("");
-      const tip = escapeHtml(`#${s.number} ${s.title}${s.blurb ? ` — ${s.blurb}` : ""}`);
+      const n = g.node(String(s.number));
+      const h = heights.get(s.number)!;
+      const left = (n.x - NODE_W / 2 + offX).toFixed(1);
+      const top = (n.y - h / 2 + offY).toFixed(1);
       const href = s.url
         ? ` href="${escapeHtml(s.url)}" target="_blank" rel="noopener noreferrer"`
         : "";
-      return `<a class="depnode depnode--${s.status}"${href}><g transform="translate(${p.x.toFixed(1)},${p.y.toFixed(1)})"><title>${tip}</title><rect class="depnode__box" width="${NODE_W}" height="${NODE_H}" rx="11" /><circle class="depnode__dot" cx="${NODE_W - 13}" cy="14" r="4" /><text class="depnode__num" x="13" y="18">#${s.number}</text><text class="depnode__title" x="13" y="36">${tspans}</text></g></a>`;
+      const desc = s.blurb ? `<p class="depnode__desc">${escapeHtml(s.blurb)}</p>` : "";
+      return `<a class="depnode depnode--${s.status}"${href} style="left:${left}px;top:${top}px;width:${NODE_W}px;height:${h}px"><span class="depnode__num">#${s.number}</span><h3 class="depnode__title">${escapeHtml(s.title)}</h3>${desc}</a>`;
     })
     .join("");
 
-  return `<div class="depmap-scroll"><svg class="depmap" width="${Math.max(1, totalW).toFixed(0)}" height="${totalH.toFixed(0)}" viewBox="0 0 ${Math.max(1, totalW).toFixed(0)} ${totalH.toFixed(0)}" role="img" aria-label="Roadmap dependency graph" preserveAspectRatio="xMidYMin meet"><defs><marker id="dep-arrow" viewBox="0 0 8 8" refX="6.5" refY="4" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L8,4 L0,8 z" /></marker></defs>${edges}${nodes}</svg></div>`;
+  return `<div class="depmap-scroll"><div class="depmap" style="width:${W}px;height:${H}px" role="img" aria-label="Roadmap dependency graph"><svg class="depmap__edges" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" aria-hidden="true"><defs><marker id="dep-arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L8,4 L0,8 z" /></marker></defs>${edgesSvg}</svg>${nodesHtml}</div></div>`;
 }
 
 /** Edgeless fallback: a readiness-grouped card grid until dependencies are linked. */

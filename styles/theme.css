@@ -551,15 +551,21 @@ a {
 	background: var(--warn-border);
 }
 
-/* The layered SVG map: rendered at natural size, scrolled horizontally if wide. */
+/* The dependency map: HTML node cards positioned over an SVG edge layer (dagre
+   computes the coordinates at build time). Cards are opaque, so an edge passing
+   nearby never shows through; scrolls horizontally when wider than the page. */
 .depmap-scroll {
 	overflow-x: auto;
 	padding-bottom: 0.5rem;
 }
-svg.depmap {
-	display: block;
-	max-width: none;
-	height: auto;
+.depmap {
+	position: relative;
+}
+.depmap__edges {
+	position: absolute;
+	inset: 0;
+	overflow: visible;
+	pointer-events: none;
 }
 .depedge {
 	fill: none;
@@ -570,48 +576,66 @@ svg.depmap {
 	fill: var(--muted);
 }
 .depnode {
-	cursor: pointer;
+	position: absolute;
+	box-sizing: border-box;
+	display: block;
+	padding: 0.55rem 0.75rem;
+	border: 1px solid var(--hairline);
+	border-left: 3px solid var(--hairline);
+	border-radius: 10px;
+	background: var(--bg);
+	overflow: hidden;
+	text-decoration: none;
+	color: inherit;
+	transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
-.depnode__box {
-	fill: var(--code-bg);
-	stroke: var(--hairline);
-	stroke-width: 1.5;
-	transition: stroke-width 0.15s ease;
-}
-.depnode:hover .depnode__box {
-	stroke-width: 2.5;
+.depnode:hover {
+	box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
 }
 .depnode__num {
-	fill: var(--muted);
 	font-family: var(--mono, monospace);
-	font-size: 11px;
+	font-size: 0.72rem;
+	color: var(--muted);
 }
 .depnode__title {
-	fill: var(--heading);
 	font-family: var(--sans);
-	font-size: 12.5px;
+	font-size: 0.95rem;
 	font-weight: 600;
+	line-height: 1.25;
+	color: var(--heading);
+	margin: 0.1rem 0 0.3rem;
+	display: -webkit-box;
+	-webkit-line-clamp: 2;
+	-webkit-box-orient: vertical;
+	overflow: hidden;
 }
-.depnode__dot {
-	fill: var(--hairline);
+.depnode__desc {
+	margin: 0;
+	font-size: 0.82rem;
+	line-height: 1.4;
+	color: var(--muted);
+	display: -webkit-box;
+	-webkit-line-clamp: 4;
+	-webkit-box-orient: vertical;
+	overflow: hidden;
 }
-.depnode--done .depnode__box {
-	stroke: var(--ok-text);
+.depnode--done {
+	border-left-color: var(--ok-text);
 }
-.depnode--done .depnode__dot {
-	fill: var(--ok-text);
+.depnode--done:hover {
+	border-color: var(--ok-text);
 }
-.depnode--ready .depnode__box {
-	stroke: var(--accent);
+.depnode--ready {
+	border-left-color: var(--accent);
 }
-.depnode--ready .depnode__dot {
-	fill: var(--accent);
+.depnode--ready:hover {
+	border-color: var(--accent);
 }
-.depnode--blocked .depnode__box {
-	stroke: var(--warn-border);
+.depnode--blocked {
+	border-left-color: var(--warn-border);
 }
-.depnode--blocked .depnode__dot {
-	fill: var(--warn-text);
+.depnode--blocked:hover {
+	border-color: var(--warn-border);
 }
 
 /* Edgeless fallback: readiness-coloured cards until dependencies are linked. */
@@ -662,12 +686,6 @@ svg.depmap {
 	line-height: 1.5;
 	color: var(--muted);
 }
-@media (max-width: 34rem) {
-	svg.depmap {
-		max-width: 100%;
-	}
-}
-
 /* ── Footer ───────────────────────────────────────────────────────────────── */
 .site-footer {
 	display: flex;
