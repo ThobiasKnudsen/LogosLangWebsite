@@ -14,6 +14,18 @@ export const OG_IMAGE = '/og.png';
 const SITE_NAME = 'Logos';
 const DEFAULT_DESC = 'Logos: a self-hosting systems language built on radical unification.';
 
+// Analytics IDs, injected at build time (set them in the Cloudflare Pages env).
+// Both empty -> analytics is fully off: no consent banner, no scripts, no cookies.
+// Set GA4_ID (G-XXXXXXXXXX) and/or CLARITY_ID (the Clarity project id) to enable.
+const GA4_ID = process.env.GA4_ID || '';
+const CLARITY_ID = process.env.CLARITY_ID || '';
+const ANALYTICS_ENABLED = !!(GA4_ID || CLARITY_ID);
+// Exposes the ids to the client so it can load them *after* consent. The scripts
+// themselves are NOT here — nothing tracking loads until the visitor accepts.
+const ANALYTICS_CONFIG = ANALYTICS_ENABLED
+	? `\n<script>window.__ANALYTICS__=${JSON.stringify({ ga4: GA4_ID, clarity: CLARITY_ID }).replace(/</g, '\\u003c')};</script>`
+	: '';
+
 /** Join the production origin with an absolute site path (e.g. "/vision/"). */
 export function absUrl(p: string): string {
 	return `${SITE_URL}${p.startsWith('/') ? p : `/${p}`}`;
@@ -69,12 +81,31 @@ function dockHtml(active: string): string {
 }
 
 function footerHtml(): string {
+	const cookieLink = ANALYTICS_ENABLED
+		? `<button type="button" class="footer-link" id="consent-manage">Cookie settings</button>`
+		: '';
 	return `<footer class="site-footer">
   <a class="gh-link" href="${GITHUB}" target="_blank" rel="noopener noreferrer" aria-label="Logos on GitHub">
     <svg viewBox="0 0 16 16" width="18" height="18" aria-hidden="true" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>
     <span>GitHub</span>
   </a>
+  <nav class="footer-links" aria-label="Legal">
+    <a class="footer-link" href="/privacy/">Privacy &amp; Cookies</a>${cookieLink}
+  </nav>
 </footer>`;
+}
+
+// The consent banner: hidden until the client decides (no stored choice -> show).
+// Accept loads Clarity + GA4; Reject loads nothing. Rendered on every page so the
+// choice is offered everywhere, including docs pages that omit the footer.
+function consentBannerHtml(): string {
+	return `<div class="consent" id="consent-banner" role="dialog" aria-label="Cookie consent" aria-live="polite" hidden>
+  <p class="consent__text">We'd like to use cookies for analytics (Microsoft Clarity and Google Analytics) to see how the site is used. Nothing loads unless you accept. See our <a href="/privacy/">Privacy &amp; Cookies</a>.</p>
+  <div class="consent__actions">
+    <button type="button" class="logos-btn logos-btn--ghost" id="consent-reject">Reject</button>
+    <button type="button" class="logos-btn logos-btn--download" id="consent-accept">Accept</button>
+  </div>
+</div>`;
 }
 
 // Inlined in <head> so the theme is applied before first paint (no flash). Default
@@ -139,7 +170,7 @@ export function page(opts: PageOptions): string {
 <meta name="description" content="${escapeHtml(desc)}" />
 <link rel="icon" href="/favicon.svg" />${canonical}${social}
 <link rel="stylesheet" href="/assets/theme.css" />${jsonLd}
-${THEME_INIT}
+${THEME_INIT}${ANALYTICS_CONFIG}
 </head>
 <body class="${opts.bodyClass ?? ''}">
 ${themeToggleHtml()}
@@ -148,6 +179,7 @@ ${header}
 ${opts.main}
 </main>
 ${opts.footer === false ? '' : footerHtml()}
+${ANALYTICS_ENABLED ? consentBannerHtml() : ''}
 <script type="module" src="/assets/main.js"></script>
 </body>
 </html>`;

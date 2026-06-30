@@ -20,6 +20,7 @@ import {
 initThemeToggle();
 initHeroRotator();
 initScrollbars();
+initConsent();
 if (document.getElementById('docs-app')) initDocs();
 if (document.getElementById('dl-grid')) initDownload();
 if (document.getElementById('pg-run')) initPlayground();
@@ -211,6 +212,96 @@ function initDownload(): void {
 				btn.classList.remove('is-copied');
 			}, 1200);
 		});
+	});
+}
+
+// ── Cookie consent + analytics ────────────────────────────────────────────────
+// Analytics (Microsoft Clarity + Google Analytics 4) is cookie-based, so nothing
+// loads until the visitor accepts. The choice is stored in a strictly-necessary
+// `consent` cookie; "Cookie settings" in the footer reopens the banner to change it.
+// If the build didn't bake in any ids (window.__ANALYTICS__ absent), this is a no-op.
+interface AnalyticsConfig {
+	ga4: string;
+	clarity: string;
+}
+
+function loadGa4(id: string): void {
+	const w = window as unknown as { dataLayer?: unknown[]; gtag?: (...a: unknown[]) => void };
+	const s = document.createElement('script');
+	s.async = true;
+	s.src = `https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(id)}`;
+	document.head.appendChild(s);
+	w.dataLayer = w.dataLayer || [];
+	function gtag(...args: unknown[]) {
+		// Each gtag() call is pushed as one array-like entry, as GA expects.
+		w.dataLayer!.push(args);
+	}
+	w.gtag = gtag;
+	gtag('js', new Date());
+	gtag('config', id);
+}
+
+function loadClarity(id: string): void {
+	const w = window as unknown as { clarity?: { (...a: unknown[]): void; q?: unknown[] } };
+	w.clarity =
+		w.clarity ||
+		function (...args: unknown[]) {
+			(w.clarity!.q = w.clarity!.q || []).push(args);
+		};
+	const t = document.createElement('script');
+	t.async = true;
+	t.src = 'https://www.clarity.ms/tag/' + encodeURIComponent(id);
+	const first = document.getElementsByTagName('script')[0];
+	first?.parentNode?.insertBefore(t, first);
+}
+
+function initConsent(): void {
+	const cfg = (window as unknown as { __ANALYTICS__?: AnalyticsConfig }).__ANALYTICS__;
+	if (!cfg) return; // analytics not configured in this build
+	const banner = document.getElementById('consent-banner');
+
+	const readConsent = (): string | null => {
+		const m = document.cookie.match('(?:^|; )consent=([^;]*)');
+		return m ? decodeURIComponent(m[1]!) : null;
+	};
+	const setConsent = (v: string): void => {
+		// ~180 days; strictly necessary (remembers the choice), so no consent needed.
+		document.cookie = `consent=${v}; path=/; max-age=15552000; samesite=lax`;
+	};
+	const show = (): void => {
+		if (banner) banner.hidden = false;
+	};
+	const hide = (): void => {
+		if (banner) banner.hidden = true;
+	};
+
+	let loaded = false;
+	const loadAnalytics = (): void => {
+		if (loaded) return;
+		loaded = true;
+		if (cfg.ga4) loadGa4(cfg.ga4);
+		if (cfg.clarity) loadClarity(cfg.clarity);
+	};
+
+	const consent = readConsent();
+	if (consent === 'granted') loadAnalytics();
+	else if (consent !== 'denied') show(); // no stored choice -> ask
+
+	document.getElementById('consent-accept')?.addEventListener('click', () => {
+		setConsent('granted');
+		hide();
+		loadAnalytics();
+	});
+	document.getElementById('consent-reject')?.addEventListener('click', () => {
+		setConsent('denied');
+		hide();
+	});
+	// Footer "Cookie settings" reopens the banner (delegated, present on most pages).
+	document.addEventListener('click', (e) => {
+		if ((e.target as Element | null)?.id === 'consent-manage') {
+			e.preventDefault();
+			show();
+		}
 	});
 }
 

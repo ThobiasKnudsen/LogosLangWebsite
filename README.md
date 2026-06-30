@@ -179,3 +179,23 @@ Connect this repo in the Cloudflare Pages dashboard with:
 Set `SITE_URL` to the production origin (defaults to `https://logoslang.dev`) so
 canonical URLs, social cards, the sitemap, and `llms.txt` resolve absolutely. Then
 add `logoslang.dev` as a custom domain in the Pages project.
+
+## Analytics & privacy
+
+Analytics is **consent-gated and off by default**. The build reads three optional env
+vars; with the ids unset, there is no banner, no scripts, and no cookies at all:
+
+- `GA4_ID` — Google Analytics 4 measurement id (`G-XXXXXXXXXX`).
+- `CLARITY_ID` — Microsoft Clarity project id (heatmaps, session replays).
+- `PRIVACY_CONTACT` — optional email shown on `/privacy/` (else it points at GitHub).
+
+When either id is set, every page gets a cookie consent banner (`templates.ts` +
+`initConsent` in `client/main.ts`). **Nothing tracking loads until the visitor clicks
+Accept** — only then are the GA4 and Clarity scripts injected and their cookies set.
+Reject loads nothing; the choice lives in a strictly-necessary `consent` cookie, and
+"Cookie settings" in the footer reopens the banner to change it. The `/privacy/` page
+(`privacyPage` in `build/pages.ts`) documents what's collected — review/adjust it.
+
+To turn it on: create the GA4 + Clarity projects, then add `GA4_ID`, `CLARITY_ID`
+(and optionally `PRIVACY_CONTACT`) as **Production environment variables** in the
+Cloudflare Pages project and redeploy.

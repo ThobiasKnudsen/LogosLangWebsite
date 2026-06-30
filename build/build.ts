@@ -24,6 +24,7 @@ import {
   placeholderPage,
   downloadPage,
   playgroundPage,
+  privacyPage,
 } from "./pages.ts";
 import { renderDocsMain } from "./docs-render.ts";
 import { fetchReleases } from "./fetch-releases.ts";
@@ -416,6 +417,17 @@ export async function build(): Promise<void> {
       main: downloadPage(releases),
     }),
   );
+  await writePage(
+    "privacy/index.html",
+    page({
+      title: "Privacy & Cookies",
+      active: "",
+      path: "/privacy/",
+      description:
+        "How logoslang.dev handles data and cookies: consent-gated analytics (Microsoft Clarity, Google Analytics), what is collected, and your choices.",
+      main: privacyPage(),
+    }),
+  );
   const docs = await renderDocs();
 
   // Discovery files: sitemap of canonical URLs, and llms.txt pointing AI
@@ -442,7 +454,8 @@ export async function build(): Promise<void> {
       ]
     : [];
   const allEntries = [...marketing, ...docsLanding, ...docs.docEntries];
-  await writeSitemap(allEntries.map((e) => e.path));
+  // Privacy goes in the sitemap but not llms.txt (it isn't content for AI engines).
+  await writeSitemap([...allEntries.map((e) => e.path), "/privacy/"]);
   await writeLlmsTxt(marketing, docsLanding, docs.docEntries);
 
   await bundleAssets();
