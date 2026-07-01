@@ -11,3 +11,5 @@
 - At the end of each response for the user request you always append to the file, starting with a heading on this format «## response time: YYYY-MM-DD_HH:mm:ss | LLM: [LLM model responding] | user: [user name]». So you would need to ask for the user name if you don't know what it is. You can set "unknown" for that response but also ask for name so that you can set the name later.
 - Under the heading you must write a summary of everything important in the last request and response.
 - You can when ever you want search through previous logs
+
+NEVER write this symbol "—" anywhere. Its a givaway that it is written by Claude. If you ever find that symbol in anywhere you should remove it if you can.
