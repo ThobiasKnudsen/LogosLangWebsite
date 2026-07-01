@@ -88,7 +88,8 @@ function initHeroRotator(): void {
 		cur.classList.add('is-prev');
 		next.classList.add('is-current');
 		i = nextIdx;
-		sizeTo(i, false); // glide the headline to re-center on the new phrase's width
+		// The box holds the widest phrase's width in CSS (inline-grid), so it stays put
+		// as phrases rotate; no per-phrase resizing is needed here.
 	}
 
 	let timer = window.setInterval(advance, INTERVAL);

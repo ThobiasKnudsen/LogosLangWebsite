@@ -116,6 +116,11 @@ export function placeholderPage(title: string, body: string): string {
   return `<section class="placeholder"><h1>${title}</h1><p>${body}</p></section>`;
 }
 
+/** The 404 page. Emitted to `dist/404.html`; Cloudflare serves it with a 404 status. */
+export function notFoundPage(): string {
+  return `<section class="placeholder"><h1>Page not found</h1><p>That page does not exist. Head to the <a href="/">home page</a> or the <a href="/docs/">documentation</a>.</p></section>`;
+}
+
 // ── Download page ─────────────────────────────────────────────────────────────
 // Pick a version; the install command + a direct download button appear for every
 // OS/arch. The release data is baked in at build time (an embedded JSON island);

@@ -25,6 +25,7 @@ import {
   downloadPage,
   playgroundPage,
   privacyPage,
+  notFoundPage,
 } from "./pages.ts";
 import { renderDocsMain } from "./docs-render.ts";
 import { fetchReleases } from "./fetch-releases.ts";
@@ -511,6 +512,18 @@ export async function build(): Promise<void> {
       main: privacyPage(),
     }),
   );
+  // Emitted to dist/404.html; Cloudflare Pages serves it (with a 404 status) for any
+  // route that doesn't match a static file, instead of falling back to the home page.
+  await writePage(
+    "404.html",
+    page({
+      title: "Page not found",
+      active: "",
+      description: "That page does not exist.",
+      main: notFoundPage(),
+    }),
+  );
+
   const docs = await renderDocs(resolveDocsDir());
 
   // Discovery files: sitemap of canonical URLs, and llms.txt pointing AI

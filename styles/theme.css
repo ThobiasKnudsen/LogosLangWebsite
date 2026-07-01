@@ -394,11 +394,10 @@ a {
 	transform: translateY(2svh);
 }
 /* Rotating tail of the headline ("Logos is ___"). All phrases stack in one grid
-   cell; each phrase slides up out of view as the next rises into place. JS sets
-   the box width to the *current* phrase (the items keep their own max-content
-   width) and the width transition glides the whole centered headline to its new
-   width, so it re-centers smoothly on every change. The lead text owns the
-   accessible heading (see .sr-only). */
+   cell; each phrase slides up out of view as the next rises into place. The box's
+   intrinsic width is the WIDEST phrase (inline-grid, below), so it never changes
+   size as phrases rotate and the centered headline stays put. The lead text owns
+   the accessible heading (see .sr-only). */
 /* The fixed wordmark that leads the rotating headline, in the brand blue-purple. */
 .hero__brand {
 	color: var(--logo);
