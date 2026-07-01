@@ -65,7 +65,7 @@ export function homePage(): string {
 
   return `<section class="hero">
   <div class="hero__copy">
-    <h1 class="hero__headline"><span class="hero__brand" aria-hidden="true">Λόγος</span><span class="hero__rotator" data-rotator aria-hidden="true"><span class="hero__rot-item is-current">Is Radical Unification</span><span class="hero__rot-item">Proves Its Own Code Correct</span><span class="hero__rot-item">Borrow-Checks Without a GC</span><span class="hero__rot-item">Optimizes Like Algebra</span><span class="hero__rot-item">Compiles to Native Speed</span><span class="hero__rot-item">Ships Its Compiler as a Library</span><span class="hero__rot-item">Reads and Writes Itself</span><span class="hero__rot-item">Is a Complete Meta-Language</span><span class="hero__rot-item">Mirrors the Mind</span></span><span class="sr-only">Logos: a self-proving meta-language.</span></h1>
+    <h1 class="hero__headline"><span class="hero__brand" aria-hidden="true">Λόγος</span><span class="hero__rotator" data-rotator aria-hidden="true"><span class="hero__rot-item is-current">Is Radical Unification</span><span class="hero__rot-item">Makes English Programmable</span><span class="hero__rot-item">Reflects on Every Aspect of Itself</span><span class="hero__rot-item">Proves Its Own Code Correct</span><span class="hero__rot-item">Borrow-Checks Without a GC</span><span class="hero__rot-item">Optimizes Like Algebra</span><span class="hero__rot-item">Compiles to Native Speed</span><span class="hero__rot-item">Ships Its Compiler as a Library</span><span class="hero__rot-item">Reads and Writes Itself</span><span class="hero__rot-item">Is a Complete Meta-Language</span><span class="hero__rot-item">Mirrors the Mind</span></span><span class="sr-only">Logos: a self-proving meta-language.</span></h1>
     <p class="hero__sub">The compiler, the parser, the files, the build, the types, the borrow checker, the proofs, all in one structure. The same operations that run your code can read, rewrite, optimize, and prove any of it.</p>
     <div class="hero__actions"><a class="logos-btn logos-btn--download" href="${DOWNLOAD}">Download</a><a class="logos-btn logos-btn--ghost" href="/roadmap/">Roadmap</a></div>
     <p class="hero__availability">Pre-alpha build for Windows, Mac and Linux.</p>
@@ -279,53 +279,92 @@ export function privacyPage(): string {
 // milestone boundary are drawn as connectors in the same style. Status is derived from the
 // graph (Done / Ready / Blocked); every roadmap issue must have a milestone.
 
-// Node sizing for the dependency map. Nodes are HTML cards (so the whole blurb is
-// readable and wraps); dagre lays them out and routes edges *around* them, and the
-// edges are drawn in an SVG layer underneath. Width is fixed; height is estimated
-// from the wrapped title + (clamped) blurb so dagre reserves the right room.
-const NODE_W = 250;
-// Conservative chars-per-line (fewer than the box truly fits) so the estimated
-// height OVER-reserves rather than under: nodes never clip their text and dagre
-// never lets them overlap. No line caps; the whole blurb is shown.
-const TITLE_CPL = 24;
-const BLURB_CPL = 30;
+// Node sizing for the dependency map. Nodes are HTML cards; dagre lays them out and
+// routes edges *around* them. Each card aims at a 2:1 (wide:tall) shape: since taller
+// text needs a wider card to keep that ratio, we solve width = 2 * height (height
+// falls as width grows) per card, then clamp. Cards with more text end up both wider
+// and taller, but keep the same proportion; the reserved height hugs the text with no
+// dead space below, and the tags sit on the top row next to `#N`. CSS caps the width
+// to `calc(100vw - 3rem)` so a card is never wider than the window (phones).
+const PADDING_X = 24; // .depnode left + right padding (0.75rem * 2)
+const BLURB_PX_PER_CHAR = 6.7; // average char advance for the blurb font (tight fit)
+const TITLE_PX_PER_CHAR = 7.6; // ... and for the larger title font
+const NODE_MIN_W = 220;
+const NODE_MAX_W = 560;
+const NODE_ASPECT = 2; // target width / height
 
-function estLines(text: string, cpl: number): number {
-  return text ? Math.max(1, Math.ceil(text.length / cpl)) : 0;
+/** Wrapped row count for `text` in a card of `width`, from the font's char advance. */
+function estLines(text: string, width: number, pxPerChar: number): number {
+  if (!text) return 0;
+  const cpl = Math.max(1, (width - PADDING_X) / pxPerChar);
+  return Math.max(1, Math.ceil(text.length / cpl));
 }
 
-// Number of wrapped rows the label chips take, so dagre reserves room for them.
-const LABEL_ROW_H = 22;
-function estLabelRows(labels: { name: string }[] = []): number {
+const LABEL_ROW_H = 22; // height of one wrapped row of label chips
+const NUM_W = 34; // width of the leading "#NN" that shares the top row with the tags
+// Rows the tags add BELOW the top row. The top row already holds `#N` and the first
+// row of tags, so a normal short tag list adds no height at all.
+function estLabelExtraRows(
+  labels: { name: string }[] = [],
+  width: number,
+): number {
   if (!labels || labels.length === 0) return 0;
-  const inner = NODE_W - 24; // card horizontal padding
-  let rowWidth = 0;
+  let avail = width - PADDING_X - NUM_W; // first row shares space with `#N`
+  let cur = 0;
   let rows = 1;
   for (const l of labels) {
     const chipW = l.name.length * 6.5 + 20; // chars + chip padding + gap
-    if (rowWidth > 0 && rowWidth + chipW > inner) {
+    if (cur > 0 && cur + chipW > avail) {
       rows++;
-      rowWidth = chipW;
+      cur = chipW;
+      avail = width - PADDING_X; // wrapped rows use the full width
     } else {
-      rowWidth += chipW;
+      cur += chipW;
     }
   }
-  return rows;
+  return rows - 1;
 }
 
-function nodeHeight(s: Station): number {
-  const titleLines = estLines(s.title, TITLE_CPL);
-  const blurbLines = estLines(s.blurb, BLURB_CPL);
-  const labelRows = estLabelRows(s.labels);
-  // padding + num line + title + (gap + blurb) + (gap + labels) + slack
+/** Reserved card height for a given width: padding + top row (#N + first tag row) +
+ *  any wrapped tag rows + title + (gap + blurb). Hugs the text, no dead space. */
+function heightForWidth(s: Station, width: number): number {
+  const titleLines = estLines(s.title, width, TITLE_PX_PER_CHAR);
+  const blurbLines = estLines(s.blurb, width, BLURB_PX_PER_CHAR);
+  const extraRows = estLabelExtraRows(s.labels, width);
   return (
-    22 +
     18 +
+    22 +
+    extraRows * LABEL_ROW_H +
     titleLines * 19 +
     (blurbLines ? 6 + blurbLines * 18 : 0) +
-    (labelRows ? 6 + labelRows * LABEL_ROW_H : 0) +
-    8
+    4
   );
+}
+
+/**
+ * Width and height for a card, aiming at NODE_ASPECT:1 (wide:tall). height(width) is
+ * non-increasing (wider wraps to fewer rows), so f(w) = w - aspect*height(w) rises
+ * monotonically and has one root: the width at which the ratio is hit. Binary-search
+ * it, clamp to [MIN, MAX], then set the width to exactly aspect*height so the box
+ * reads at the target ratio (short cards that bottom out at MIN stay a bit flatter).
+ */
+function nodeDims(s: Station): { w: number; h: number } {
+  const f = (w: number) => w - NODE_ASPECT * heightForWidth(s, w);
+  let w: number;
+  if (f(NODE_MIN_W) >= 0) w = NODE_MIN_W;
+  else if (f(NODE_MAX_W) <= 0) w = NODE_MAX_W;
+  else {
+    let lo = NODE_MIN_W;
+    let hi = NODE_MAX_W;
+    for (let i = 0; i < 40; i++) {
+      const mid = (lo + hi) / 2;
+      if (f(mid) < 0) lo = mid;
+      else hi = mid;
+    }
+    w = (lo + hi) / 2;
+  }
+  const h = heightForWidth(s, w);
+  return { w: Math.min(NODE_MAX_W, Math.max(NODE_MIN_W, NODE_ASPECT * h)), h };
 }
 
 /** Readable text colour (near-black or white) over a GitHub label's 6-hex colour. */
@@ -339,10 +378,13 @@ function labelTextColor(hex: string): string {
   return lum > 0.6 ? "#1b1b1b" : "#ffffff";
 }
 
-/** A card's label chips, coloured like GitHub. Empty string when there are none. */
-function labelChipsHtml(labels: { name: string; color: string }[] = []): string {
+/** A card's label chips, coloured like GitHub. They sit inline on the top row next to
+ *  `#N`; returns the chip spans (no wrapper), or "" when there are none. */
+function labelChipsHtml(
+  labels: { name: string; color: string }[] = [],
+): string {
   if (!labels || labels.length === 0) return "";
-  const chips = labels
+  return labels
     .map((l) => {
       const valid = /^[0-9a-fA-F]{6}$/.test(l.color);
       const bg = valid ? `#${l.color}` : "var(--code-bg)";
@@ -350,7 +392,6 @@ function labelChipsHtml(labels: { name: string; color: string }[] = []): string 
       return `<span class="deplabel" style="background:${bg};color:${fg}">${escapeHtml(l.name)}</span>`;
     })
     .join("");
-  return `<div class="depnode__labels">${chips}</div>`;
 }
 
 // Padding around the whole graph on the canvas.
@@ -371,11 +412,19 @@ function formatDue(iso: string | null): string {
 }
 
 /** The milestone "finish line": a full-width rule with a label pill on the left. */
-function milestoneLineHtml(band: Band, centerY: number, width: number, height: number): string {
+function milestoneLineHtml(
+  band: Band,
+  centerY: number,
+  width: number,
+  height: number,
+): string {
   const m = band.milestone;
   const total = band.stations.length;
   const done = band.stations.filter((s) => s.status === "done").length;
-  const meta = [formatDue(m.dueOn), total ? `${done}/${total} done` : "no issues yet"]
+  const meta = [
+    formatDue(m.dueOn),
+    total ? `${done}/${total} done` : "no issues yet",
+  ]
     .filter(Boolean)
     .join(" · ");
   const inner =
@@ -397,7 +446,10 @@ function estLabelWidth(band: Band): number {
   const m = band.milestone;
   const total = band.stations.length;
   const done = band.stations.filter((s) => s.status === "done").length;
-  const meta = [formatDue(m.dueOn), total ? `${done}/${total} done` : "no issues yet"]
+  const meta = [
+    formatDue(m.dueOn),
+    total ? `${done}/${total} done` : "no issues yet",
+  ]
     .filter(Boolean)
     .join(" · ");
   // "MILESTONE" flag (~62) + title (serif ~1rem) + meta (0.75rem) + padding/gaps (~54).
@@ -419,18 +471,30 @@ function estLabelWidth(band: Band): number {
 function bandedMap(bands: Band[], stations: Station[]): string {
   const LINE_H = 30; // reserved vertical space for a milestone line (boundary node)
   const LABEL_MARGIN = 28; // clear space between the label column and the graph
-  const LABEL_GUTTER = Math.min(340, Math.round(Math.max(...bands.map(estLabelWidth)) + LABEL_MARGIN));
+  const LABEL_GUTTER = Math.min(
+    340,
+    Math.round(Math.max(...bands.map(estLabelWidth)) + LABEL_MARGIN),
+  );
 
   const g = new dagre.graphlib.Graph();
-  g.setGraph({ rankdir: "TB", ranksep: 40, nodesep: 30, edgesep: 18, marginx: 18, marginy: 18 });
+  g.setGraph({
+    rankdir: "TB",
+    ranksep: 50,
+    nodesep: 16,
+    edgesep: 18,
+    marginx: 18,
+    marginy: 18,
+  });
   g.setDefaultEdgeLabel(() => ({}));
 
   const inSet = new Set(stations.map((s) => s.number));
   const heights = new Map<number, number>();
+  const widths = new Map<number, number>();
   for (const s of stations) {
-    const h = nodeHeight(s);
+    const { w, h } = nodeDims(s);
     heights.set(s.number, h);
-    g.setNode(String(s.number), { width: NODE_W, height: h });
+    widths.set(s.number, w);
+    g.setNode(String(s.number), { width: w, height: h });
   }
   // Real dependency edges (blocker -> dependent); the only ones drawn.
   for (const s of stations) {
@@ -473,7 +537,8 @@ function bandedMap(bands: Band[], stations: Station[]): string {
     see(n.x - n.width / 2, n.y - n.height / 2);
     see(n.x + n.width / 2, n.y + n.height / 2);
   }
-  const isReal = (e: { v: string; w: string }) => !boundaryIds.has(e.v) && !boundaryIds.has(e.w);
+  const isReal = (e: { v: string; w: string }) =>
+    !boundaryIds.has(e.v) && !boundaryIds.has(e.w);
   const realEdges: { x: number; y: number }[][] = g
     .edges()
     .filter(isReal)
@@ -487,13 +552,19 @@ function bandedMap(bands: Band[], stations: Station[]): string {
 
   const offX = CANVAS_PAD + LABEL_GUTTER - minX;
   const offY = CANVAS_PAD - minY;
-  const W = Math.max(Math.ceil(maxX - minX + CANVAS_PAD * 2 + LABEL_GUTTER), 320);
+  const W = Math.max(
+    Math.ceil(maxX - minX + CANVAS_PAD * 2 + LABEL_GUTTER),
+    320,
+  );
   const H = Math.ceil(maxY - minY + CANVAS_PAD * 2);
 
   const edgesHtml = realEdges
     .map((pts) => {
       const d = pts
-        .map((p, i) => `${i === 0 ? "M" : "L"}${(p.x + offX).toFixed(1)},${(p.y + offY).toFixed(1)}`)
+        .map(
+          (p, i) =>
+            `${i === 0 ? "M" : "L"}${(p.x + offX).toFixed(1)},${(p.y + offY).toFixed(1)}`,
+        )
         .join(" ");
       return `<path class="depedge" d="${d}" marker-end="url(#dep-arrow)" />`;
     })
@@ -503,14 +574,17 @@ function bandedMap(bands: Band[], stations: Station[]): string {
     .map((s) => {
       const n = g.node(String(s.number));
       const h = heights.get(s.number)!;
-      const left = (n.x - NODE_W / 2 + offX).toFixed(1);
+      const w = widths.get(s.number)!;
+      const left = (n.x - w / 2 + offX).toFixed(1);
       const top = (n.y - h / 2 + offY).toFixed(1);
       const href = s.url
         ? ` href="${escapeHtml(s.url)}" target="_blank" rel="noopener noreferrer"`
         : "";
-      const desc = s.blurb ? `<p class="depnode__desc">${escapeHtml(s.blurb)}</p>` : "";
+      const desc = s.blurb
+        ? `<p class="depnode__desc">${escapeHtml(s.blurb)}</p>`
+        : "";
       const labels = labelChipsHtml(s.labels);
-      return `<a class="depnode depnode--${s.status}"${href} style="left:${left}px;top:${top}px;width:${NODE_W}px;height:${h}px"><span class="depnode__num">#${s.number}</span><h3 class="depnode__title">${escapeHtml(s.title)}</h3>${desc}${labels}</a>`;
+      return `<a class="depnode depnode--${s.status}"${href} style="left:${left}px;top:${top}px;width:${w}px;height:${h}px"><div class="depnode__top"><span class="depnode__num">#${s.number}</span>${labels}</div><h3 class="depnode__title">${escapeHtml(s.title)}</h3>${desc}</a>`;
     })
     .join("");
 

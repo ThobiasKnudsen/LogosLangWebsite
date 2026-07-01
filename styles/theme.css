@@ -21,6 +21,10 @@
 	   #fff/#ffffff anywhere on the site. */
 	--white: #fdf8e3;
 	--nav-height: 4.5rem;
+	/* Corner reserved for the fixed theme toggle: its right inset (1.15rem) + track
+	   width (3.6rem) + a gap. The dock keeps this much clear on its right so the
+	   toggle never renders on top of it. */
+	--theme-toggle-reserve: 5.5rem;
 
 	/* Light theme */
 	--bg: #fdf8e3; /* gruvbox cream #fbf1c7, lightened 50% toward white */
@@ -120,10 +124,15 @@ a {
 .dock {
 	position: fixed;
 	inset-block-start: 0.85rem;
-	inset-inline: 0;
+	/* Right gutter reserves the top-right corner for the fixed theme toggle so the
+	   dock never sits under it; a small left gutter keeps it from touching the edge.
+	   Centred within that band on wide screens (via margin + max-width), and simply
+	   fills it on narrow ones, so the right margin is always at least the reserve. */
+	inset-inline: 1rem var(--theme-toggle-reserve);
 	margin-inline: auto;
 	z-index: 50;
-	width: calc(min(72rem, 100% - 2rem) * 0.93); /* 7% narrower than before */
+	width: auto;
+	max-width: 66.96rem; /* was min(72rem, 100% - 2rem) * 0.93 */
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
@@ -676,6 +685,9 @@ a {
 	position: absolute;
 	box-sizing: border-box;
 	display: block;
+	/* The inline width is the build-time layout width; never let a card be wider than
+	   the window, so on a phone it caps to the viewport and wraps a little taller. */
+	max-width: calc(100vw - 3rem);
 	padding: 0.55rem 0.75rem;
 	border: 1px solid var(--hairline);
 	border-left: 3px solid var(--hairline);
@@ -693,6 +705,7 @@ a {
 	font-family: var(--mono, monospace);
 	font-size: 0.72rem;
 	color: var(--muted);
+	flex-shrink: 0;
 }
 .depnode__title {
 	font-family: var(--sans);
@@ -708,13 +721,14 @@ a {
 	line-height: 1.4;
 	color: var(--muted);
 }
-/* GitHub-style label chips inside a node (all of the issue's labels except
-   `roadmap`); colours come from each label's own GitHub colour (set inline). */
-.depnode__labels {
+/* Top row of a node: the issue number, then its GitHub label chips to the right (all
+   labels except `roadmap`; colours come from each label's own GitHub colour, inline).
+   Wraps to a new row when the tags do not fit. */
+.depnode__top {
 	display: flex;
 	flex-wrap: wrap;
-	gap: 4px;
-	margin-top: 0.45rem;
+	align-items: center;
+	gap: 0.28rem 0.4rem;
 }
 .deplabel {
 	font-size: 0.66rem;

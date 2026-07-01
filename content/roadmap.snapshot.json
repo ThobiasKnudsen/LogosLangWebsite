@@ -26,7 +26,12 @@
       "status": "done",
       "tier": 0,
       "milestone": 1,
-      "labels": []
+      "labels": [
+        {
+          "name": "seed",
+          "color": "155878"
+        }
+      ]
     },
     {
       "number": 30,
@@ -40,21 +45,12 @@
       "status": "ready",
       "tier": 1,
       "milestone": 1,
-      "labels": []
-    },
-    {
-      "number": 34,
-      "title": "Proof system",
-      "blurb": "Creating proof system with universe, predicates and proofs.",
-      "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/34",
-      "state": "open",
-      "blockedBy": [
-        30
-      ],
-      "status": "blocked",
-      "tier": 2,
-      "milestone": 2,
-      "labels": []
+      "labels": [
+        {
+          "name": "seed",
+          "color": "155878"
+        }
+      ]
     },
     {
       "number": 36,
@@ -63,13 +59,17 @@
       "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/36",
       "state": "open",
       "blockedBy": [
-        30,
-        29
+        30
       ],
       "status": "blocked",
       "tier": 2,
       "milestone": 1,
-      "labels": []
+      "labels": [
+        {
+          "name": "seed",
+          "color": "155878"
+        }
+      ]
     },
     {
       "number": 27,
@@ -78,45 +78,74 @@
       "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/27",
       "state": "open",
       "blockedBy": [
-        29,
         36
       ],
       "status": "blocked",
       "tier": 3,
       "milestone": 1,
-      "labels": []
+      "labels": [
+        {
+          "name": "seed",
+          "color": "155878"
+        }
+      ]
     },
     {
       "number": 32,
       "title": "Create all fundamental identities",
-      "blurb": "In Logos everything is an identity. For the seed some other identities are needed as well like struct, i32, f64, ., &, @, (, +, language and :=.",
+      "blurb": "In Logos everything is an identity. In the seed other identities are needed as well like struct, i32, f64, ., &, @, (, +, language, :=, for, if, while, fn, -, and '«'. Its not necessary to make an issue for each identity as many will be made together in batches that are unknown beforehand.",
       "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/32",
       "state": "open",
       "blockedBy": [
-        27,
-        30,
-        29
+        27
       ],
       "status": "blocked",
       "tier": 4,
       "milestone": 1,
-      "labels": []
+      "labels": [
+        {
+          "name": "seed",
+          "color": "155878"
+        }
+      ]
     },
     {
       "number": 33,
-      "title": "mut and pub",
-      "blurb": "The seed should have what is needed to define Mut and pub in Logos",
+      "title": "mut, pub and other (new) rw gates",
+      "blurb": "These aren't strictly needed in the seed but they help a lot with safety since everything should only be readable by default and also not everything should be able to read everything. Most likely everything in the seed would need read every other part of the seed and there must be a explicit rw gate for this, just like mut and pub.",
       "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/33",
       "state": "open",
       "blockedBy": [
-        29,
-        27,
-        30
+        27
       ],
       "status": "blocked",
       "tier": 4,
       "milestone": 1,
-      "labels": []
+      "labels": [
+        {
+          "name": "seed",
+          "color": "155878"
+        }
+      ]
+    },
+    {
+      "number": 38,
+      "title": "The «?» identity",
+      "blurb": "«?» is really important to state what is unknown. In any possible state of Logos in the future there will always be unknown things, which means there will always be things to improve, and that is why an explicit identity of what is unknown is needed. When the self-identification system gets made it will start being able to solve what should be in the «?» spots. An example is «sin(x)² + cos(x)² == ?».",
+      "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/38",
+      "state": "open",
+      "blockedBy": [
+        27
+      ],
+      "status": "blocked",
+      "tier": 4,
+      "milestone": 1,
+      "labels": [
+        {
+          "name": "seed",
+          "color": "155878"
+        }
+      ]
     },
     {
       "number": 28,
@@ -125,15 +154,71 @@
       "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/28",
       "state": "open",
       "blockedBy": [
-        27,
-        30,
-        29,
         32,
-        36
+        33,
+        38
       ],
       "status": "blocked",
       "tier": 5,
       "milestone": 1,
+      "labels": [
+        {
+          "name": "seed",
+          "color": "155878"
+        }
+      ]
+    },
+    {
+      "number": 31,
+      "title": "Compiler",
+      "blurb": "Compiling the Logic Graph to binary code. Only functions can be compiled. A set of identities are leafs which represents the IR primitives.",
+      "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/31",
+      "state": "open",
+      "blockedBy": [
+        28
+      ],
+      "status": "blocked",
+      "tier": 6,
+      "milestone": 1,
+      "labels": [
+        {
+          "name": "seed",
+          "color": "155878"
+        }
+      ]
+    },
+    {
+      "number": 37,
+      "title": "Interpreter",
+      "blurb": "The interpreter runs any give Logic Graph function without compiling anything, but it relies on at least the leaves being compiled, because the leaves is the \"ground truth\" in the Logic Graph and everything is fundamentally defined in through leaves at the bottom but the leaves isn't defined in other identities. They are defined but their definitions lies in the compiled and how it converts the leaves to machine-code.",
+      "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/37",
+      "state": "open",
+      "blockedBy": [
+        31
+      ],
+      "status": "blocked",
+      "tier": 7,
+      "milestone": 1,
+      "labels": [
+        {
+          "name": "seed",
+          "color": "155878"
+        }
+      ]
+    },
+    {
+      "number": 34,
+      "title": "Proof system",
+      "blurb": "Creating proof system with universe, predicates and proofs.",
+      "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/34",
+      "state": "open",
+      "blockedBy": [
+        37,
+        38
+      ],
+      "status": "blocked",
+      "tier": 8,
+      "milestone": 2,
       "labels": []
     },
     {
@@ -147,24 +232,8 @@
         34
       ],
       "status": "blocked",
-      "tier": 5,
+      "tier": 9,
       "milestone": 2,
-      "labels": []
-    },
-    {
-      "number": 31,
-      "title": "Compiler",
-      "blurb": "Compiling the Logic Graph to binary code. Only functions can be compiled. A set of identities are leafs which represents the IR primitives.",
-      "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/31",
-      "state": "open",
-      "blockedBy": [
-        29,
-        28,
-        32
-      ],
-      "status": "blocked",
-      "tier": 6,
-      "milestone": 1,
       "labels": []
     }
   ]
