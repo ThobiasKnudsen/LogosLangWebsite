@@ -18,6 +18,7 @@ import {
 } from '../build/releases.ts';
 
 initThemeToggle();
+initNavMenu();
 initHeroRotator();
 initScrollbars();
 initConsent();
@@ -25,13 +26,43 @@ if (document.getElementById('docs-app')) initDocs();
 if (document.getElementById('dl-grid')) initDownload();
 if (document.getElementById('pg-run')) initPlayground();
 
+// ── Nav dropdown (hamburger) ──────────────────────────────────────────────────
+// On narrow screens the inline nav is hidden and this button reveals the same
+// links in a dropdown. Closes on outside click, Escape, or picking a link.
+function initNavMenu(): void {
+	const toggle = document.querySelector<HTMLButtonElement>('.nav-toggle');
+	const menu = document.getElementById('nav-menu');
+	if (!toggle || !menu) return;
+
+	const setOpen = (open: boolean): void => {
+		menu.hidden = !open;
+		toggle.setAttribute('aria-expanded', String(open));
+	};
+
+	toggle.addEventListener('click', (e) => {
+		e.stopPropagation();
+		setOpen(menu.hidden);
+	});
+	document.addEventListener('click', (e) => {
+		if (menu.hidden) return;
+		const t = e.target as Node;
+		if (!menu.contains(t) && !toggle.contains(t)) setOpen(false);
+	});
+	document.addEventListener('keydown', (e) => {
+		if (e.key === 'Escape' && !menu.hidden) setOpen(false);
+	});
+	menu.addEventListener('click', (e) => {
+		if ((e.target as Element)?.closest('a')) setOpen(false);
+	});
+}
+
 // ── Hero headline rotator ─────────────────────────────────────────────────────
 // Cycles the tail of "Logos is ___" through its phrases: the current phrase
-// slides up and out while the next rises into place, and the box width animates
-// to the new phrase so the whole centered headline glides to re-center. Pure
-// progressive enhancement — with JS off (or reduced motion) the first phrase
-// stays shown. Pauses while the pointer is over the rotator so a reader can hold
-// a phrase.
+// slides up and out while the next rises into place. The box reserves the widest
+// phrase's width in CSS, so it never changes size and the brand stays put (no
+// re-centering jitter). Pure progressive enhancement — with JS off (or reduced
+// motion) the first phrase stays shown. Pauses while the pointer is over the
+// rotator so a reader can hold a phrase.
 function initHeroRotator(): void {
 	const rotator = document.querySelector<HTMLElement>('[data-rotator]');
 	if (!rotator) return;
@@ -40,32 +71,6 @@ function initHeroRotator(): void {
 
 	const INTERVAL = 4500;
 	let i = 0;
-
-	// Pin the box to the current phrase's intrinsic width; the CSS width
-	// transition turns each *phrase change* into a smooth re-centering. Sizing
-	// that isn't a phrase change (first paint, font load, resize) is snapped
-	// instantly so it never animates a stray width change.
-	const sizeTo = (idx: number, instant: boolean): void => {
-		// Round up so sub-pixel width never shaves the trailing glyph (the right-side
-		// clip-room in CSS absorbs the extra fraction).
-		const w = `${Math.ceil(items[idx]!.getBoundingClientRect().width)}px`;
-		if (!instant) {
-			rotator.style.width = w;
-			return;
-		}
-		rotator.style.transition = 'none';
-		rotator.style.width = w;
-		void rotator.offsetWidth; // commit before restoring the transition
-		rotator.style.transition = '';
-	};
-
-	// Size to the first phrase from the first paint so the headline starts
-	// centered, then re-measure once webfonts load and on resize (glyph widths
-	// change with both).
-	sizeTo(0, true);
-	const remeasure = (): void => sizeTo(i, true);
-	if (document.fonts?.ready) void document.fonts.ready.then(remeasure);
-	window.addEventListener('resize', remeasure);
 
 	if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 

@@ -73,6 +73,8 @@ function themeToggleHtml(): string {
 </label>`;
 }
 
+const MENU_SVG = `<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><g stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></g></svg>`;
+
 function dockHtml(active: string): string {
 	const links = NAV.map(
 		(n) =>
@@ -81,12 +83,16 @@ function dockHtml(active: string): string {
 			}>${n.label}</a>`
 	).join('');
 
+	// The same links appear inline on wide screens (.nav) and inside the collapsed
+	// dropdown (.nav-menu) on narrow ones, where the hamburger button toggles them.
 	return `<header class="dock">
   <a class="wordmark" href="/" aria-label="Logos home">Λόγος</a>
   <nav class="nav" aria-label="Primary">${links}</nav>
   <div class="dock-right">
+    <button class="nav-toggle" type="button" aria-label="Menu" aria-expanded="false" aria-controls="nav-menu">${MENU_SVG}</button>
     <a class="logos-btn logos-btn--download" href="${DOWNLOAD}">Download</a>
   </div>
+  <nav class="nav-menu" id="nav-menu" aria-label="Primary" hidden>${links}</nav>
 </header>`;
 }
 

@@ -87,6 +87,10 @@
 }
 html {
 	scroll-behavior: smooth;
+	/* Guard: never let a too-wide element (e.g. the hero headline on a phone) add
+	   horizontal scroll that shifts the whole centered layout sideways. `clip`
+	   contains overflow without creating a scroll container. */
+	overflow-x: clip;
 }
 body {
 	margin: 0;
@@ -164,8 +168,64 @@ a {
 	align-items: center;
 	gap: 0.85rem;
 }
+/* Hamburger button + collapsed dropdown. Hidden on wide screens (the inline .nav
+   is shown instead); swapped in below 48rem where .nav is hidden. */
+.nav-toggle {
+	display: none;
+	align-items: center;
+	justify-content: center;
+	width: 2.3rem;
+	height: 2.3rem;
+	padding: 0;
+	border: 1px solid var(--dock-border);
+	border-radius: 8px;
+	background: transparent;
+	color: var(--heading);
+	cursor: pointer;
+}
+.nav-toggle:hover {
+	border-color: var(--logo);
+	color: var(--logo);
+}
+.nav-menu {
+	position: absolute;
+	inset-block-start: calc(100% + 0.5rem);
+	inset-inline-end: 0;
+	min-width: 12rem;
+	display: flex;
+	flex-direction: column;
+	gap: 0.15rem;
+	padding: 0.5rem;
+	border: 1px solid var(--dock-border);
+	border-radius: 12px;
+	background: var(--bg);
+	box-shadow: 0 12px 34px -16px rgba(22, 22, 15, 0.5);
+	z-index: 55;
+}
+.nav-menu[hidden] {
+	display: none;
+}
+.nav-menu .nav-link {
+	padding: 0.55rem 0.75rem;
+	border-radius: 8px;
+}
+.nav-menu .nav-link:hover,
+.nav-menu .nav-link.active {
+	background: var(--hairline);
+}
+
 @media (max-width: 48rem) {
 	.nav {
+		display: none;
+	}
+	.nav-toggle {
+		display: inline-flex;
+	}
+}
+/* Never show the dropdown on wide screens, even if it was toggled open before a
+   resize — the inline nav is authoritative there. */
+@media (min-width: 48.01rem) {
+	.nav-menu {
 		display: none;
 	}
 }
@@ -310,7 +370,14 @@ a {
 	line-height: 1.02;
 	font-weight: 600;
 	letter-spacing: -0.02em;
-	white-space: nowrap;
+	/* Stacked: the brand "Λόγος" is a fixed centered kicker and the rotating phrase
+	   sits centered on its own line directly below. The brand never moves as phrases
+	   rotate (the center never drifts), every phrase is centered on its own line, and
+	   long phrases wrap instead of overflowing — so it holds at any width. */
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	max-width: 100%;
 	margin: 0;
 	color: var(--heading);
 	/* Nudge the headline slightly down; transform keeps the grid's centering of
@@ -326,12 +393,16 @@ a {
 /* The fixed wordmark that leads the rotating headline, in the brand blue-purple. */
 .hero__brand {
 	color: var(--logo);
+	white-space: nowrap; /* keep "Λόγος is" together as one unit */
 }
 .hero__rotator {
 	display: inline-grid;
-	/* Flush-left so the phrase sits right after "Logos is " with no gap; the box
-	   width tracks the phrase (set in JS), so the whole headline still re-centers. */
-	justify-items: start;
+	/* All phrases stack in one grid cell and are centered, so the box's intrinsic
+	   width is the WIDEST phrase and every phrase is centered on the line. max-width
+	   (and the wrap rule below) keep it from ever exceeding the viewport. */
+	justify-items: center;
+	text-align: center;
+	max-width: 100%;
 	vertical-align: bottom;
 	overflow: hidden;
 	line-height: 1.02;
@@ -343,7 +414,6 @@ a {
 	/* A sliver of clip-room on the right so a serif glyph's overhang (the final "e"
 	   in Language) isn't shaved off by the overflow clip. */
 	padding-right: 0.06em;
-	transition: width 1.1s cubic-bezier(0.22, 1, 0.36, 1);
 }
 .hero__rot-item {
 	grid-area: 1 / 1;
@@ -395,6 +465,18 @@ a {
 	color: var(--muted);
 	margin: 0.9rem 0 0;
 	transform: translateY(7svh);
+}
+/* Below ~1280px the longest phrase can't fit on one line, so bound the rotator to
+   the viewport and let phrases wrap (still centered) instead of being clipped. Above
+   it, the grid reserves the widest phrase's width and no wrapping is needed. */
+@media (max-width: 80rem) {
+	.hero__rotator {
+		width: 92vw; /* definite width so wrapped lines have room and stay on-screen */
+	}
+	.hero__rot-item {
+		white-space: normal; /* wrap instead of running off-screen */
+		width: 100%; /* fill the bounded box (overrides the desktop max-content) */
+	}
 }
 
 /* ── Pillars ──────────────────────────────────────────────────────────────── */
