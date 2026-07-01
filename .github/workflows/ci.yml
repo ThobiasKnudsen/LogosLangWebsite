@@ -1,0 +1,32 @@
+name: ci
+
+# Type-check and run the unit-test suites on every pull request and on pushes to
+# main. This is the general code guard; docs-ci.yml separately enforces the docs
+# versioning/freeze model. Kept unfiltered (no `paths:`) so a change anywhere in
+# build/ or client/ is still type-checked and tested — the tests are the site's
+# only regression net for the versioning, release, and roadmap models.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test

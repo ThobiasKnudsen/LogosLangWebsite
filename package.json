@@ -6,11 +6,13 @@
   "scripts": {
     "dev": "tsx build/server.ts",
     "build": "tsx build/build.ts",
+    "typecheck": "tsc --noEmit",
     "test:docs-model": "tsx build/version.test.ts",
     "test:ci-check": "tsx build/ci-check.test.ts",
     "test:releases": "tsx build/releases.test.ts",
     "test:roadmap": "tsx build/roadmap.test.ts",
     "test:new-doc": "tsx build/new-doc.test.ts",
+    "test": "npm run test:docs-model && npm run test:ci-check && npm run test:releases && npm run test:roadmap && npm run test:new-doc",
     "new-doc": "tsx build/new-doc.ts"
   },
   "devDependencies": {
