@@ -15,13 +15,18 @@ Requires **Node 22+** (pinned in `.node-version`).
 npm install
 npm run dev             # dev server at http://localhost:4321 (watch + live-reload)
 npm run build           # production build to ./dist
-npm run test:docs-model # unit-test the docs versioning model
-npm run test:ci-check   # unit-test the CI freeze/forward-only guard
+npm run test:docs-model # unit-test the docs versioning (render) model
 npm run test:releases   # unit-test the release/download model
-npm run test:new-doc    # unit-test the new-doc version picker
-
-npm run new-doc -- reference/operators   # scaffold a new doc, auto-named vX.Y.Z_operators.md
+npm run test:roadmap    # unit-test the roadmap model
 ```
+
+**Docs live in the [LogosLang](https://github.com/ThobiasKnudsen/LogosLang) repo**
+(under `docs/`), not here, so the language and its documentation version together. At
+build time the site reads them from, in order: `$LOGOS_DOCS_DIR` if set; a sibling
+`../LogosLang` checkout (best for local dev: edit docs there and the dev server
+live-reloads); otherwise a shallow clone of LogosLang into `.docs-cache/`. The
+versioning guard and the `new-doc` scaffolder live in that repo too
+(`.github/scripts/`), as plain bash. See "Docs versioning & release" below.
 
 The build fetches LogosLang's GitHub Releases to bake the download page. It never
 fails on a network error; for fast offline builds set `SKIP_RELEASES_FETCH=1`, or
@@ -36,9 +41,11 @@ page.
 - **Markdown** — `markdown-it` for docs, with [Shiki](https://shiki.style) code
   highlighting (dual light/dark via CSS variables). Internal doc links are
   version-less and resolved to `/docs/<section>/` at build time.
-- **Versioned docs** — doc files are named `vX.Y.Z_name.md`; the prefix is the
-  version at which that page's content last changed. The model lives in
-  `build/version.ts` (covered by `build/version.test.ts`). The version picker and
+- **Versioned docs.** Doc files are named `vX.Y.Z_name.md`; the prefix is the
+  version at which that page's content last changed. They live in the LogosLang repo;
+  the *render* model (sections, snapshots, effective version) lives here in
+  `build/version.ts` (covered by `build/version.test.ts`), while the *guard* that
+  enforces the versioning rules lives in LogosLang as bash. The version picker and
   per-page history are server-rendered and progressively enhanced by the client.
 - **Bundling** — [esbuild](https://esbuild.github.io) bundles `client/main.ts` and
   `styles/theme.css` into `dist/assets/`, with self-hosted fonts emitted to
@@ -56,53 +63,59 @@ page.
 ```
 build/build.ts        the static build: pages, docs, sitemap, llms.txt, asset bundle
 build/server.ts       dev server: build, serve dist/, watch, live-reload
-build/version.ts      docs versioning model (sections, snapshots, effective version)
+build/version.ts      docs versioning render model (sections, snapshots, effective version)
 build/version.test.ts unit tests for the versioning model
-build/ci-check.ts     CI guard: prefix validation, freeze + forward-only, release check
-build/ci-check.test.ts unit tests for the CI guard
 build/releases.ts     browser-safe release model: asset-name parsing, install commands
 build/fetch-releases.ts build-time fetch of LogosLang's GitHub Releases (node-only)
 build/releases.test.ts unit tests for the release/download model
-build/new-doc.ts      scaffold a new doc pre-named with the correct version prefix
-build/new-doc.test.ts unit tests for the new-doc version picker
 build/markdown.ts     markdown-it + Shiki + version-less link resolution
 build/docs-render.ts  server-side render of a docs page (tree, version nav, article)
 build/pages.ts        marketing pages (home hero, vision, roadmap, placeholders)
 build/templates.ts    shared HTML shell: dock, footer, <head>, theme script
 client/main.ts        client runtime: theme toggle, hero rotator, docs hydration
-content/docs/**        documentation pages (vX.Y.Z_name.md)
 styles/theme.css       light/dark wisprflow theme: tokens, fonts, components
 public/                static assets copied verbatim (favicon, og.png, robots.txt)
 ```
 
+The documentation pages (`vX.Y.Z_name.md`) live in the LogosLang repo under `docs/`,
+fetched at build time. The guard + scaffolder that enforce their naming live there too
+(`.github/scripts/docs-check.sh`, `new-doc.sh`).
+
 ## Docs versioning & release (CI/CD)
 
-Docs versions are driven by **LogosLang's git tags**, and old snapshots are frozen
-once released. Two workflows enforce this; the logic is `build/ci-check.ts`.
+Docs live in the **LogosLang** repo (`docs/`) and are versioned by **that repo's git
+tags**; old snapshots are frozen once released. The guard runs there, next to the docs,
+as plain bash (`.github/scripts/docs-check.sh`, self-tested by `docs-check.test.sh`) so
+the language repo needs no Node/TypeScript. This website just fetches those files and
+renders them.
 
 **The model in one line:** a doc is `vX.Y.Z_name.md`; you never edit a released file
-in place — you copy it to a newer version and edit the copy. `R` = the newest `vX.Y.Z`
-tag on *this* repo = the frozen line. Versions `<= R` are frozen; `> R` are in progress.
+in place. You copy it to a newer version and edit the copy. `R` = the newest `vX.Y.Z`
+tag on LogosLang = the frozen line. Versions `<= R` are frozen; `> R` are in progress.
 
-New docs are named manually, but `npm run new-doc -- <dir/name>` scaffolds the file
-already prefixed with the right version (the current in-progress line, or one patch
-above the last release) so you don't have to hand-name it.
+New docs are named manually, but `.github/scripts/new-doc.sh <dir/name>` (in LogosLang)
+scaffolds the file already prefixed with the right version (the current in-progress
+line, or one patch above the last release) so you don't have to hand-name it.
 
-**On every pull request** (`.github/workflows/docs-ci.yml` → `validate`):
+**On every LogosLang pull request** (`.github/workflows/docs.yml` there):
 
-- every file under `content/docs` must carry a valid `vX.Y.Z_` prefix;
-- **freeze** — no snapshot `<= R` may be added, modified, or deleted;
-- **forward-only** — changed snapshots must be version `> R`.
+- `test` self-tests the guard;
+- `validate` enforces: every file under `docs/` carries a valid `vX.Y.Z_` prefix;
+  **freeze** (no snapshot `<= R` added, modified, or deleted); **forward-only** (any
+  changed snapshot is version `> R`). Make `validate` a required check on LogosLang.
 
-**On a LogosLang release** — pushing a tag `vX.Y.Z` in `../LogosLang` runs
-`release.yml` there, which (0) **gates** the tag — it must be strict semver `vX.Y.Z`
-and strictly newer than every existing tag, or the run fails before building anything;
-(1) creates the GitHub Release; (2) builds the per-OS/arch artifacts **and a
-WebAssembly build** and uploads them; then (3) sends a `logoslang-release`
-`repository_dispatch` to this repo. The `release` job here verifies every in-progress doc is named exactly
-`vX.Y.Z`, tags this repo `vX.Y.Z` (advancing `R`, freezing those docs permanently),
-and fires a Cloudflare deploy hook so the site rebuilds — the new build *and* docs go
-live together.
+**On a docs push to LogosLang's `main`**, `docs.yml` sends a `docs-sync`
+`repository_dispatch` to this repo; the `rebuild` workflow here fires the Cloudflare
+deploy hook, and the rebuild re-clones the docs, so in-progress edits go live.
+
+**On a LogosLang release**, pushing a tag `vX.Y.Z` in `../LogosLang` runs `release.yml`
+there, which (0) **gates** the tag (strict semver, strictly newer than every existing
+tag) **and verifies the docs** (every in-progress doc named exactly `vX.Y.Z`, via
+`docs-check.sh release`), or the run fails before building anything; (1) creates the
+GitHub Release; (2) builds the per-OS/arch artifacts **and a WebAssembly build** and
+uploads them; then (3) sends a `logoslang-release` `repository_dispatch` to this repo,
+which fires the deploy hook. The tag itself (immutable) freezes those docs. The new
+build *and* docs go live together.
 
 ## Download page & release builds
 
@@ -142,17 +155,19 @@ timeout/terminate kill-switch so runaway user code can't freeze the tab.
 1. **LogosLang repo → Settings → Secrets → Actions:** add `WEBSITE_DISPATCH_TOKEN`, a
    fine-grained PAT scoped to `ThobiasKnudsen/LogosLangWebsite` with
    **Contents: read & write** (the default `GITHUB_TOKEN` cannot dispatch cross-repo).
+   It powers all three cross-repo notifications: `docs-sync`, `roadmap-sync`, and
+   `logoslang-release`.
 2. **This repo → Settings → Secrets → Actions:** add `CLOUDFLARE_DEPLOY_HOOK_URL` (a
-   Cloudflare Pages → Settings → Builds & deployments → Deploy hook URL). The release
-   job POSTs it to rebuild; if unset, that step is skipped.
-3. **This repo → Settings → Branches → add a rule for `main`:** require the
-   **`validate`** status check to pass before merging, and require a pull request
-   (so nothing reaches `main` without the guard). Optionally restrict force-pushes.
-4. **This repo → Settings → Rules → Tags (optional):** add a tag ruleset for `v*`
+   Cloudflare Pages → Settings → Builds & deployments → Deploy hook URL). The `rebuild`
+   workflow POSTs it; if unset, that step is skipped.
+3. **LogosLang repo → Settings → Branches → add a rule for `main`:** require the
+   **`validate`** status check (from LogosLang's `docs.yml`) to pass before merging,
+   and require a pull request, so no bad doc reaches `main` without the guard.
+4. **LogosLang repo → Settings → Rules → Tags (optional):** add a tag ruleset for `v*`
    that blocks tag deletion/update, so a frozen release tag can never be moved.
 
-That combination — required `validate` check + immutable release tags — is what makes
-a completed version un-revisitable through normal merges.
+That combination (required `validate` check + immutable release tags, both on LogosLang)
+is what makes a completed version un-revisitable through normal merges.
 
 ### Releasing safely (multiple pushes, hotfixes)
 

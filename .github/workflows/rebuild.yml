@@ -1,0 +1,43 @@
+name: rebuild
+
+# The site is built from data that lives in the LogosLang repo (docs under docs/, and
+# the roadmap from `roadmap`-labelled issues), so a change there must trigger a rebuild
+# here. Every trigger just POSTs the Cloudflare deploy hook; the rebuild re-fetches the
+# docs (build/build.ts shallow-clones LogosLang) and the roadmap/releases.
+#
+# repository_dispatch events (all sent by LogosLang, reusing its WEBSITE_DISPATCH_TOKEN):
+#   - docs-sync         a push to LogosLang's main changed docs/ (docs.yml)
+#   - roadmap-sync      a roadmap issue or milestone changed (roadmap-sync.yml)
+#   - logoslang-release a version tag was pushed and artifacts built (release.yml)
+# Plus a daily schedule as a safety net (milestone due-date changes fire no webhook),
+# and a manual button.
+
+on:
+  repository_dispatch:
+    types: [docs-sync, roadmap-sync, logoslang-release]
+  schedule:
+    - cron: "17 6 * * *" # daily at 06:17 UTC
+  workflow_dispatch: {} # allow a manual rebuild from the Actions tab
+
+permissions:
+  contents: read
+
+# Coalesce a burst of events into a single rebuild.
+concurrency:
+  group: rebuild
+  cancel-in-progress: true
+
+jobs:
+  rebuild:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Cloudflare Pages rebuild
+        env:
+          HOOK: ${{ secrets.CLOUDFLARE_DEPLOY_HOOK_URL }}
+          EVENT: ${{ github.event.action || github.event_name }}
+        run: |
+          if [ -n "$HOOK" ]; then
+            curl -sf -X POST "$HOOK" && echo "Triggered Cloudflare rebuild (${EVENT})."
+          else
+            echo "CLOUDFLARE_DEPLOY_HOOK_URL not set; skipping rebuild trigger." >&2
+          fi

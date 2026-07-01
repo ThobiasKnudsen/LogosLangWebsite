@@ -7,11 +7,8 @@
     "dev": "tsx build/server.ts",
     "build": "tsx build/build.ts",
     "test:docs-model": "tsx build/version.test.ts",
-    "test:ci-check": "tsx build/ci-check.test.ts",
     "test:releases": "tsx build/releases.test.ts",
-    "test:roadmap": "tsx build/roadmap.test.ts",
-    "test:new-doc": "tsx build/new-doc.test.ts",
-    "new-doc": "tsx build/new-doc.ts"
+    "test:roadmap": "tsx build/roadmap.test.ts"
   },
   "devDependencies": {
     "@dagrejs/dagre": "^3.0.0",

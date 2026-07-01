@@ -3,7 +3,7 @@ import http from 'node:http';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import chokidar from 'chokidar';
-import { build, ROOT } from './build.ts';
+import { build, ROOT, localDocsDir } from './build.ts';
 
 const DIST = path.join(ROOT, 'dist');
 const PORT = 4321;
@@ -113,10 +113,13 @@ async function main(): Promise<void> {
 	await build();
 	server.listen(PORT, () => console.log(`dev server: http://localhost:${PORT}/`));
 
-	const watcher = chokidar.watch(['content', 'styles', 'client', 'build', 'public'], {
-		cwd: ROOT,
-		ignoreInitial: true,
-	});
+	// Watch the docs too: when LogosLang is checked out next to this repo, editing a
+	// doc there live-reloads the site. (Absolute path, since docs live outside ROOT.)
+	const docsDir = localDocsDir();
+	const watcher = chokidar.watch(
+		['content', 'styles', 'client', 'build', 'public', ...(docsDir ? [docsDir] : [])],
+		{ cwd: ROOT, ignoreInitial: true },
+	);
 	let timer: NodeJS.Timeout | null = null;
 	watcher.on('all', () => {
 		if (timer) clearTimeout(timer);

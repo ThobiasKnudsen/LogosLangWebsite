@@ -84,6 +84,9 @@ out
 dist
 .output
 
+# Shallow clone of LogosLang's docs, fetched at build time (see build/build.ts)
+.docs-cache/
+
 # Gatsby files
 .cache/
 # Comment in the public line in if your project uses Gatsby and not Next.js

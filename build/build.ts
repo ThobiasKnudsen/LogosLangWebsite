@@ -1,7 +1,8 @@
 // Static build: render every docs snapshot to its own static page (real URLs, no
 // SPA shell), emit a structure-only manifest for client hydration, generate the
 // marketing pages, and bundle the client JS + CSS (with self-hosted fonts).
-import { promises as fs } from "node:fs";
+import { promises as fs, existsSync, mkdirSync, rmSync } from "node:fs";
+import { execFileSync } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import * as esbuild from "esbuild";
@@ -34,8 +35,61 @@ export const ROOT = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
   "..",
 );
-const DOCS_DIR = path.join(ROOT, "content/docs");
 const DIST = path.join(ROOT, "dist");
+
+// The docs live in the LogosLang repo (ThobiasKnudsen/LogosLang) under docs/, not in
+// this repo, so the language and its documentation version together. resolveDocsDir()
+// locates them, in order of preference:
+//   1. $LOGOS_DOCS_DIR   an explicit path (CI override / offline preview)
+//   2. ../LogosLang/docs a local sibling checkout (best for dev: live edits, no clone)
+//   3. a shallow clone of LogosLang into .docs-cache/ (Cloudflare / CI build)
+const DOCS_REPO =
+  process.env.LOGOS_DOCS_REPO ??
+  "https://github.com/ThobiasKnudsen/LogosLang.git";
+const DOCS_REF = process.env.LOGOS_DOCS_REF ?? "main";
+const DOCS_CACHE = path.join(ROOT, ".docs-cache", "logoslang");
+
+/** A local LogosLang docs checkout to render from without cloning, or null. */
+export function localDocsDir(): string | null {
+  const override = process.env.LOGOS_DOCS_DIR;
+  if (override) return path.resolve(override);
+  const sibling = path.resolve(ROOT, "..", "LogosLang", "docs");
+  return existsSync(sibling) ? sibling : null;
+}
+
+/** Shallow-clone (or refresh) LogosLang's docs into the cache; returns its docs/ dir. */
+function cloneDocs(): string {
+  const run = (args: string[], cwd?: string) =>
+    execFileSync("git", args, { cwd, stdio: ["ignore", "ignore", "inherit"] });
+  try {
+    if (existsSync(path.join(DOCS_CACHE, ".git"))) {
+      run(["fetch", "--depth", "1", "origin", DOCS_REF], DOCS_CACHE);
+      run(["reset", "--hard", "FETCH_HEAD"], DOCS_CACHE);
+    } else {
+      rmSync(DOCS_CACHE, { recursive: true, force: true });
+      mkdirSync(path.dirname(DOCS_CACHE), { recursive: true });
+      run(["clone", "--depth", "1", "--branch", DOCS_REF, DOCS_REPO, DOCS_CACHE]);
+    }
+  } catch (err) {
+    throw new Error(
+      `failed to fetch docs from ${DOCS_REPO} (ref ${DOCS_REF}). Check out LogosLang ` +
+        `next to this repo, or set LOGOS_DOCS_DIR to a local docs/ checkout. Cause: ${
+          (err as Error).message
+        }`,
+    );
+  }
+  return path.join(DOCS_CACHE, "docs");
+}
+
+/** Resolve the docs source directory, cloning LogosLang if no local copy exists. */
+export function resolveDocsDir(): string {
+  const local = localDocsDir();
+  if (local) {
+    if (!existsSync(local)) throw new Error(`docs directory not found: ${local}`);
+    return local;
+  }
+  return cloneDocs();
+}
 
 async function walk(dir: string): Promise<string[]> {
   const out: string[] = [];
@@ -97,14 +151,14 @@ function metaDescription(html: string): string {
  * static page per snapshot at `/docs/<id>/v<ver>/`, a canonical `/docs/<id>/` for
  * each section's newest snapshot, and a `/docs/` landing on the first section.
  */
-async function renderDocs(): Promise<{
+async function renderDocs(docsDir: string): Promise<{
   sectionCount: number;
   versions: string[];
   docEntries: { path: string; title: string; desc: string }[];
 }> {
-  const absFiles = await walk(DOCS_DIR);
+  const absFiles = await walk(docsDir);
   const relFiles = absFiles.map((f) =>
-    path.relative(DOCS_DIR, f).split(path.sep).join("/"),
+    path.relative(docsDir, f).split(path.sep).join("/"),
   );
   const sections = buildSections(relFiles);
   const sectionIds = new Set(sections.map((s) => s.id));
@@ -114,7 +168,7 @@ async function renderDocs(): Promise<{
   const titleBySnap = new Map<string, string>();
   for (const section of sections) {
     for (const snap of section.snapshots) {
-      const source = await fs.readFile(path.join(DOCS_DIR, snap.file), "utf8");
+      const source = await fs.readFile(path.join(docsDir, snap.file), "utf8");
       const { title, html } = await renderMarkdown(
         source,
         section.dir,
@@ -455,7 +509,7 @@ export async function build(): Promise<void> {
       main: privacyPage(),
     }),
   );
-  const docs = await renderDocs();
+  const docs = await renderDocs(resolveDocsDir());
 
   // Discovery files: sitemap of canonical URLs, and llms.txt pointing AI
   // answer-engines at the same content with one-line summaries.
