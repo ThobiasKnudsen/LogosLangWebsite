@@ -29,7 +29,7 @@
 	--muted: #6f6a60;
 	--hairline: #e7e1d6;
 	--accent: #4f46e5;
-	--dock-bg: rgba(252, 251, 248, 0.82);
+	--dock-bg: rgba(250, 246, 237, 0.85); /* warm creamy panel, not a bleach white */
 	--dock-border: #e1dacd;
 	--track: #ddd7ca;
 	--track-on: #cfc9bb;
@@ -420,7 +420,8 @@ a {
 	border: 1px solid var(--hairline);
 	border-radius: 12px;
 	padding: 1.4rem;
-	background: var(--dock-bg);
+	/* Warm creamy off-white surface (themed), not the near-bleach --dock-bg. */
+	background: var(--code-bg);
 }
 .pillar h3 {
 	margin: 0 0 0.6rem;
