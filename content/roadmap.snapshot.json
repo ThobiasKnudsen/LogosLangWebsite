@@ -10,18 +10,8 @@
     "tier": 0
   },
   {
-    "number": 30,
-    "title": "the Type",
-    "blurb": "Everything in Logos has a type and is used to explain the value. The type of type is type itself so that.",
-    "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/30",
-    "state": "open",
-    "blockedBy": [],
-    "status": "ready",
-    "tier": 0
-  },
-  {
     "number": 27,
-    "title": "the Lexer",
+    "title": "Lexer",
     "blurb": "The lexer is based on a trie just that each node can also be a regex pattern so that nearly all string identifications you want to do could be represented. Since its a trie its both fast but also mutable. The default way to identify anything in any string of any language is through this global lexer. It resolves multiple equal strings by checking what context in the Logic Graph it is declared.",
     "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/27",
     "state": "open",
@@ -32,12 +22,39 @@
     "tier": 1
   },
   {
-    "number": 28,
-    "title": "the Parser",
-    "blurb": "The parser needs to know what each token from the lexer means and therefore all tokens needs to have a defined type.",
-    "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/28",
+    "number": 30,
+    "title": "Type",
+    "blurb": "Everything in Logos has a type and is used to explain the value. The type of type is type itself so that.",
+    "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/30",
     "state": "open",
     "blockedBy": [
+      29
+    ],
+    "status": "blocked",
+    "tier": 1
+  },
+  {
+    "number": 32,
+    "title": "Create all fundamental identities",
+    "blurb": "In Logos everything is an identity. For the seed some other identities are needed as well like struct, i32, f64, ., &, @, (, +, language and :=.",
+    "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/32",
+    "state": "open",
+    "blockedBy": [
+      27,
+      30,
+      29
+    ],
+    "status": "blocked",
+    "tier": 2
+  },
+  {
+    "number": 33,
+    "title": "mut and pub",
+    "blurb": "The seed should have what is needed to define Mut and pub in Logos",
+    "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/33",
+    "state": "open",
+    "blockedBy": [
+      29,
       27,
       30
     ],
@@ -45,16 +62,57 @@
     "tier": 2
   },
   {
+    "number": 34,
+    "title": "Proof system",
+    "blurb": "Creating proof system with universe, predicates and proofs.",
+    "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/34",
+    "state": "open",
+    "blockedBy": [
+      30
+    ],
+    "status": "blocked",
+    "tier": 2
+  },
+  {
+    "number": 28,
+    "title": "Parser",
+    "blurb": "The parser needs to know what each token from the lexer means and therefore all tokens needs to have a defined type.",
+    "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/28",
+    "state": "open",
+    "blockedBy": [
+      27,
+      30,
+      29,
+      32
+    ],
+    "status": "blocked",
+    "tier": 3
+  },
+  {
+    "number": 35,
+    "title": "Borrow checker",
+    "blurb": "",
+    "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/35",
+    "state": "open",
+    "blockedBy": [
+      33,
+      34
+    ],
+    "status": "blocked",
+    "tier": 3
+  },
+  {
     "number": 31,
-    "title": "compilation",
+    "title": "Compiler",
     "blurb": "Compiling the Logic Graph to binary code. Only functions can be compiled. A set of identities are leafs which represents the IR primitives.",
     "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/31",
     "state": "open",
     "blockedBy": [
       29,
-      28
+      28,
+      32
     ],
     "status": "blocked",
-    "tier": 3
+    "tier": 4
   }
 ]
