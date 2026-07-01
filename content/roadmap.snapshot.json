@@ -1,118 +1,171 @@
-[
-  {
-    "number": 29,
-    "title": "Dyad",
-    "blurb": "The fundamental node constructing the entire Logic Graph. It is a struct only containing two fields: type and value. The type explains how the value should be interpreted. It is named Dyad because it contains exactly two fields",
-    "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/29",
-    "state": "open",
-    "blockedBy": [],
-    "status": "ready",
-    "tier": 0
-  },
-  {
-    "number": 27,
-    "title": "Lexer",
-    "blurb": "The lexer is based on a trie just that each node can also be a regex pattern so that nearly all string identifications you want to do could be represented. Since its a trie its both fast but also mutable. The default way to identify anything in any string of any language is through this global lexer. It resolves multiple equal strings by checking what context in the Logic Graph it is declared.",
-    "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/27",
-    "state": "open",
-    "blockedBy": [
-      29
-    ],
-    "status": "blocked",
-    "tier": 1
-  },
-  {
-    "number": 30,
-    "title": "Type",
-    "blurb": "Everything in Logos has a type and is used to explain the value. The type of type is type itself so that.",
-    "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/30",
-    "state": "open",
-    "blockedBy": [
-      29
-    ],
-    "status": "blocked",
-    "tier": 1
-  },
-  {
-    "number": 32,
-    "title": "Create all fundamental identities",
-    "blurb": "In Logos everything is an identity. For the seed some other identities are needed as well like struct, i32, f64, ., &, @, (, +, language and :=.",
-    "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/32",
-    "state": "open",
-    "blockedBy": [
-      27,
-      30,
-      29
-    ],
-    "status": "blocked",
-    "tier": 2
-  },
-  {
-    "number": 33,
-    "title": "mut and pub",
-    "blurb": "The seed should have what is needed to define Mut and pub in Logos",
-    "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/33",
-    "state": "open",
-    "blockedBy": [
-      29,
-      27,
-      30
-    ],
-    "status": "blocked",
-    "tier": 2
-  },
-  {
-    "number": 34,
-    "title": "Proof system",
-    "blurb": "Creating proof system with universe, predicates and proofs.",
-    "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/34",
-    "state": "open",
-    "blockedBy": [
-      30
-    ],
-    "status": "blocked",
-    "tier": 2
-  },
-  {
-    "number": 28,
-    "title": "Parser",
-    "blurb": "The parser needs to know what each token from the lexer means and therefore all tokens needs to have a defined type.",
-    "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/28",
-    "state": "open",
-    "blockedBy": [
-      27,
-      30,
-      29,
-      32
-    ],
-    "status": "blocked",
-    "tier": 3
-  },
-  {
-    "number": 35,
-    "title": "Borrow checker",
-    "blurb": "",
-    "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/35",
-    "state": "open",
-    "blockedBy": [
-      33,
-      34
-    ],
-    "status": "blocked",
-    "tier": 3
-  },
-  {
-    "number": 31,
-    "title": "Compiler",
-    "blurb": "Compiling the Logic Graph to binary code. Only functions can be compiled. A set of identities are leafs which represents the IR primitives.",
-    "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/31",
-    "state": "open",
-    "blockedBy": [
-      29,
-      28,
-      32
-    ],
-    "status": "blocked",
-    "tier": 4
-  }
-]
+{
+  "milestones": [
+    {
+      "number": 1,
+      "title": "v1",
+      "dueOn": null,
+      "state": "open",
+      "url": "https://github.com/ThobiasKnudsen/LogosLang/milestone/1"
+    },
+    {
+      "number": 2,
+      "title": "after v1",
+      "dueOn": null,
+      "state": "open",
+      "url": "https://github.com/ThobiasKnudsen/LogosLang/milestone/2"
+    }
+  ],
+  "stations": [
+    {
+      "number": 29,
+      "title": "Dyad",
+      "blurb": "The fundamental node constructing the entire Logic Graph. It is a struct only containing two fields: type and value. The type explains how the value should be interpreted. It is named Dyad because it contains exactly two fields",
+      "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/29",
+      "state": "closed",
+      "blockedBy": [],
+      "status": "done",
+      "tier": 0,
+      "milestone": 1,
+      "labels": []
+    },
+    {
+      "number": 30,
+      "title": "Type",
+      "blurb": "Everything in Logos has a type and is used to explain the value. The type of type is type itself",
+      "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/30",
+      "state": "open",
+      "blockedBy": [
+        29
+      ],
+      "status": "ready",
+      "tier": 1,
+      "milestone": 1,
+      "labels": []
+    },
+    {
+      "number": 34,
+      "title": "Proof system",
+      "blurb": "Creating proof system with universe, predicates and proofs.",
+      "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/34",
+      "state": "open",
+      "blockedBy": [
+        30
+      ],
+      "status": "blocked",
+      "tier": 2,
+      "milestone": 2,
+      "labels": []
+    },
+    {
+      "number": 36,
+      "title": "Token",
+      "blurb": "Lexer creates tokens and the parser consumes tokens. Each token contains an identity that is identified by the lexer but is not instantiated yet. The parser is what instantiates the identities in the tokens and removes the tokens.",
+      "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/36",
+      "state": "open",
+      "blockedBy": [
+        30,
+        29
+      ],
+      "status": "blocked",
+      "tier": 2,
+      "milestone": 1,
+      "labels": []
+    },
+    {
+      "number": 27,
+      "title": "Lexer",
+      "blurb": "The lexer is based on a trie just that each node can also be a regex pattern so that nearly all string identifications you want to do could be represented. Since its a trie its both fast but also mutable. The default way to identify anything in any string of any language is through this global lexer. It resolves multiple equal strings by checking what context in the Logic Graph it is declared.",
+      "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/27",
+      "state": "open",
+      "blockedBy": [
+        29,
+        36
+      ],
+      "status": "blocked",
+      "tier": 3,
+      "milestone": 1,
+      "labels": []
+    },
+    {
+      "number": 32,
+      "title": "Create all fundamental identities",
+      "blurb": "In Logos everything is an identity. For the seed some other identities are needed as well like struct, i32, f64, ., &, @, (, +, language and :=.",
+      "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/32",
+      "state": "open",
+      "blockedBy": [
+        27,
+        30,
+        29
+      ],
+      "status": "blocked",
+      "tier": 4,
+      "milestone": 1,
+      "labels": []
+    },
+    {
+      "number": 33,
+      "title": "mut and pub",
+      "blurb": "The seed should have what is needed to define Mut and pub in Logos",
+      "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/33",
+      "state": "open",
+      "blockedBy": [
+        29,
+        27,
+        30
+      ],
+      "status": "blocked",
+      "tier": 4,
+      "milestone": 1,
+      "labels": []
+    },
+    {
+      "number": 28,
+      "title": "Parser",
+      "blurb": "The parser needs to know what each token from the lexer means and therefore all tokens needs to have a defined type.",
+      "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/28",
+      "state": "open",
+      "blockedBy": [
+        27,
+        30,
+        29,
+        32,
+        36
+      ],
+      "status": "blocked",
+      "tier": 5,
+      "milestone": 1,
+      "labels": []
+    },
+    {
+      "number": 35,
+      "title": "Borrow checker",
+      "blurb": "",
+      "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/35",
+      "state": "open",
+      "blockedBy": [
+        33,
+        34
+      ],
+      "status": "blocked",
+      "tier": 5,
+      "milestone": 2,
+      "labels": []
+    },
+    {
+      "number": 31,
+      "title": "Compiler",
+      "blurb": "Compiling the Logic Graph to binary code. Only functions can be compiled. A set of identities are leafs which represents the IR primitives.",
+      "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/31",
+      "state": "open",
+      "blockedBy": [
+        29,
+        28,
+        32
+      ],
+      "status": "blocked",
+      "tier": 6,
+      "milestone": 1,
+      "labels": []
+    }
+  ]
+}

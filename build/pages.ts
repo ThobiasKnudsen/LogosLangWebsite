@@ -13,7 +13,7 @@ import {
   type Asset,
 } from "./releases.ts";
 import dagre from "@dagrejs/dagre";
-import { STATUS_LABELS, type Station } from "./roadmap.ts";
+import { bandsOf, type Band, type Roadmap, type Station } from "./roadmap.ts";
 
 const DOWNLOAD = "/download/";
 const GITHUB = "https://github.com/ThobiasKnudsen/LogosLang";
@@ -270,13 +270,14 @@ export function privacyPage(): string {
 </article>`;
 }
 
-// The roadmap is the DEPENDENCY GRAPH of LogosLang's `roadmap`-labelled GitHub
-// issues (build/roadmap.ts + fetch-roadmap.ts) — the issue tracker is the single
-// source of truth, and there are no categories. Each issue is a node; its
-// "blocked by" links are the edges. Nodes are laid out in dependency tiers (build
-// order) with arrows pointing from a blocker down to what it unblocks; status is
-// derived from the graph (Done / Ready / Blocked). Before any dependency is linked
-// the graph is edgeless, so we show a plain readiness grid until edges exist.
+// The roadmap is LogosLang's `roadmap`-labelled GitHub issues grouped into
+// MILESTONE BANDS (build/roadmap.ts + fetch-roadmap.ts). The issue tracker is the
+// single source of truth. Each milestone is a horizontal "finish line": its issues
+// render in the band directly above the line, and every later milestone (and its
+// issues) renders below it. Within a band the "blocked by" links are drawn as
+// arrows (dagre, from a blocker down to what it unblocks); dependencies that cross a
+// milestone boundary are drawn as connectors in the same style. Status is derived from the
+// graph (Done / Ready / Blocked); every roadmap issue must have a milestone.
 
 // Node sizing for the dependency map. Nodes are HTML cards (so the whole blurb is
 // readable and wraps); dagre lays them out and routes edges *around* them, and the
@@ -285,7 +286,7 @@ export function privacyPage(): string {
 const NODE_W = 250;
 // Conservative chars-per-line (fewer than the box truly fits) so the estimated
 // height OVER-reserves rather than under: nodes never clip their text and dagre
-// never lets them overlap. No line caps — the whole blurb is shown.
+// never lets them overlap. No line caps; the whole blurb is shown.
 const TITLE_CPL = 24;
 const BLURB_CPL = 30;
 
@@ -293,34 +294,170 @@ function estLines(text: string, cpl: number): number {
   return text ? Math.max(1, Math.ceil(text.length / cpl)) : 0;
 }
 
+// Number of wrapped rows the label chips take, so dagre reserves room for them.
+const LABEL_ROW_H = 22;
+function estLabelRows(labels: { name: string }[] = []): number {
+  if (!labels || labels.length === 0) return 0;
+  const inner = NODE_W - 24; // card horizontal padding
+  let rowWidth = 0;
+  let rows = 1;
+  for (const l of labels) {
+    const chipW = l.name.length * 6.5 + 20; // chars + chip padding + gap
+    if (rowWidth > 0 && rowWidth + chipW > inner) {
+      rows++;
+      rowWidth = chipW;
+    } else {
+      rowWidth += chipW;
+    }
+  }
+  return rows;
+}
+
 function nodeHeight(s: Station): number {
   const titleLines = estLines(s.title, TITLE_CPL);
   const blurbLines = estLines(s.blurb, BLURB_CPL);
-  // padding + num line + title + (gap + blurb) + slack
-  return 22 + 18 + titleLines * 19 + (blurbLines ? 6 + blurbLines * 18 : 0) + 8;
+  const labelRows = estLabelRows(s.labels);
+  // padding + num line + title + (gap + blurb) + (gap + labels) + slack
+  return (
+    22 +
+    18 +
+    titleLines * 19 +
+    (blurbLines ? 6 + blurbLines * 18 : 0) +
+    (labelRows ? 6 + labelRows * LABEL_ROW_H : 0) +
+    8
+  );
 }
 
-/** The dependency map: dagre layout, HTML node cards over an SVG edge layer. */
-function depMapSvg(stations: Station[]): string {
+/** Readable text colour (near-black or white) over a GitHub label's 6-hex colour. */
+function labelTextColor(hex: string): string {
+  if (!/^[0-9a-fA-F]{6}$/.test(hex)) return "var(--heading)";
+  const r = parseInt(hex.slice(0, 2), 16);
+  const g = parseInt(hex.slice(2, 4), 16);
+  const b = parseInt(hex.slice(4, 6), 16);
+  // Perceptual luminance; light labels get dark text, dark labels get white.
+  const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  return lum > 0.6 ? "#1b1b1b" : "#ffffff";
+}
+
+/** A card's label chips, coloured like GitHub. Empty string when there are none. */
+function labelChipsHtml(labels: { name: string; color: string }[] = []): string {
+  if (!labels || labels.length === 0) return "";
+  const chips = labels
+    .map((l) => {
+      const valid = /^[0-9a-fA-F]{6}$/.test(l.color);
+      const bg = valid ? `#${l.color}` : "var(--code-bg)";
+      const fg = valid ? labelTextColor(l.color) : "var(--heading)";
+      return `<span class="deplabel" style="background:${bg};color:${fg}">${escapeHtml(l.name)}</span>`;
+    })
+    .join("");
+  return `<div class="depnode__labels">${chips}</div>`;
+}
+
+// Padding around the whole graph on the canvas.
+const CANVAS_PAD = 8;
+
+/** A milestone's due date as a compact label, or "" when there is no due date. */
+function formatDue(iso: string | null): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  const when = d.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+  return `Due ${when}`;
+}
+
+/** The milestone "finish line": a full-width rule with a label pill on the left. */
+function milestoneLineHtml(band: Band, centerY: number, width: number, height: number): string {
+  const m = band.milestone;
+  const total = band.stations.length;
+  const done = band.stations.filter((s) => s.status === "done").length;
+  const meta = [formatDue(m.dueOn), total ? `${done}/${total} done` : "no issues yet"]
+    .filter(Boolean)
+    .join(" · ");
+  const inner =
+    `<span class="msline__flag">Milestone</span>` +
+    `<span class="msline__title">${escapeHtml(m.title)}</span>` +
+    (meta ? `<span class="msline__meta">${escapeHtml(meta)}</span>` : "");
+  const label = m.url
+    ? `<a class="msline__label" href="${escapeHtml(m.url)}" target="_blank" rel="noopener noreferrer">${inner}</a>`
+    : `<span class="msline__label">${inner}</span>`;
+  const cls = m.state === "closed" ? " msline--closed" : "";
+  const top = (centerY - height / 2).toFixed(1);
+  return `<div class="msline${cls}" style="left:0;top:${top}px;width:${width}px;height:${height}px">${label}<span class="msline__line"></span></div>`;
+}
+
+/** Rough pixel width of a milestone label pill, used to size the left gutter so no
+ *  node (and thus no cross-band edge) is placed behind a label. Over-estimates
+ *  rather than under, so labels always clear the graph. */
+function estLabelWidth(band: Band): number {
+  const m = band.milestone;
+  const total = band.stations.length;
+  const done = band.stations.filter((s) => s.status === "done").length;
+  const meta = [formatDue(m.dueOn), total ? `${done}/${total} done` : "no issues yet"]
+    .filter(Boolean)
+    .join(" · ");
+  // "MILESTONE" flag (~62) + title (serif ~1rem) + meta (0.75rem) + padding/gaps (~54).
+  return 62 + m.title.length * 8.5 + meta.length * 5.6 + 54;
+}
+
+/**
+ * Lay out the whole roadmap as ONE dagre graph so every dependency edge (within a
+ * milestone or across milestones) is ranked and routed the same way, around nodes.
+ *
+ * Milestone banding is enforced with an invisible boundary node per milestone: every
+ * issue in a milestone links down to its boundary, and the boundary links down to the
+ * next milestone's issues. That forces each milestone's issues above its line and
+ * below all earlier ones, while dagre still routes cross-milestone edges around nodes.
+ * Boundary/ordering edges are never drawn. The milestone line is drawn at its
+ * boundary node's y. The whole graph is shifted right by a LEFT GUTTER wide enough for
+ * the widest label pill, which stays flush-left so edges never cross behind a label.
+ */
+function bandedMap(bands: Band[], stations: Station[]): string {
+  const LINE_H = 30; // reserved vertical space for a milestone line (boundary node)
+  const LABEL_MARGIN = 28; // clear space between the label column and the graph
+  const LABEL_GUTTER = Math.min(340, Math.round(Math.max(...bands.map(estLabelWidth)) + LABEL_MARGIN));
+
   const g = new dagre.graphlib.Graph();
-  g.setGraph({ rankdir: "TB", ranksep: 52, nodesep: 30, edgesep: 18, marginx: 18, marginy: 18 });
+  g.setGraph({ rankdir: "TB", ranksep: 40, nodesep: 30, edgesep: 18, marginx: 18, marginy: 18 });
   g.setDefaultEdgeLabel(() => ({}));
+
+  const inSet = new Set(stations.map((s) => s.number));
   const heights = new Map<number, number>();
   for (const s of stations) {
     const h = nodeHeight(s);
     heights.set(s.number, h);
     g.setNode(String(s.number), { width: NODE_W, height: h });
   }
-  // Edge blocker -> dependent, so an arrow points from a blocker down to what it unblocks.
+  // Real dependency edges (blocker -> dependent); the only ones drawn.
   for (const s of stations) {
     for (const b of s.blockedBy) {
-      if (heights.has(b)) g.setEdge(String(b), String(s.number));
+      if (inSet.has(b)) g.setEdge(String(b), String(s.number));
     }
   }
+
+  // Invisible boundary node + ordering edges per milestone (see the doc comment).
+  const boundaryId = (n: number) => `__ms_${n}`;
+  const boundaryIds = new Set<string>();
+  let prev: string | null = null;
+  for (const band of bands) {
+    const bid = boundaryId(band.milestone.number);
+    boundaryIds.add(bid);
+    g.setNode(bid, { width: 1, height: LINE_H });
+    for (const s of band.stations) g.setEdge(String(s.number), bid); // issues above the line
+    if (prev) {
+      g.setEdge(prev, bid); // keep boundaries ordered even across empty milestones
+      for (const s of band.stations) g.setEdge(prev, String(s.number)); // issues below the prev line
+    }
+    prev = bid;
+  }
+
   dagre.layout(g);
 
-  // Bounding box over node rects AND routed edge points (dagre can route slightly
-  // outside the node area); translate everything into a 0-based, padded canvas.
+  // Bounding box over real node rects, real edge points, and boundary y-extents.
   let minX = Infinity;
   let minY = Infinity;
   let maxX = -Infinity;
@@ -336,15 +473,24 @@ function depMapSvg(stations: Station[]): string {
     see(n.x - n.width / 2, n.y - n.height / 2);
     see(n.x + n.width / 2, n.y + n.height / 2);
   }
-  const edgePts: { x: number; y: number }[][] = g.edges().map((e) => g.edge(e).points);
-  for (const pts of edgePts) for (const p of pts) see(p.x, p.y);
-  const pad = 8;
-  const offX = pad - minX;
-  const offY = pad - minY;
-  const W = Math.ceil(maxX - minX + pad * 2);
-  const H = Math.ceil(maxY - minY + pad * 2);
+  const isReal = (e: { v: string; w: string }) => !boundaryIds.has(e.v) && !boundaryIds.has(e.w);
+  const realEdges: { x: number; y: number }[][] = g
+    .edges()
+    .filter(isReal)
+    .map((e) => g.edge(e).points);
+  for (const pts of realEdges) for (const p of pts) see(p.x, p.y);
+  for (const bid of boundaryIds) {
+    const n = g.node(bid);
+    see(n.x, n.y - LINE_H / 2);
+    see(n.x, n.y + LINE_H / 2);
+  }
 
-  const edgesSvg = edgePts
+  const offX = CANVAS_PAD + LABEL_GUTTER - minX;
+  const offY = CANVAS_PAD - minY;
+  const W = Math.max(Math.ceil(maxX - minX + CANVAS_PAD * 2 + LABEL_GUTTER), 320);
+  const H = Math.ceil(maxY - minY + CANVAS_PAD * 2);
+
+  const edgesHtml = realEdges
     .map((pts) => {
       const d = pts
         .map((p, i) => `${i === 0 ? "M" : "L"}${(p.x + offX).toFixed(1)},${(p.y + offY).toFixed(1)}`)
@@ -363,43 +509,35 @@ function depMapSvg(stations: Station[]): string {
         ? ` href="${escapeHtml(s.url)}" target="_blank" rel="noopener noreferrer"`
         : "";
       const desc = s.blurb ? `<p class="depnode__desc">${escapeHtml(s.blurb)}</p>` : "";
-      return `<a class="depnode depnode--${s.status}"${href} style="left:${left}px;top:${top}px;width:${NODE_W}px;height:${h}px"><span class="depnode__num">#${s.number}</span><h3 class="depnode__title">${escapeHtml(s.title)}</h3>${desc}</a>`;
+      const labels = labelChipsHtml(s.labels);
+      return `<a class="depnode depnode--${s.status}"${href} style="left:${left}px;top:${top}px;width:${NODE_W}px;height:${h}px"><span class="depnode__num">#${s.number}</span><h3 class="depnode__title">${escapeHtml(s.title)}</h3>${desc}${labels}</a>`;
     })
     .join("");
 
-  return `<div class="depmap-scroll"><div class="depmap" style="width:${W}px;height:${H}px" role="img" aria-label="Roadmap dependency graph"><svg class="depmap__edges" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" aria-hidden="true"><defs><marker id="dep-arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L8,4 L0,8 z" /></marker></defs>${edgesSvg}</svg>${nodesHtml}</div></div>`;
-}
-
-/** Edgeless fallback: a readiness-grouped card grid until dependencies are linked. */
-function depGrid(stations: Station[]): string {
-  const cards = stations
-    .map((s) => {
-      const href = s.url
-        ? `href="${escapeHtml(s.url)}" target="_blank" rel="noopener noreferrer"`
-        : "";
-      const desc = s.blurb ? `<p class="depcard__desc">${escapeHtml(s.blurb)}</p>` : "";
-      return `<li class="depcard depcard--${s.status}"><a class="depcard__link" ${href}><span class="depcard__num">#${s.number}</span><h3 class="depcard__title">${escapeHtml(s.title)}</h3>${desc}<span class="chip chip--${s.status}">${STATUS_LABELS[s.status]}</span></a></li>`;
+  const linesHtml = bands
+    .map((band) => {
+      const n = g.node(boundaryId(band.milestone.number));
+      return milestoneLineHtml(band, n.y + offY, W, LINE_H);
     })
     .join("");
-  return `<ul class="depgrid">${cards}</ul>`;
+
+  return `<div class="depmap-scroll"><div class="depmap" style="width:${W}px;height:${H}px" role="img" aria-label="Roadmap milestones and dependency graph"><svg class="depmap__edges" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" aria-hidden="true"><defs><marker id="dep-arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L8,4 L0,8 z" /></marker></defs>${edgesHtml}</svg>${linesHtml}${nodesHtml}</div></div>`;
 }
 
-export function roadmapPage(stations: Station[]): string {
-  if (stations.length === 0) {
+export function roadmapPage(roadmap: Roadmap): string {
+  const bands = bandsOf(roadmap);
+  if (bands.length === 0) {
     return `<article class="roadmap">
   <h1 class="roadmap__title">Roadmap</h1>
-  <p class="roadmap__lead">The roadmap is generated from the project's GitHub issues and will appear here once they're published.</p>
+  <p class="roadmap__lead">The roadmap is generated from the project's GitHub milestones and issues, and will appear here once they're published.</p>
 </article>`;
   }
-  const hasEdges = stations.some((s) => s.blockedBy.length > 0);
-  const lead = hasEdges
-    ? `The headline is the destination, not the current release. Logos is pre-alpha — nothing here ships yet. Each box is a tracked issue and the arrows point from a piece of work down to what it unblocks, so the top rows are buildable now and the lower rows wait on them.`
-    : `The headline is the destination, not the current release. Logos is pre-alpha — nothing here ships yet. These are the tracked issues; as their <em>blocked by</em> links are added on GitHub, this becomes a build-order dependency graph.`;
+  const lead = `The headline is the destination, not the current release. Logos is pre-alpha, so nothing here ships yet. Each milestone is a finish line: the issues above it are the work that gets Logos there, and every milestone below is still further out. Within a milestone the arrows point from a piece of work down to what it unblocks.`;
   const legend = `<ul class="depmap-legend"><li class="is-done">Done</li><li class="is-ready">Ready</li><li class="is-blocked">Blocked</li></ul>`;
   return `<article class="roadmap">
   <h1 class="roadmap__title">Roadmap</h1>
   <p class="roadmap__lead">${lead}</p>
   ${legend}
-  ${hasEdges ? depMapSvg(stations) : depGrid(stations)}
+  ${bandedMap(bands, roadmap.stations)}
 </article>`;
 }

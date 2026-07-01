@@ -578,11 +578,11 @@ a {
 	max-width: 52ch;
 }
 
-/* ── Roadmap dependency graph ───────────────────────────────────────────────
-   The roadmap is the dependency graph of the project's GitHub issues. Nodes are
-   laid out in build-order tiers (the SVG built by depMapSvg) with arrows from a
-   blocker down to what it unblocks; before any edges exist we show the readiness
-   grid below. Status colours: done = green, ready = accent, blocked = amber. */
+/* ── Roadmap milestones + dependency graph ──────────────────────────────────
+   The roadmap groups the project's GitHub issues into milestone bands (built by
+   bandedMap). Each milestone is a horizontal finish line; its issues sit above it
+   with arrows from a blocker down to what it unblocks, and later milestones sit
+   below. Status colours: done = green, ready = accent, blocked = amber. */
 .chip {
 	display: inline-block;
 	font-size: 0.68rem;
@@ -643,10 +643,20 @@ a {
    nearby never shows through; scrolls horizontally when wider than the page. */
 .depmap-scroll {
 	overflow-x: auto;
-	padding-bottom: 0.5rem;
+	/* Full-bleed: break out of the .roadmap max-width so the graph area spans the
+	   whole window. `html { overflow-x: clip }` keeps this from adding page scroll.
+	   `safe center` centres the graph when it fits and left-aligns it (so nothing is
+	   clipped) when it is wider than the window and needs to scroll. */
+	width: 100vw;
+	margin-inline: calc(50% - 50vw);
+	box-sizing: border-box;
+	padding: 0 1.5rem 0.5rem;
+	display: flex;
+	justify-content: safe center;
 }
 .depmap {
 	position: relative;
+	flex: none;
 }
 .depmap__edges {
 	position: absolute;
@@ -698,6 +708,22 @@ a {
 	line-height: 1.4;
 	color: var(--muted);
 }
+/* GitHub-style label chips inside a node (all of the issue's labels except
+   `roadmap`); colours come from each label's own GitHub colour (set inline). */
+.depnode__labels {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 4px;
+	margin-top: 0.45rem;
+}
+.deplabel {
+	font-size: 0.66rem;
+	font-weight: 600;
+	line-height: 1.2;
+	padding: 0.12rem 0.44rem;
+	border-radius: 999px;
+	white-space: nowrap;
+}
 .depnode--done {
 	border-left-color: var(--ok-text);
 }
@@ -717,53 +743,55 @@ a {
 	border-color: var(--warn-border);
 }
 
-/* Edgeless fallback: readiness-coloured cards until dependencies are linked. */
-.depgrid {
-	list-style: none;
-	margin: 0;
-	padding: 0;
-	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
-	gap: 1rem;
+/* Milestone "finish line": a full-width dashed rule with a label pill on the left.
+   Positioned absolutely (like the nodes) at the band boundary; the issues of the
+   milestone sit above it, later milestones below. */
+.msline {
+	position: absolute;
+	box-sizing: border-box;
+	display: flex;
+	align-items: center;
+	gap: 0.85rem;
 }
-.depcard {
-	border: 1px solid var(--hairline);
-	border-left: 3px solid var(--hairline);
-	border-radius: 10px;
+.msline__line {
+	flex: 1;
+	height: 0;
+	border-top: 2px dashed var(--accent);
+	opacity: 0.7;
+}
+.msline__label {
+	display: inline-flex;
+	align-items: baseline;
+	gap: 0.5rem;
+	padding: 0.3rem 0.7rem;
+	border-radius: 999px;
 	background: var(--code-bg);
-}
-.depcard--done {
-	border-left-color: var(--ok-text);
-}
-.depcard--ready {
-	border-left-color: var(--accent);
-}
-.depcard--blocked {
-	border-left-color: var(--warn-border);
-}
-.depcard__link {
-	display: block;
-	padding: 0.9rem 1rem;
+	box-shadow: inset 0 0 0 1px var(--accent);
 	text-decoration: none;
-	color: inherit;
+	white-space: nowrap;
 }
-.depcard__num {
-	font-family: var(--mono, monospace);
-	font-size: 0.78rem;
+.msline__flag {
+	font-size: 0.62rem;
+	font-weight: 700;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
 	color: var(--muted);
 }
-.depcard__title {
+.msline__title {
 	font-family: var(--serif);
-	font-size: 1.08rem;
-	line-height: 1.25;
+	font-size: 1rem;
+	font-weight: 600;
 	color: var(--heading);
-	margin: 0.15rem 0 0.4rem;
 }
-.depcard__desc {
-	margin: 0 0 0.6rem;
-	font-size: 0.92rem;
-	line-height: 1.5;
+.msline__meta {
+	font-size: 0.75rem;
 	color: var(--muted);
+}
+.msline--closed .msline__line {
+	border-top-color: var(--ok-text);
+}
+.msline--closed .msline__label {
+	box-shadow: inset 0 0 0 1px var(--ok-text);
 }
 /* ── Footer ───────────────────────────────────────────────────────────────── */
 .site-footer {
