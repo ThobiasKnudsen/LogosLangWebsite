@@ -7,16 +7,15 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import * as esbuild from "esbuild";
 import {
-  buildSections,
-  globalVersions,
+  parseVersionDir,
   versionToString,
-  parseVersionString,
-  compareVersions,
-  effectiveSnapshot,
-  visibleSections,
-  type SemVer,
+  sortVersions,
+  latestTree,
+  globalVersionStrings,
+  type VersionTree,
+  type DocPage,
 } from "./version.ts";
-import { renderMarkdown } from "./markdown.ts";
+import { renderMarkdown, parseFrontmatter } from "./markdown.ts";
 import { page, SITE_URL, absUrl, setAssetUrls } from "./templates.ts";
 import {
   homePage,
@@ -146,69 +145,75 @@ function metaDescription(html: string): string {
   return text.length > 155 ? `${text.slice(0, 152).trimEnd()}…` : text;
 }
 
+/** Title for a page: its frontmatter `title`, else a prettified last path segment. */
+function titleForPage(source: string, pagePath: string): string {
+  const { title } = parseFrontmatter(source);
+  if (title) return title;
+  const seg = pagePath.slice(pagePath.lastIndexOf("/") + 1);
+  return seg.replace(/[-_]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+/** A page's URL: canonical `/docs/<path>/` for the latest version, else versioned. */
+function pageUrl(versionStr: string, pagePath: string, isLatest: boolean): string {
+  return isLatest ? `/docs/${pagePath}/` : `/docs/v${versionStr}/${pagePath}/`;
+}
+
 /**
- * Render the docs into `dist`: a structure-only `manifest.json` (no HTML) plus one
- * static page per snapshot at `/docs/<id>/v<ver>/`, a canonical `/docs/<id>/` for
- * each section's newest snapshot, and a `/docs/` landing on the first section.
+ * Render the docs into `dist`. Each version is a complete tree under `docs/vX.Y.Z/`;
+ * we emit a versioned page at `/docs/v<ver>/<path>/` for every page in every version,
+ * a canonical `/docs/<path>/` for the latest version, a `/docs/` landing, and a
+ * structure-only `manifest.json` (per-version page lists, no HTML) for the client.
  */
 async function renderDocs(docsDir: string): Promise<{
-  sectionCount: number;
+  pageCount: number;
   versions: string[];
   docEntries: { path: string; title: string; desc: string }[];
 }> {
-  const absFiles = await walk(docsDir);
-  const relFiles = absFiles.map((f) =>
-    path.relative(docsDir, f).split(path.sep).join("/"),
-  );
-  const sections = buildSections(relFiles);
-  const sectionIds = new Set(sections.map((s) => s.id));
-
-  // Render each snapshot's HTML and title once, keyed by `id@version`.
-  const htmlBySnap = new Map<string, string>();
-  const titleBySnap = new Map<string, string>();
-  for (const section of sections) {
-    for (const snap of section.snapshots) {
-      const source = await fs.readFile(path.join(docsDir, snap.file), "utf8");
-      const { title, html } = await renderMarkdown(
-        source,
-        section.dir,
-        sectionIds,
-      );
-      htmlBySnap.set(`${section.id}@${snap.versionStr}`, html);
-      titleBySnap.set(
-        `${section.id}@${snap.versionStr}`,
-        title ?? section.name,
-      );
-    }
+  // Discover `vX.Y.Z/` folders and read each version's page tree.
+  let dirEntries: import("node:fs").Dirent[];
+  try {
+    dirEntries = await fs.readdir(docsDir, { withFileTypes: true });
+  } catch {
+    dirEntries = [];
   }
-  const titleOf = (id: string, ver: string) =>
-    titleBySnap.get(`${id}@${ver}`) ?? id;
-  const htmlOf = (id: string, ver: string) =>
-    htmlBySnap.get(`${id}@${ver}`) ?? "";
 
-  const versions = globalVersions(sections).map(versionToString);
-  const latestStr = versions.length ? versions[versions.length - 1]! : null;
+  const trees: VersionTree[] = [];
+  const sourceOf = new Map<string, string>(); // `${versionStr}::${path}` -> source
+  for (const entry of dirEntries) {
+    if (!entry.isDirectory()) continue;
+    const version = parseVersionDir(entry.name);
+    if (!version) continue;
+    const versionStr = versionToString(version);
+    const verDir = path.join(docsDir, entry.name);
+    const pages: DocPage[] = [];
+    for (const abs of await walk(verDir)) {
+      const pagePath = path
+        .relative(verDir, abs)
+        .split(path.sep)
+        .join("/")
+        .replace(/\.md$/, "");
+      const source = await fs.readFile(abs, "utf8");
+      sourceOf.set(`${versionStr}::${pagePath}`, source);
+      pages.push({ path: pagePath, title: titleForPage(source, pagePath) });
+    }
+    pages.sort((a, b) => a.path.localeCompare(b.path));
+    trees.push({ version, versionStr, pages });
+  }
 
-  // Structure-only manifest: metadata for client hydration, no HTML payload.
+  const sorted = sortVersions(trees);
+  const versions = globalVersionStrings(trees);
+  const latest = latestTree(trees);
+  const latestStr = latest ? latest.versionStr : null;
+
+  // Structure-only manifest: per-version page lists for client hydration, no HTML.
   const manifest = {
     versions,
     latest: latestStr,
-    sections: sections.map((s) => ({
-      id: s.id,
-      dir: s.dir,
-      name: s.name,
-      snapshots: s.snapshots.map((sn) => ({
-        version: sn.versionStr,
-        title: titleOf(s.id, sn.versionStr),
-      })),
-    })),
+    trees: Object.fromEntries(sorted.map((t) => [t.versionStr, t.pages])),
   };
-  await fs.writeFile(
-    path.join(DIST, "manifest.json"),
-    JSON.stringify(manifest),
-  );
+  await fs.writeFile(path.join(DIST, "manifest.json"), JSON.stringify(manifest));
 
-  if (!latestStr) {
+  if (!latest) {
     await writePage(
       "docs/index.html",
       page({
@@ -220,35 +225,51 @@ async function renderDocs(docsDir: string): Promise<{
         main: '<div class="docs"><p>No documentation has been published yet.</p></div>',
       }),
     );
-    return { sectionCount: 0, versions, docEntries: [] };
+    return { pageCount: 0, versions, docEntries: [] };
   }
-  const latest = parseVersionString(latestStr);
 
-  // Render one docs page (a `#docs-app` block) at a given global context.
+  // Render every page's HTML once, keyed by `${versionStr}::${path}`. Links resolve
+  // within the page's own version.
+  const htmlOf = new Map<string, string>();
+  for (const tree of sorted) {
+    const pagePaths = new Set(tree.pages.map((p) => p.path));
+    const isLatest = tree.versionStr === latestStr;
+    for (const pg of tree.pages) {
+      const source = sourceOf.get(`${tree.versionStr}::${pg.path}`)!;
+      const currentDir = pg.path.includes("/")
+        ? pg.path.slice(0, pg.path.lastIndexOf("/"))
+        : "";
+      const { html } = await renderMarkdown(source, {
+        currentDir,
+        pagePaths,
+        versionStr: tree.versionStr,
+        isLatest,
+      });
+      htmlOf.set(`${tree.versionStr}::${pg.path}`, html);
+    }
+  }
+
+  // Render one docs page (a `#docs-app` block) at a given version.
   const renderTo = async (opts: {
     urlPath: string;
-    global: SemVer;
-    currentId: string;
-    viewedVersion: SemVer;
+    versionStr: string;
+    isLatest: boolean;
+    page: DocPage;
     canonical: string;
+    docTitle?: string;
   }) => {
+    const html = htmlOf.get(`${opts.versionStr}::${opts.page.path}`) ?? "";
     const main = renderDocsMain({
-      sections,
-      global: opts.global,
-      isLatestGlobal: compareVersions(opts.global, latest) === 0,
-      currentId: opts.currentId,
-      viewedVersion: opts.viewedVersion,
-      titleOf,
-      htmlOf,
+      trees: sorted,
+      versionStr: opts.versionStr,
+      isLatest: opts.isLatest,
+      currentPath: opts.page.path,
+      html,
       versions,
+      latestStr,
     });
-    const docTitle = titleOf(
-      opts.currentId,
-      versionToString(opts.viewedVersion),
-    );
-    const docDesc = metaDescription(
-      htmlOf(opts.currentId, versionToString(opts.viewedVersion)),
-    );
+    const docTitle = opts.docTitle ?? opts.page.title;
+    const docDesc = metaDescription(html);
     await writePage(
       opts.urlPath,
       page({
@@ -274,70 +295,51 @@ async function renderDocs(docsDir: string): Promise<{
     );
   };
 
-  // Canonical docs URLs (one per section, newest snapshot) for sitemap + llms.txt.
-  const docEntries: { path: string; title: string; desc: string }[] = [];
-
-  for (const section of sections) {
-    const canonical = `/docs/${section.id}/`;
-    const newest = effectiveSnapshot(section, latest)!; // section's latest snapshot
-
-    // Canonical page: the section at the newest global version.
-    await renderTo({
-      urlPath: `docs/${section.id}/index.html`,
-      global: latest,
-      currentId: section.id,
-      viewedVersion: newest.version,
-      canonical,
-    });
-    docEntries.push({
-      path: canonical,
-      title: titleOf(section.id, newest.versionStr),
-      desc: metaDescription(htmlOf(section.id, newest.versionStr)),
-    });
-
-    // Historical permalinks: each snapshot shown against the latest global
-    // version, so the version picker stays put and an off-version snapshot
-    // carries the "current version is vX" warning.
-    for (const snap of section.snapshots) {
+  // Versioned permalink for every page in every version.
+  for (const tree of sorted) {
+    const isLatest = tree.versionStr === latestStr;
+    for (const pg of tree.pages) {
       await renderTo({
-        urlPath: `docs/${section.id}/v${snap.versionStr}/index.html`,
-        global: latest,
-        currentId: section.id,
-        viewedVersion: snap.version,
-        canonical,
+        urlPath: `docs/v${tree.versionStr}/${pg.path}/index.html`,
+        versionStr: tree.versionStr,
+        isLatest,
+        page: pg,
+        canonical: pageUrl(tree.versionStr, pg.path, isLatest),
       });
     }
   }
 
-  // `/docs/` lands on the first section visible at the newest version.
-  const first = visibleSections(sections, latest)[0];
-  if (first) {
-    const newest = effectiveSnapshot(first, latest)!;
-    const main = renderDocsMain({
-      sections,
-      global: latest,
-      isLatestGlobal: true,
-      currentId: first.id,
-      viewedVersion: newest.version,
-      titleOf,
-      htmlOf,
-      versions,
+  // Canonical `/docs/<path>/` for the latest version (also feeds sitemap + llms.txt).
+  const docEntries: { path: string; title: string; desc: string }[] = [];
+  for (const pg of latest.pages) {
+    await renderTo({
+      urlPath: `docs/${pg.path}/index.html`,
+      versionStr: latest.versionStr,
+      isLatest: true,
+      page: pg,
+      canonical: `/docs/${pg.path}/`,
     });
-    await writePage(
-      "docs/index.html",
-      page({
-        title: "Docs",
-        active: "docs",
-        bodyClass: "docs-page",
-        header: "none",
-        footer: false,
-        canonical: `/docs/${first.id}/`,
-        main,
-      }),
-    );
+    docEntries.push({
+      path: `/docs/${pg.path}/`,
+      title: pg.title,
+      desc: metaDescription(htmlOf.get(`${latest.versionStr}::${pg.path}`) ?? ""),
+    });
   }
 
-  return { sectionCount: sections.length, versions, docEntries };
+  // `/docs/` lands on the first page of the latest version.
+  const first = latest.pages[0];
+  if (first) {
+    await renderTo({
+      urlPath: "docs/index.html",
+      versionStr: latest.versionStr,
+      isLatest: true,
+      page: first,
+      canonical: `/docs/${first.path}/`,
+      docTitle: "Docs",
+    });
+  }
+
+  return { pageCount: latest.pages.length, versions, docEntries };
 }
 
 /**
@@ -542,7 +544,7 @@ export async function build(): Promise<void> {
   await copyDir(path.join(ROOT, "public"), DIST);
 
   console.log(
-    `built ${docs.sectionCount} docs sections, versions [${docs.versions.join(", ")}] -> dist/`,
+    `built ${docs.pageCount} docs pages (latest), versions [${docs.versions.join(", ")}] -> dist/`,
   );
 }
 

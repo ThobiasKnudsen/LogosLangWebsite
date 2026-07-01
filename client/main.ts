@@ -341,145 +341,42 @@ function initPlayground(): void {
 }
 
 // ── Docs hydration ───────────────────────────────────────────────────────────
-interface Snapshot {
-	version: string;
+interface DocPageC {
+	path: string;
 	title: string;
-}
-interface ManifestSection {
-	id: string;
-	dir: string;
-	name: string;
-	snapshots: Snapshot[];
 }
 interface Manifest {
 	versions: string[];
 	latest: string | null;
-	sections: ManifestSection[];
-}
-
-const CHEV_DOWN = `<svg class="tree-chev" viewBox="0 0 16 16" width="11" height="11" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="4 6 8 10 12 6"/></svg>`;
-
-/** Compare two "X.Y.Z" version strings. */
-function cmpVer(a: string, b: string): number {
-	const pa = a.split('.').map(Number);
-	const pb = b.split('.').map(Number);
-	return pa[0]! - pb[0]! || pa[1]! - pb[1]! || pa[2]! - pb[2]!;
+	trees: Record<string, DocPageC[]>;
 }
 
 function escapeHtml(s: string): string {
 	return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
-function prettify(seg: string): string {
-	return seg.replace(/[-_]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
-}
-
-interface TreeNode {
-	label: string;
-	children: Map<string, TreeNode>;
-	section?: ManifestSection;
-}
-
 function initDocs(): void {
 	const app = document.getElementById('docs-app')!;
 
 	let manifest: Manifest | null = null;
-	const byId = new Map<string, ManifestSection>();
-	let globalVersion = '';
 
-	/** The effective snapshot for a section at global version `g`, or null. */
-	function effectiveAt(section: ManifestSection, g: string): Snapshot | null {
-		let eff: Snapshot | null = null;
-		for (const sn of section.snapshots) {
-			if (cmpVer(sn.version, g) <= 0) eff = sn;
-			else break;
-		}
-		return eff;
+	const pagesOf = (v: string): DocPageC[] => manifest?.trees[v] ?? [];
+	const hasPage = (v: string, path: string): boolean => pagesOf(v).some((p) => p.path === path);
+	const hrefFor = (v: string, path: string): string =>
+		manifest && v === manifest.latest ? `/docs/${path}/` : `/docs/v${v}/${path}/`;
+
+	// URL of `path` in version `v`, falling back to that version's landing page when
+	// the version does not contain the page (it was added/removed/moved there).
+	function urlInVersion(path: string, v: string): string {
+		if (hasPage(v, path)) return hrefFor(v, path);
+		const first = pagesOf(v)[0];
+		return first ? hrefFor(v, first.path) : '/docs/';
 	}
 
-	/** URL of a section at `g`: its canonical URL when latest, else the permalink. */
-	function urlForSectionAt(id: string, g: string): string | null {
-		const section = byId.get(id);
-		if (!section || !manifest) return null;
-		const eff = effectiveAt(section, g);
-		if (!eff) return null;
-		return g === manifest.latest ? `/docs/${id}/` : `/docs/${id}/v${eff.version}/`;
-	}
-
-	// ── Tree rendering (mirrors build/docs-render.ts) ──────────────────────────
-	function buildTree(g: string): TreeNode {
-		const root: TreeNode = { label: '', children: new Map() };
-		for (const section of manifest!.sections) {
-			if (!effectiveAt(section, g)) continue; // hidden before it existed
-			const parts = section.id.split('/');
-			let node = root;
-			for (let i = 0; i < parts.length - 1; i++) {
-				const key = parts[i]!;
-				let child = node.children.get(key);
-				if (!child) {
-					child = { label: prettify(key), children: new Map() };
-					node.children.set(key, child);
-				}
-				node = child;
-			}
-			node.children.set(parts[parts.length - 1]!, { label: section.name, children: new Map(), section });
-		}
-		return root;
-	}
-
-	function renderNode(node: TreeNode, g: string, activeId: string, nested: boolean): string {
-		const entries = [...node.children.values()].sort((a, b) => {
-			const af = a.section ? 1 : 0;
-			const bf = b.section ? 1 : 0;
-			if (af !== bf) return af - bf;
-			return a.label.localeCompare(b.label);
-		});
-		const items = entries
-			.map((child) => {
-				if (child.section) {
-					const eff = effectiveAt(child.section, g)!;
-					const url = g === manifest!.latest ? `/docs/${child.section.id}/` : `/docs/${child.section.id}/v${eff.version}/`;
-					const active = child.section.id === activeId ? ' active' : '';
-					return `<li><a class="tree-link${active}" href="${url}">${escapeHtml(eff.title)}<span class="tree-ver">v${eff.version}</span></a></li>`;
-				}
-				return `<li><details open><summary class="tree-folder">${CHEV_DOWN}<span class="tree-folder__label">${escapeHtml(child.label)}</span></summary>${renderNode(child, g, activeId, true)}</details></li>`;
-			})
-			.join('');
-		return `<ul class="tree${nested ? ' tree--nested' : ''}">${items}</ul>`;
-	}
-
-	// Re-skin the dropdown, tree, and off-version warning to `globalVersion`. When
-	// it equals latest the server-rendered markup is already correct (no-op).
-	function applyGlobalContext(): void {
-		const sel = document.getElementById('docs-global-version') as HTMLSelectElement | null;
-		if (sel) sel.value = globalVersion;
-		if (!manifest || globalVersion === manifest.latest) return;
-
-		const id = app.dataset.section ?? '';
-		const tree = document.getElementById('docs-tree');
-		if (tree) tree.innerHTML = renderNode(buildTree(globalVersion), globalVersion, id, false);
-
-		const section = byId.get(id);
-		const correct = document.getElementById('docs-correct') as HTMLAnchorElement | null;
-		const group = document.getElementById('docs-snapnav-group');
-		if (!section || !correct || !group) return;
-
-		const eff = effectiveAt(section, globalVersion);
-		const viewed = app.dataset.version ?? '';
-		const off = !!eff && eff.version !== viewed;
-		group.classList.toggle('off', off);
-		if (off && eff) {
-			correct.hidden = false;
-			correct.href = `/docs/${id}/v${eff.version}/`;
-			correct.textContent = `At ${globalVersion}, this page is v${eff.version}.`;
-		} else {
-			correct.hidden = true;
-		}
-	}
-
-	// Swap the docs-app block for the one at `url`, then reapply the global context.
-	// Switching versions of the SAME section keeps the scroll position so the reader
-	// can see exactly what changed; moving to another section resets to the top.
+	// Swap the docs-app block for the one at `url`. Each version's page is fully
+	// server-rendered (tree, arrows, dropdown), so we just replace the block. Staying
+	// on the same page path (e.g. switching versions) keeps the scroll position so the
+	// reader sees exactly what changed; moving to another page resets to the top.
 	async function navigate(url: string, push: boolean): Promise<boolean> {
 		let html: string;
 		try {
@@ -493,22 +390,19 @@ function initDocs(): void {
 		const next = doc.getElementById('docs-app');
 		if (!next) return false;
 
-		const prevSection = app.dataset.section;
+		const samePath = next.dataset.path === app.dataset.path;
 		const savedScroll = app.querySelector('.docs-main')?.scrollTop ?? 0;
-		const sameSection = next.dataset.section === prevSection;
 
 		app.innerHTML = next.innerHTML;
-		app.dataset.section = next.dataset.section;
+		app.dataset.path = next.dataset.path;
 		app.dataset.version = next.dataset.version;
-		app.dataset.global = next.dataset.global;
 
 		const title = doc.querySelector('title')?.textContent;
 		if (title) document.title = title;
 		if (push) history.pushState(null, '', url);
 
-		applyGlobalContext();
 		const main = app.querySelector('.docs-main');
-		if (main) main.scrollTop = sameSection ? savedScroll : 0;
+		if (main) main.scrollTop = samePath ? savedScroll : 0;
 		return true;
 	}
 
@@ -525,25 +419,13 @@ function initDocs(): void {
 		});
 	});
 
-	// Version selector: pin the whole site to the chosen version and jump the
-	// current section to its effective snapshot there.
+	// Version selector: jump to the same page in the chosen version (or its landing).
 	document.addEventListener('change', (e) => {
 		const sel = e.target as HTMLSelectElement;
 		if (sel.id !== 'docs-global-version') return;
-		globalVersion = sel.value;
-		try {
-			localStorage.setItem('docsVersion', globalVersion);
-		} catch {
-			/* ignore */
-		}
-		const id = app.dataset.section ?? '';
-		let url = urlForSectionAt(id, globalVersion);
-		if (!url && manifest) {
-			const first = manifest.sections.find((s) => effectiveAt(s, globalVersion));
-			url = first ? urlForSectionAt(first.id, globalVersion) : '/docs/';
-		}
-		void navigate(url || '/docs/', true).then((ok) => {
-			if (!ok) location.href = url || '/docs/';
+		const url = urlInVersion(app.dataset.path ?? '', sel.value);
+		void navigate(url, true).then((ok) => {
+			if (!ok) location.href = url;
 		});
 	});
 
@@ -586,20 +468,11 @@ function initDocs(): void {
 		}
 	});
 
-	// Load the manifest, then apply any stored version preference.
+	// Load the manifest so the version dropdown can resolve cross-version URLs.
 	void fetch('/manifest.json')
 		.then((r) => r.json() as Promise<Manifest>)
 		.then((m) => {
 			manifest = m;
-			for (const s of m.sections) byId.set(s.id, s);
-			let stored: string | null = null;
-			try {
-				stored = localStorage.getItem('docsVersion');
-			} catch {
-				/* ignore */
-			}
-			globalVersion = stored && m.versions.includes(stored) ? stored : m.latest ?? '';
-			applyGlobalContext();
 		})
 		.catch(() => {
 			/* navigation still works via full page loads */
