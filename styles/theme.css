@@ -16,6 +16,10 @@
 	--bp-dark: #403b90; /* dark blue-purple (40% darker than the old #6b63f0) */
 
 	--ink: #16160f;
+	/* Creamy white — the site's default white. Warm and soft; used anywhere a
+	   plain bleach #fff would otherwise appear, in both themes. There is no pure
+	   #fff/#ffffff anywhere on the site. */
+	--white: #faf7ef;
 	--nav-height: 4.5rem;
 
 	/* Light theme */
@@ -60,7 +64,7 @@
 	--track: #34322b;
 	--track-on: #403d34;
 	--download-bg: var(--bp-dark);
-	--download-fg: #ffffff;
+	--download-fg: var(--white);
 	--logo: var(--bp-light);
 	--code-bg: #100f0c;
 	--warn-bg: #2b1f12;
@@ -241,7 +245,7 @@ a {
 	width: 1.5rem;
 	height: 1.5rem;
 	border-radius: 50%;
-	background: #fff;
+	background: var(--white);
 	transform: translateY(-50%);
 	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 	transition: inset-inline-start 0.18s ease;
@@ -1077,7 +1081,7 @@ mark.search-hit {
 }
 :root[data-theme='dark'] mark.search-hit {
 	background: #7a5a12;
-	color: #fff;
+	color: var(--white);
 }
 
 @media (max-width: 52rem) {
@@ -1269,7 +1273,7 @@ mark.search-hit {
 	font-weight: 700;
 	letter-spacing: 0.03em;
 	text-transform: uppercase;
-	color: #fff;
+	color: var(--white);
 	background: var(--accent);
 	padding: 0.18rem 0.5rem;
 	border-radius: 999px;
