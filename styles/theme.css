@@ -37,6 +37,7 @@
 	--download-fg: var(--ink);
 	--logo: var(--bp-dark);
 	--code-bg: #faf6ee; /* warm coffee-tinted off-white (not a cool pure white) */
+	--panel: #f6efd3; /* creamy card surface: warmer + a touch deeper than --bg, so cards read cream (not white) against the page */
 	--warn-bg: #fdf1e1;
 	--warn-border: #e9a23b;
 	--warn-text: #8a4b00;
@@ -67,6 +68,7 @@
 	--download-fg: var(--white);
 	--logo: var(--bp-light);
 	--code-bg: #100f0c;
+	--panel: #1c1b15; /* creamy card surface (dark): a step lighter than --bg so cards read as raised */
 	--warn-bg: #2b1f12;
 	--warn-border: #b9772a;
 	--warn-text: #f0c089;
@@ -502,8 +504,8 @@ a {
 	border: 1px solid var(--hairline);
 	border-radius: 12px;
 	padding: 1.4rem;
-	/* Warm creamy off-white surface (themed), not the near-bleach --dock-bg. */
-	background: var(--code-bg);
+	/* Creamy card surface (themed): warmer/deeper than the page so it reads cream, not white. */
+	background: var(--panel);
 }
 .pillar h3 {
 	margin: 0 0 0.6rem;
