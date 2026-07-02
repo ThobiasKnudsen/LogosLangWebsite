@@ -31,7 +31,7 @@ const GA4_ID = process.env.GA4_ID || '';
 const CLARITY_ID = process.env.CLARITY_ID || '';
 const ANALYTICS_ENABLED = !!(GA4_ID || CLARITY_ID);
 // Exposes the ids to the client so it can load them *after* consent. The scripts
-// themselves are NOT here — nothing tracking loads until the visitor accepts.
+// themselves are NOT here; nothing tracking loads until the visitor accepts.
 const ANALYTICS_CONFIG = ANALYTICS_ENABLED
 	? `\n<script>window.__ANALYTICS__=${JSON.stringify({ ga4: GA4_ID, clarity: CLARITY_ID }).replace(/</g, '\\u003c')};</script>`
 	: '';
@@ -55,6 +55,7 @@ const NAV = [
 	{ key: 'examples', label: 'Examples', href: '/examples/' },
 	{ key: 'playground', label: 'Playground', href: '/playground/' },
 	{ key: 'docs', label: 'Docs', href: '/docs/' },
+	{ key: 'about', label: 'About', href: '/about/' },
 ];
 
 const SUN_SVG = `<svg class="theme-switch__icon sun" viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><circle cx="12" cy="12" r="4.2" fill="currentColor"/><g stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="1.5" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22.5"/><line x1="1.5" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22.5" y2="12"/><line x1="4.2" y1="4.2" x2="6" y2="6"/><line x1="18" y1="18" x2="19.8" y2="19.8"/><line x1="19.8" y1="4.2" x2="18" y2="6"/><line x1="6" y1="18" x2="4.2" y2="19.8"/></g></svg>`;
@@ -75,6 +76,10 @@ function themeToggleHtml(): string {
 
 const MENU_SVG = `<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><g stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></g></svg>`;
 
+// The GitHub mark (octocat), shared by the dock button, the dropdown row, and the
+// footer link. Fills with currentColor so each spot's text colour applies.
+const GITHUB_SVG = `<svg viewBox="0 0 16 16" width="18" height="18" aria-hidden="true" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>`;
+
 function dockHtml(active: string): string {
 	const links = NAV.map(
 		(n) =>
@@ -89,10 +94,13 @@ function dockHtml(active: string): string {
   <a class="wordmark" href="/" aria-label="Logos home">Λόγος</a>
   <nav class="nav" aria-label="Primary">${links}</nav>
   <div class="dock-right">
-    <button class="nav-toggle" type="button" aria-label="Menu" aria-expanded="false" aria-controls="nav-menu">${MENU_SVG}</button>
+    <div class="nav-burger">
+      <button class="nav-toggle" type="button" aria-label="Menu" aria-expanded="false" aria-controls="nav-menu">${MENU_SVG}</button>
+      <nav class="nav-menu" id="nav-menu" aria-label="Primary" hidden>${links}<a class="nav-link nav-menu__github" href="${GITHUB}" target="_blank" rel="noopener noreferrer">${GITHUB_SVG}<span>GitHub</span></a><a class="logos-btn logos-btn--download nav-menu__download" href="${DOWNLOAD}">Download</a></nav>
+    </div>
+    <a class="gh-btn" href="${GITHUB}" target="_blank" rel="noopener noreferrer" aria-label="Logos on GitHub">${GITHUB_SVG}</a>
     <a class="logos-btn logos-btn--download" href="${DOWNLOAD}">Download</a>
   </div>
-  <nav class="nav-menu" id="nav-menu" aria-label="Primary" hidden>${links}</nav>
 </header>`;
 }
 
@@ -102,7 +110,7 @@ function footerHtml(): string {
 		: '';
 	return `<footer class="site-footer">
   <a class="gh-link" href="${GITHUB}" target="_blank" rel="noopener noreferrer" aria-label="Logos on GitHub">
-    <svg viewBox="0 0 16 16" width="18" height="18" aria-hidden="true" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>
+    ${GITHUB_SVG}
     <span>GitHub</span>
   </a>
   <nav class="footer-links" aria-label="Legal">

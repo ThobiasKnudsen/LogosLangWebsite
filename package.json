@@ -11,7 +11,6 @@
     "test:roadmap": "tsx build/roadmap.test.ts"
   },
   "devDependencies": {
-    "@dagrejs/dagre": "^3.0.0",
     "@fontsource-variable/eb-garamond": "^5.2.7",
     "@fontsource-variable/figtree": "^5.2.10",
     "@fontsource-variable/jetbrains-mono": "^5.2.8",

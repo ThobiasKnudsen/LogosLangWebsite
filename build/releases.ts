@@ -86,7 +86,7 @@ export function compareTags(a: string, b: string): number {
 /**
  * Shape the raw GitHub Releases API JSON into our model: drop drafts, keep only
  * convention-matching assets, sort releases newest-first and each release's assets
- * by OS then arch. Pure — unit-tested without network.
+ * by OS then arch. Pure; unit-tested without network.
  */
 export function releasesFromApi(apiReleases: unknown): Release[] {
 	if (!Array.isArray(apiReleases)) return [];

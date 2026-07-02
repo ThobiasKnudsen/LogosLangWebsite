@@ -16,15 +16,62 @@ import {
 	type Os,
 	type Asset,
 } from '../build/releases.ts';
+import { depmapHtml, DEFAULT_ASPECT } from '../build/roadmap-render.ts';
+import type { Roadmap } from '../build/roadmap.ts';
 
 initThemeToggle();
 initNavMenu();
 initHeroRotator();
+initWisdom();
 initScrollbars();
 initConsent();
 if (document.getElementById('docs-app')) initDocs();
 if (document.getElementById('dl-grid')) initDownload();
 if (document.getElementById('pg-run')) initPlayground();
+if (document.getElementById('logos-roadmap')) initRoadmap();
+
+// ── Roadmap: fit the dependency map's cards to the window ────────────────────
+// The build bakes the map at DEFAULT_ASPECT (a typical landscape window), which is
+// what a JS-off visitor keeps. With JS on, re-run the same layout (shared module
+// build/roadmap-render.ts, data from the #logos-roadmap JSON island) so each card
+// targets the visitor's real width:height ratio: roughly 16:9 on a desktop, tall
+// cards on a portrait phone. Re-renders on resize/rotation, debounced, and only
+// when the ratio actually moved enough to change the layout visibly.
+function initRoadmap(): void {
+	const island = document.getElementById('logos-roadmap');
+	if (!island || !document.querySelector('.depmap-scroll')) return;
+	let roadmap: Roadmap;
+	try {
+		roadmap = JSON.parse(island.textContent || '') as Roadmap;
+	} catch {
+		return; // baked static map stays in place
+	}
+
+	const windowAspect = (): number =>
+		Math.min(2.6, Math.max(0.4, window.innerWidth / window.innerHeight));
+
+	let rendered = DEFAULT_ASPECT; // what the server baked
+	const render = (): void => {
+		const aspect = windowAspect();
+		if (Math.abs(aspect - rendered) < 0.05) return;
+		const scroll = document.querySelector<HTMLElement>('.depmap-scroll');
+		const html = depmapHtml(roadmap, aspect);
+		if (!scroll || !html) return;
+		scroll.outerHTML = html; // depmapHtml includes the .depmap-scroll wrapper
+		rendered = aspect;
+		// When the map is wider than the window (phones), start centered on the
+		// graph's spine rather than on its left edge.
+		const next = document.querySelector<HTMLElement>('.depmap-scroll');
+		if (next) next.scrollLeft = (next.scrollWidth - next.clientWidth) / 2;
+	};
+
+	render();
+	let timer = 0;
+	window.addEventListener('resize', () => {
+		clearTimeout(timer);
+		timer = window.setTimeout(render, 150);
+	});
+}
 
 // ── Nav dropdown (hamburger) ──────────────────────────────────────────────────
 // On narrow screens the inline nav is hidden and this button reveals the same
@@ -60,7 +107,7 @@ function initNavMenu(): void {
 // Cycles the tail of "Logos is ___" through its phrases: the current phrase
 // slides up and out while the next rises into place. The box reserves the widest
 // phrase's width in CSS, so it never changes size and the brand stays put (no
-// re-centering jitter). Pure progressive enhancement — with JS off (or reduced
+// re-centering jitter). Pure progressive enhancement: with JS off (or reduced
 // motion) the first phrase stays shown. Pauses while the pointer is over the
 // rotator so a reader can hold a phrase.
 function initHeroRotator(): void {
@@ -99,9 +146,69 @@ function initHeroRotator(): void {
 	});
 }
 
+// ── Wisdom frieze: shared auto-drift + manual scroll ──────────────────────────
+// The frieze holds two identical quote sequences. A rAF loop nudges scrollLeft to
+// give a slow ambient drift; because it's the same scrollLeft the visitor moves when
+// they swipe or scroll, auto and manual share one mechanism. Whenever the position
+// crosses out of the first sequence we shift it back by exactly one sequence width
+// (both sequences are identical, so the jump is invisible), giving an endless loop in
+// either direction. Drift pauses while the pointer is over the frieze or it holds
+// focus, so a passage can be read and selected. Pure progressive enhancement; with
+// reduced motion we skip the drift and leave it a plain manual scroll strip.
+function initWisdom(): void {
+	const frieze = document.querySelector<HTMLElement>('.wisdom__scroll');
+	const track = frieze?.querySelector<HTMLElement>('.wisdom__track');
+	if (!frieze || !track) return;
+	if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+	const SPEED = 24; // px/second of ambient drift
+	// The track is two identical sequences laid side by side, so one sequence is half
+	// its scroll width. Read live each time: fonts loading can change it after init.
+	const seqWidth = (): number => track.scrollWidth / 2;
+
+	// Keep the position inside the first sequence's band. Jumping by a whole sequence
+	// width lands on the identical point in the other copy, so the loop shows no seam.
+	const wrap = (): void => {
+		const w = seqWidth();
+		if (w <= 0) return;
+		if (frieze.scrollLeft >= w) frieze.scrollLeft -= w;
+		else if (frieze.scrollLeft <= 0) frieze.scrollLeft += w;
+	};
+
+	// Start half a sequence in, so there's room to drift or scroll either way at once.
+	frieze.scrollLeft = seqWidth() / 2;
+
+	let paused = false;
+	frieze.addEventListener('pointerenter', () => {
+		paused = true;
+	});
+	frieze.addEventListener('pointerleave', () => {
+		paused = false;
+	});
+	frieze.addEventListener('focusin', () => {
+		paused = true;
+	});
+	frieze.addEventListener('focusout', () => {
+		paused = false;
+	});
+	// A hand scroll/swipe still needs the wrap so it, too, loops endlessly.
+	frieze.addEventListener('scroll', wrap, { passive: true });
+
+	let last = 0;
+	const step = (t: number): void => {
+		if (last && !paused) {
+			frieze.scrollLeft += (SPEED * (t - last)) / 1000;
+			wrap();
+		}
+		last = t;
+		requestAnimationFrame(step);
+	};
+	requestAnimationFrame(step);
+}
+
 // ── Auto-hiding scrollbar ─────────────────────────────────────────────────────
 // Reveal the (otherwise transparent) scrollbar thumb only while something is
-// actively scrolling — the whole-page scroll (<html>) and the docs panes alike.
+// actively scrolling: the whole-page scroll (<html>) and the docs panes alike.
 function initScrollbars(): void {
 	const timers = new WeakMap<Element, number>();
 	document.addEventListener(
@@ -336,7 +443,7 @@ function initPlayground(): void {
 		// TODO: load select.selectedOptions[0].dataset.wasm in a Worker and evaluate
 		// the #pg-editor source against it. Stubbed until Logos targets WebAssembly.
 		output.textContent =
-			`The Logos runtime for ${v} is a placeholder build — in-browser execution isn't available yet.\n` +
+			`The Logos runtime for ${v} is a placeholder build, so in-browser execution isn't available yet.\n` +
 			`Your code will run here once Logos compiles to WebAssembly.`;
 	});
 }

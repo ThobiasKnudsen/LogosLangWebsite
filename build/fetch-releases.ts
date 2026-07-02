@@ -1,7 +1,7 @@
 // Build-time fetch of LogosLang's GitHub Releases, shaped into the browser-safe
 // model in releases.ts. Node-only (uses process.env / fs); imported by build.ts.
 //
-// The build must never fail because GitHub is slow, rate-limited, or offline — a
+// The build must never fail because GitHub is slow, rate-limited, or offline: a
 // failed fetch just yields an empty list, and the download page renders its
 // "no builds yet" state. Escape hatches for local/offline work:
 //   SKIP_RELEASES_FETCH=1     -> always [] (fast offline builds)

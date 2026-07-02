@@ -2,11 +2,12 @@
 import http from 'node:http';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
+import { spawn } from 'node:child_process';
 import chokidar from 'chokidar';
 import { build, ROOT, localDocsDir } from './build.ts';
 
 const DIST = path.join(ROOT, 'dist');
-const PORT = 4321;
+const PORT = Number(process.env.PORT) || 4321;
 
 const MIME: Record<string, string> = {
 	'.html': 'text/html; charset=utf-8',
@@ -64,7 +65,7 @@ const server = http.createServer(async (req, res) => {
 	}
 
 	// HTML/CSS/JS are never cached in dev so rebuilds are always fresh. Fonts are
-	// content-hashed (fonts/[name]-[hash].woff2), so they're safe to cache hard —
+	// content-hashed (fonts/[name]-[hash].woff2), so they're safe to cache hard;
 	// without this they re-download on every navigation and the text visibly
 	// re-flows (FOUT) each time you change page.
 	const ext = path.extname(file);
@@ -86,6 +87,28 @@ function notifyReload(): void {
 	for (const res of clients) res.write('data: reload\n\n');
 }
 
+// Watcher rebuilds run in a FRESH SUBPROCESS, for two load-bearing reasons:
+// 1. Freshness: this process imported build/*.ts once at startup, so an in-process
+//    rebuild would render pages from stale modules; a subprocess re-reads them, so
+//    template/page edits apply without restarting the server.
+// 2. Responsiveness: the build blocks on synchronous work (gh/git execFileSync)
+//    and network fetches; in-process that froze THIS event loop, and the site
+//    stopped responding mid-rebuild. In a subprocess the server keeps serving.
+function runBuild(): Promise<boolean> {
+	return new Promise((resolve) => {
+		const child = spawn(
+			process.execPath,
+			['--import=tsx', path.join(ROOT, 'build/build.ts')],
+			{ cwd: ROOT, stdio: 'inherit' },
+		);
+		child.on('exit', (code) => resolve(code === 0));
+		child.on('error', (err) => {
+			console.error('build failed to start:', err);
+			resolve(false);
+		});
+	});
+}
+
 let building = false;
 let queued = false;
 async function rebuild(): Promise<void> {
@@ -95,11 +118,12 @@ async function rebuild(): Promise<void> {
 	}
 	building = true;
 	try {
-		await build();
-		notifyReload();
-		console.log('rebuilt');
-	} catch (err) {
-		console.error('build failed:', err);
+		if (await runBuild()) {
+			notifyReload();
+			console.log('rebuilt');
+		} else {
+			console.error('build failed (see output above)');
+		}
 	} finally {
 		building = false;
 		if (queued) {
@@ -118,7 +142,15 @@ async function main(): Promise<void> {
 	const docsDir = localDocsDir();
 	const watcher = chokidar.watch(
 		['content', 'styles', 'client', 'build', 'public', ...(docsDir ? [docsDir] : [])],
-		{ cwd: ROOT, ignoreInitial: true },
+		{
+			cwd: ROOT,
+			ignoreInitial: true,
+			// The build itself writes content/roadmap.snapshot.json after a successful
+			// roadmap fetch. Watching it would make every rebuild schedule the next one
+			// (an endless rebuild loop), and the build that wrote it has already rendered
+			// that data, so there is never a reason to rebuild on its change.
+			ignored: (p) => path.basename(p) === 'roadmap.snapshot.json',
+		},
 	);
 	let timer: NodeJS.Timeout | null = null;
 	watcher.on('all', () => {

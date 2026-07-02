@@ -1,397 +1,544 @@
 /* Self-hosted variable fonts (bundled + copied by esbuild). */
-@import '@fontsource-variable/figtree/index.css';
-@import '@fontsource-variable/eb-garamond/index.css';
-@import '@fontsource-variable/eb-garamond/wght-italic.css';
-@import '@fontsource-variable/jetbrains-mono/index.css';
+@import "@fontsource-variable/figtree/index.css";
+@import "@fontsource-variable/eb-garamond/index.css";
+@import "@fontsource-variable/eb-garamond/wght-italic.css";
+@import "@fontsource-variable/jetbrains-mono/index.css";
 
 /* ── Design tokens ─────────────────────────────────────────────────────────
    Light is the default. Both versions of the brand blue-purple are theme-
    independent; the download and logo pick which one per theme. */
 :root {
-	--sans: 'Figtree Variable', ui-sans-serif, system-ui, sans-serif;
-	--serif: 'EB Garamond Variable', Georgia, 'Times New Roman', serif;
-	--mono: 'JetBrains Mono Variable', ui-monospace, 'SF Mono', monospace;
+    --sans: "Figtree Variable", ui-sans-serif, system-ui, sans-serif;
+    --serif: "EB Garamond Variable", Georgia, "Times New Roman", serif;
+    --mono: "JetBrains Mono Variable", ui-monospace, "SF Mono", monospace;
 
-	--bp-light: #c7c4ff; /* bright blue-purple */
-	--bp-dark: #403b90; /* dark blue-purple (40% darker than the old #6b63f0) */
+    --bp-light: #c7c4ff; /* bright blue-purple */
+    --bp-dark: #403b90; /* dark blue-purple (40% darker than the old #6b63f0) */
 
-	--ink: #16160f;
-	/* Creamy white — the site's default white. Warm and soft; used anywhere a
+    --ink: #16160f;
+    /* Creamy white: the site's default white. Warm and soft; used anywhere a
 	   plain bleach #fff would otherwise appear, in both themes. There is no pure
 	   #fff/#ffffff anywhere on the site. */
-	--white: #fdf8e3;
-	--nav-height: 4.5rem;
-	/* Corner reserved for the fixed theme toggle: its right inset (1.15rem) + track
-	   width (3.6rem) + a gap. The dock keeps this much clear on its right so the
-	   toggle never renders on top of it. */
-	--theme-toggle-reserve: 5.5rem;
+    --white: #fdf8e3;
+    --nav-height: 4.5rem;
+    /* Corner reserved for the fixed theme toggle: its right inset (1.15rem) + track
+	   width (3.6rem) + a matching 1.15rem margin on its LEFT, so the gap between the
+	   dock and the toggle is exactly the toggle's own margin to the screen edge. */
+    --theme-toggle-reserve: 5.9rem;
 
-	/* Light theme */
-	--bg: #fdf8e3; /* gruvbox cream #fbf1c7, lightened 50% toward white */
-	--text: #2c2b25;
-	--heading: #16160f;
-	--muted: #6f6a60;
-	--hairline: #e7e1d6;
-	--accent: #4f46e5;
-	--dock-bg: rgba(253, 248, 227, 0.85); /* the one cream (--bg) at 85%, for the blurred dock/panel */
-	--dock-border: #e1dacd;
-	--track: #ddd7ca;
-	--track-on: #cfc9bb;
-	--download-bg: var(--bp-light);
-	--download-fg: var(--ink);
-	--logo: var(--bp-dark);
-	--code-bg: #fdf8e3; /* the site's one creamy white — identical to --bg */
-	--warn-bg: #fdf1e1;
-	--warn-border: #e9a23b;
-	--warn-text: #8a4b00;
-	--ok-bg: #e7f3ea;
-	--ok-text: #2b6b34;
-	--metro-main: var(--accent);
-	--line-parse: #2a82bd;
-	--line-exec: #c0392b;
-	--line-compile: #c96a1f;
-	--line-memory: #2c8f52;
-	--line-proofs: #6f5de0;
-	--line-interop: #c8466f;
-	--line-tooling: #1a9088;
+    /* Light theme */
+    --bg: #fdf8e3; /* gruvbox cream #fbf1c7, lightened 50% toward white */
+    /* The cream, darkened back toward the raw gruvbox cream (#fbf1c7): the
+       raised-surface tint for the dock, buttons, banner, roadmap nodes, and docs
+       controls. --surface-frost is the same tone at 85% for the frosted panels
+       that float over scrolling text (dock, docs logo, snapnav, consent). */
+    --surface: #faf4e0;
+    --surface-frost: rgba(251, 248, 227, 0.75);
+    --text: #2c2b25;
+    --heading: #16160f;
+    --muted: #6f6a60;
+    --hairline: #e7e1d6;
+    --accent: #4f46e5;
+    --dock-bg: rgba(
+        253,
+        248,
+        227,
+        0.85
+    ); /* the one cream (--bg) at 85%, for the blurred dock/panel */
+    --dock-border: #e1dacd;
+    --track: #ddd7ca;
+    --track-on: #cfc9bb;
+    --download-bg: var(--bp-light);
+    --download-fg: var(--ink);
+    --logo: var(--bp-dark);
+    --btn-hover: var(
+        --ink
+    ); /* hover text/outline for dock links + ghost buttons */
+    --code-bg: #fdf8e3; /* the site's one creamy white, identical to --bg */
+    --warn-bg: #fdf1e1;
+    --warn-border: #e9a23b;
+    --warn-text: #8a4b00;
+    --ok-bg: #e7f3ea;
+    --ok-text: #2b6b34;
+    --metro-main: var(--accent);
+    --line-parse: #2a82bd;
+    --line-exec: #c0392b;
+    --line-compile: #c96a1f;
+    --line-memory: #2c8f52;
+    --line-proofs: #6f5de0;
+    --line-interop: #c8466f;
+    --line-tooling: #1a9088;
 }
 
-:root[data-theme='dark'] {
-	--bg: #14130f;
-	--text: #d8d4c9;
-	--heading: #faf8f4;
-	--muted: #9c978b;
-	--hairline: #2c2a23;
-	--accent: #8f88ff;
-	--dock-bg: rgba(28, 28, 24, 0.72);
-	--dock-border: #3a382f;
-	--track: #34322b;
-	--track-on: #403d34;
-	--download-bg: var(--bp-dark);
-	--download-fg: var(--white);
-	--logo: var(--bp-light);
-	--code-bg: #100f0c;
-	--warn-bg: #2b1f12;
-	--warn-border: #b9772a;
-	--warn-text: #f0c089;
-	--ok-bg: #16291a;
-	--ok-text: #8ce0a0;
-	--metro-main: var(--accent);
-	--line-parse: #5cb0ec;
-	--line-exec: #e2685a;
-	--line-compile: #e8964a;
-	--line-memory: #54c47e;
-	--line-proofs: #9d8dff;
-	--line-interop: #ec7ba0;
-	--line-tooling: #3fc3b8;
+:root[data-theme="dark"] {
+    --bg: #14130f;
+    /* Dark counterpart of the raised-surface tint: surfaces elevate slightly
+	   LIGHTER than the near-black page (matching the existing dark dock tone). */
+    --surface: #1c1c18;
+    --surface-frost: rgba(28, 28, 24, 0.72);
+    --text: #d8d4c9;
+    --heading: #faf8f4;
+    --muted: #9c978b;
+    --hairline: #2c2a23;
+    --accent: #8f88ff;
+    --dock-bg: rgba(28, 28, 24, 0.72);
+    --dock-border: #3a382f;
+    --track: #34322b;
+    --track-on: #403d34;
+    --download-bg: var(--bp-dark);
+    --download-fg: var(--white);
+    --logo: var(--bp-light);
+    --btn-hover: var(
+        --white
+    ); /* hover text/outline for dock links + ghost buttons */
+    --code-bg: #100f0c;
+    --warn-bg: #2b1f12;
+    --warn-border: #b9772a;
+    --warn-text: #f0c089;
+    --ok-bg: #16291a;
+    --ok-text: #8ce0a0;
+    --metro-main: var(--accent);
+    --line-parse: #5cb0ec;
+    --line-exec: #e2685a;
+    --line-compile: #e8964a;
+    --line-memory: #54c47e;
+    --line-proofs: #9d8dff;
+    --line-interop: #ec7ba0;
+    --line-tooling: #3fc3b8;
 }
 
 * {
-	box-sizing: border-box;
+    box-sizing: border-box;
 }
 html {
-	scroll-behavior: smooth;
-	/* Guard: never let a too-wide element (e.g. the hero headline on a phone) add
+    scroll-behavior: smooth;
+    /* Guard: never let a too-wide element (e.g. the hero headline on a phone) add
 	   horizontal scroll that shifts the whole centered layout sideways. `clip`
 	   contains overflow without creating a scroll container. */
-	overflow-x: clip;
+    overflow-x: clip;
 }
 body {
-	margin: 0;
-	background: var(--bg);
-	color: var(--text);
-	font-family: var(--sans);
-	font-size: 16px;
-	line-height: 1.6;
-	-webkit-font-smoothing: antialiased;
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
 }
 a {
-	color: var(--accent);
+    color: var(--accent);
 }
 .sr-only {
-	position: absolute;
-	width: 1px;
-	height: 1px;
-	padding: 0;
-	margin: -1px;
-	overflow: hidden;
-	clip: rect(0, 0, 0, 0);
-	white-space: nowrap;
-	border: 0;
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
 }
 
 /* ── Floating menu dock ─────────────────────────────────────────────────── */
 .dock {
-	position: fixed;
-	inset-block-start: 0.85rem;
-	/* Right gutter reserves the top-right corner for the fixed theme toggle so the
-	   dock never sits under it; a small left gutter keeps it from touching the edge.
-	   Centred within that band on wide screens (via margin + max-width), and simply
-	   fills it on narrow ones, so the right margin is always at least the reserve. */
-	inset-inline: 1rem var(--theme-toggle-reserve);
-	margin-inline: auto;
-	z-index: 50;
-	width: auto;
-	max-width: 66.96rem; /* was min(72rem, 100% - 2rem) * 0.93 */
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	gap: 1rem;
-	padding: 0.55rem 0.9rem 0.55rem 1.1rem;
-	border: 1px solid var(--dock-border);
-	border-radius: 14px;
-	background: var(--bg); /* same colour as the page */
-	-webkit-backdrop-filter: saturate(140%) blur(12px);
-	backdrop-filter: saturate(140%) blur(12px);
-	box-shadow: 0 10px 30px -18px rgba(22, 22, 15, 0.4);
+    position: fixed;
+    inset-block-start: 0.85rem;
+    /* The dock is centred on the SCREEN: the same gutter on both sides, sized so
+       the fixed theme toggle in the top-right corner always fits beside it. On
+       narrow screens the dock shrinks symmetrically instead of drifting off-centre. */
+    inset-inline: var(--theme-toggle-reserve);
+    margin-inline: auto;
+    z-index: 50;
+    width: auto;
+    max-width: 66.96rem; /* was min(72rem, 100% - 2rem) * 0.93 */
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.55rem 0.9rem 0.55rem 1.1rem;
+    border: 1px solid var(--dock-border);
+    border-radius: 14px;
+    background: var(
+        --surface-frost
+    ); /* the darker cream, frosted over the page */
+    -webkit-backdrop-filter: saturate(140%) blur(12px);
+    backdrop-filter: saturate(140%) blur(12px);
+    box-shadow: 0 10px 30px -18px rgba(22, 22, 15, 0.4);
 }
 .wordmark {
-	font-family: var(--serif);
-	font-size: 1.6rem;
-	font-weight: 500;
-	letter-spacing: 0.01em;
-	color: var(--logo);
-	text-decoration: none;
+    font-family: var(--serif);
+    font-size: 1.6rem;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    color: var(--logo);
+    text-decoration: none;
+    transition: color 0.12s ease;
+}
+/* The home button hovers to ink/creamy white, matching the dock links' hover. */
+.wordmark:hover {
+    color: var(--btn-hover);
 }
 .nav {
-	display: flex;
-	gap: 1.75rem;
-	align-items: center;
+    display: flex;
+    gap: 1.75rem;
+    align-items: center;
 }
 .nav-link {
-	font-size: 0.95rem;
-	font-weight: 500;
-	color: var(--muted);
-	text-decoration: none;
-	transition: color 0.12s ease;
-}
-.nav-link:hover,
-.nav-link.active {
-	color: var(--heading);
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--muted);
+    text-decoration: none;
+    border-radius: 7px; /* rounds the hover outline below */
+    transition: color 0.12s ease;
 }
 .nav-link.active {
-	font-weight: 600;
+    color: var(--heading);
+    font-weight: 600;
+}
+/* Hovered dock links echo the ghost button's hover (see .logos-btn--ghost:hover):
+   ink/cream text inside a matching outline (black in light theme, creamy white in
+   dark). Declared after .active so hovering the current page's link still shows
+   the full hover treatment. */
+.nav-link:hover {
+    color: var(--btn-hover);
+}
+/* The outline only in the inline dock nav: outline (not border) so the dock layout
+   never shifts. The dropdown (.nav-menu) rows sit flush and carry a row highlight
+   instead; keyboard focus rings are never suppressed anywhere. */
+.nav .nav-link:hover {
+    outline: 1.5px solid var(--btn-hover);
+    outline-offset: 0.4rem;
 }
 .dock-right {
-	display: flex;
-	align-items: center;
-	gap: 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+}
+/* Icon-only GitHub button beside Download. Sized and hovered like the hamburger
+   button so the dock's icon buttons read as one family. Hidden once the nav
+   collapses (below 60rem): it moves into the dropdown as .nav-menu__github. */
+.gh-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.3rem;
+    height: 2.3rem;
+    border: 1px solid var(--dock-border);
+    border-radius: 8px;
+    color: var(--heading);
+}
+.gh-btn:hover {
+    border-color: var(--btn-hover);
+    color: var(--btn-hover);
 }
 /* Hamburger button + collapsed dropdown. Hidden on wide screens (the inline .nav
-   is shown instead); swapped in below 48rem where .nav is hidden. */
+   is shown instead); swapped in below 60rem where .nav is hidden. The breakpoint
+   leaves slack: the inline links must never overflow the dock (a squeezed dock
+   would push the Download button outside it) before the burger takes over. */
+/* The burger and its dropdown share this one anchor, so the menu always hangs
+   directly under the button wherever the button sits (dock-centred, or at the
+   dock's right edge on phones). */
+.nav-burger {
+    position: relative;
+    display: none; /* shown below 60rem, together with the button */
+}
 .nav-toggle {
-	display: none;
-	align-items: center;
-	justify-content: center;
-	width: 2.3rem;
-	height: 2.3rem;
-	padding: 0;
-	border: 1px solid var(--dock-border);
-	border-radius: 8px;
-	background: transparent;
-	color: var(--heading);
-	cursor: pointer;
+    display: none;
+    position: relative; /* lets the open state stack the button above the menu */
+    align-items: center;
+    justify-content: center;
+    width: 2.3rem;
+    height: 2.3rem;
+    padding: 0;
+    border: 1px solid var(--dock-border);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--heading);
+    cursor: pointer;
 }
 .nav-toggle:hover {
-	border-color: var(--logo);
-	color: var(--logo);
+    border-color: var(--btn-hover);
+    color: var(--btn-hover);
 }
 .nav-menu {
-	position: absolute;
-	inset-block-start: calc(100% + 0.5rem);
-	inset-inline-end: 0;
-	min-width: 12rem;
-	display: flex;
-	flex-direction: column;
-	gap: 0.15rem;
-	padding: 0.5rem;
-	border: 1px solid var(--dock-border);
-	border-radius: 12px;
-	background: var(--bg);
-	box-shadow: 0 12px 34px -16px rgba(22, 22, 15, 0.5);
-	z-index: 55;
+    position: absolute;
+    /* Tucked 1px under the button's bottom edge: the open button paints over the
+	   shared edge, so the two boxes merge into a single shape. */
+    inset-block-start: calc(100% - 1px);
+    inset-inline-start: 0; /* left edges align: the menu extends to the RIGHT */
+    min-width: 12rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    padding: 0.5rem;
+    border: 1px solid var(--dock-border);
+    border-radius: 12px;
+    border-start-start-radius: 0; /* squared where it continues the button's edge */
+    background: var(--surface);
+    box-shadow: 0 12px 34px -16px rgba(22, 22, 15, 0.5);
+    z-index: 55;
 }
 .nav-menu[hidden] {
-	display: none;
+    display: none;
+}
+/* Open state: button and dropdown read as ONE shape. The button takes the menu's
+   surface, squares its bottom corners, and opens the border between them (it sits
+   above the menu's tucked-under top edge, so it owns the seam). Hovering the
+   button then outlines the whole merged shape: the button's own hover recolours
+   its border, and the :has() rule recolours the menu's border in the same move. */
+.nav-toggle[aria-expanded="true"] {
+    background: var(--surface);
+    border-end-start-radius: 0;
+    border-end-end-radius: 0;
+    border-block-end-color: transparent;
+    z-index: 56;
+}
+.nav-toggle[aria-expanded="true"]:hover {
+    border-block-end-color: transparent; /* the seam stays open while hovered */
+}
+.nav-burger:has(.nav-toggle[aria-expanded="true"]:hover) .nav-menu {
+    border-color: var(--btn-hover);
 }
 .nav-menu .nav-link {
-	padding: 0.55rem 0.75rem;
-	border-radius: 8px;
+    /* 0.55rem all around: with the -0.15rem outline inset below, the hover line
+	   sits exactly 0.4rem from the text, the same gap as the inline dock links. */
+    padding: 0.55rem;
+    border-radius: 8px;
 }
-.nav-menu .nav-link:hover,
 .nav-menu .nav-link.active {
-	background: var(--hairline);
+    background: var(--hairline);
+}
+/* Dropdown rows hover exactly like the inline dock links: btn-hover text inside a
+   matching outline. Drawn 0.15rem INSIDE the row (negative offset) so the line
+   never crosses into the neighbouring rows or the menu's edge. */
+.nav-menu .nav-link:hover,
+.nav-menu .nav-link:focus-visible {
+    color: var(--btn-hover);
+    outline: 1.5px solid var(--btn-hover);
+    outline-offset: -0.15rem;
+}
+/* Download's home inside the dropdown: hidden until the phone layout (below) hides
+   the dock's own Download button and this row stands in for it. Scoped under
+   .nav-menu so it outranks the generic .logos-btn display rule. */
+.nav-menu .nav-menu__download {
+    display: none;
+    justify-content: center;
+    margin-top: 0.35rem;
+}
+/* GitHub's home inside the dropdown, a row like the nav links (same hover). It is
+   only ever seen below 60rem, where the dock's .gh-btn is hidden. */
+.nav-menu__github {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 
-@media (max-width: 48rem) {
-	.nav {
-		display: none;
-	}
-	.nav-toggle {
-		display: inline-flex;
-	}
+@media (max-width: 60rem) {
+    .nav {
+        display: none;
+    }
+    .nav-burger {
+        display: inline-flex;
+        /* Dead centre of the dock (absolute, so the wordmark and Download button
+		   widths can't push it off-centre). The dropdown anchors to this wrapper,
+		   so it rides along and always hangs right under the button. */
+        position: absolute;
+        inset-inline-start: 50%;
+        transform: translateX(-50%);
+    }
+    .nav-toggle {
+        display: inline-flex;
+    }
+    .gh-btn {
+        display: none; /* lives in the dropdown (.nav-menu__github) from here down */
+    }
 }
-/* Never show the dropdown on wide screens, even if it was toggled open before a
-   resize — the inline nav is authoritative there. */
-@media (min-width: 48.01rem) {
-	.nav-menu {
-		display: none;
-	}
+/* Phone widths: nothing shrinks. The dock's Download button moves into the
+   hamburger dropdown (.nav-menu__download) and the burger takes its place at the
+   dock's right edge, so the wordmark and burger keep their full size. */
+@media (max-width: 30rem) {
+    /* Direct child only: the dropdown (now inside .dock-right via .nav-burger)
+	   carries its own Download row, which must NOT be hidden with it. */
+    .dock-right > .logos-btn--download {
+        display: none;
+    }
+    .nav-burger {
+        position: relative;
+        inset-inline-start: auto;
+        transform: none;
+    }
+    /* The burger sits at the dock's right edge here, so there is no room to the
+	   right: the menu hangs left (right edges aligned) to stay on screen. */
+    .nav-menu {
+        inset-inline-start: auto;
+        inset-inline-end: 0;
+        border-start-start-radius: 12px;
+        border-start-end-radius: 0;
+    }
+    .nav-menu .nav-menu__download {
+        display: inline-flex;
+    }
 }
 
 /* ── Buttons ──────────────────────────────────────────────────────────────── */
 .logos-btn {
-	display: inline-flex;
-	align-items: center;
-	gap: 0.5rem;
-	padding: 0.7rem 1.4rem;
-	border-radius: 999px;
-	font-family: var(--sans);
-	font-weight: 600;
-	font-size: 1rem;
-	line-height: 1;
-	text-decoration: none;
-	border: 1.5px solid transparent;
-	cursor: pointer;
-	transition: transform 0.12s ease, filter 0.12s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.7rem 1.4rem;
+    border-radius: 999px;
+    font-family: var(--sans);
+    font-weight: 600;
+    font-size: 1rem;
+    line-height: 1;
+    text-decoration: none;
+    border: 1.5px solid transparent;
+    cursor: pointer;
+    transition:
+        transform 0.12s ease,
+        filter 0.12s ease;
 }
 .logos-btn:hover {
-	transform: translateY(-1px);
+    transform: translateY(-1px);
 }
 .logos-btn--download {
-	background: var(--download-bg);
-	color: var(--download-fg);
-	border-color: var(--download-fg);
-	border-radius: 7px;
-	font-size: 0.8rem;
+    background: var(--download-bg);
+    color: var(--download-fg);
+    border-color: var(--download-fg);
+    border-radius: 7px;
+    font-size: 0.8rem;
 }
 .logos-btn--download:hover {
-	filter: brightness(1.05);
+    filter: brightness(1.05);
 }
 .logos-btn--ghost {
-	background: transparent;
-	color: var(--heading);
-	border-color: var(--hairline);
-	border-radius: 7px;
-	font-size: 0.8rem;
+    background: var(--surface);
+    color: var(--heading);
+    border-color: var(--hairline);
+    border-radius: 7px;
+    font-size: 0.8rem;
 }
 .logos-btn--ghost:hover {
-	border-color: var(--logo);
-	color: var(--logo);
+    border-color: var(--btn-hover);
+    color: var(--btn-hover);
 }
 
 /* ── Theme toggle (fixed top-right on every page) ─────────────────────────── */
 .theme-switch {
-	position: fixed;
-	inset-block-start: 1.15rem;
-	inset-inline-end: 1.15rem;
-	z-index: 60;
-	display: inline-flex;
-	align-items: center;
-	cursor: pointer;
+    position: fixed;
+    inset-block-start: 1.15rem;
+    inset-inline-end: 1.15rem;
+    z-index: 60;
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
 }
 .theme-switch__input {
-	position: absolute;
-	width: 1px;
-	height: 1px;
-	opacity: 0;
-	pointer-events: none;
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
 }
 .theme-switch__track {
-	position: relative;
-	width: 3.6rem;
-	height: 1.9rem;
-	border-radius: 999px;
-	background: var(--track);
-	border: 1px solid var(--dock-border);
-	transition: background 0.18s ease;
+    position: relative;
+    width: 3.6rem;
+    height: 1.9rem;
+    border-radius: 999px;
+    background: var(--track);
+    border: 1px solid var(--dock-border);
+    transition: background 0.18s ease;
 }
 .theme-switch__thumb {
-	position: absolute;
-	top: 50%;
-	inset-inline-start: 0.2rem;
-	z-index: 1;
-	width: 1.5rem;
-	height: 1.5rem;
-	border-radius: 50%;
-	background: var(--white);
-	transform: translateY(-50%);
-	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-	transition: inset-inline-start 0.18s ease;
+    position: absolute;
+    top: 50%;
+    inset-inline-start: 0.2rem;
+    z-index: 1;
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 50%;
+    background: var(--white);
+    transform: translateY(-50%);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    transition: inset-inline-start 0.18s ease;
 }
 .theme-switch__icon {
-	position: absolute;
-	top: 50%;
-	transform: translateY(-50%);
-	z-index: 2;
-	color: var(--muted);
-	opacity: 0.5;
-	pointer-events: none;
-	transition: color 0.18s ease, opacity 0.18s ease;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 2;
+    color: var(--muted);
+    opacity: 0.5;
+    pointer-events: none;
+    transition:
+        color 0.18s ease,
+        opacity 0.18s ease;
 }
 .theme-switch__icon.sun {
-	inset-inline-start: 0.5rem;
+    inset-inline-start: 0.5rem;
 }
 .theme-switch__icon.moon {
-	inset-inline-end: 0.55rem;
+    inset-inline-end: 0.55rem;
 }
 .theme-switch:not(:has(.theme-switch__input:checked)) .sun {
-	color: #e8a33d;
-	opacity: 1;
+    color: #e8a33d;
+    opacity: 1;
 }
 .theme-switch:has(.theme-switch__input:checked) .moon {
-	color: var(--bp-dark);
-	opacity: 1;
+    color: var(--bp-dark);
+    opacity: 1;
 }
 .theme-switch__input:checked + .theme-switch__track {
-	background: var(--track-on);
+    background: var(--track-on);
 }
 .theme-switch__input:checked + .theme-switch__track .theme-switch__thumb {
-	inset-inline-start: calc(100% - 1.7rem);
+    inset-inline-start: calc(100% - 1.7rem);
 }
 .theme-switch__input:focus-visible + .theme-switch__track {
-	outline: 2px solid var(--accent);
-	outline-offset: 2px;
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
 }
 
 /* ── Page scaffold ────────────────────────────────────────────────────────── */
 .page-main {
-	padding-top: var(--nav-height);
+    padding-top: var(--nav-height);
 }
 
 /* ── Hero ─────────────────────────────────────────────────────────────────── */
 .hero {
-	min-height: calc(100svh - var(--nav-height));
-	display: grid;
-	grid-template-rows: 0.3fr auto 0.7fr;
-	text-align: center;
+    /* Drop the headline a comfortable way down the page, midway between hugging the
+	   nav and sitting at the vertical centre, then let the copy flow naturally. The
+	   hero doesn't force a full viewport height, so the frieze below rises into view;
+	   the frieze's own top margin (see .wisdom) sets the gap under the availability
+	   line, rather than leaving it to a grid spacer. */
+    padding-top: clamp(4rem, 10vh, 13rem);
+    text-align: center;
 }
 .hero__copy {
-	grid-row: 2;
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	padding-inline: 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-inline: 1rem;
 }
 .hero__headline {
-	font-family: var(--serif);
-	font-size: clamp(1.6rem, 8vw, 5.6rem);
-	line-height: 1.02;
-	font-weight: 600;
-	letter-spacing: -0.02em;
-	/* Stacked: the brand "Λόγος" is a fixed centered kicker and the rotating phrase
+    font-family: var(--serif);
+    /* 20% smaller than the original clamp(1.6rem, 8vw, 5.6rem). */
+    font-size: clamp(1.28rem, 6.4vw, 4.48rem);
+    line-height: 1.02;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    /* Stacked: the brand "Λόγος" is a fixed centered kicker and the rotating phrase
 	   sits centered on its own line directly below. The brand never moves as phrases
 	   rotate (the center never drifts), every phrase is centered on its own line, and
-	   long phrases wrap instead of overflowing — so it holds at any width. */
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	max-width: 100%;
-	margin: 0;
-	color: var(--heading);
-	/* Nudge the headline slightly down; transform keeps the grid's centering of
-	   the copy block undisturbed. */
-	transform: translateY(2svh);
+	   long phrases wrap instead of overflowing, so it holds at any width. */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    max-width: 100%;
+    margin: 0;
+    color: var(--heading);
 }
 /* Rotating tail of the headline ("Logos is ___"). All phrases stack in one grid
    cell; each phrase slides up out of view as the next rises into place. The box's
@@ -400,190 +547,297 @@ a {
    the accessible heading (see .sr-only). */
 /* The fixed wordmark that leads the rotating headline, in the brand blue-purple. */
 .hero__brand {
-	color: var(--logo);
-	white-space: nowrap; /* keep "Λόγος is" together as one unit */
+    color: var(--logo);
+    white-space: nowrap; /* keep "Λόγος is" together as one unit */
 }
 .hero__rotator {
-	display: inline-grid;
-	/* All phrases stack in one grid cell and are centered, so the box's intrinsic
+    display: inline-grid;
+    /* All phrases stack in one grid cell and are centered, so the box's intrinsic
 	   width is the WIDEST phrase and every phrase is centered on the line. max-width
 	   (and the wrap rule below) keep it from ever exceeding the viewport. */
-	justify-items: center;
-	text-align: center;
-	max-width: 100%;
-	vertical-align: bottom;
-	overflow: hidden;
-	line-height: 1.02;
-	/* With overflow clipped, the box aligns by its bottom edge, so padding-bottom
+    justify-items: center;
+    text-align: center;
+    max-width: 100%;
+    vertical-align: bottom;
+    overflow: hidden;
+    line-height: 1.02;
+    /* With overflow clipped, the box aligns by its bottom edge, so padding-bottom
 	   (clip room for descenders like the "g" in Language) would lift the words off
-	   the "Logos is" baseline — the equal negative margin pulls them back down. */
-	padding-bottom: 0.22em;
-	margin-bottom: -0.22em;
-	/* A sliver of clip-room on the right so a serif glyph's overhang (the final "e"
+	   the "Logos is" baseline; the equal negative margin pulls them back down. */
+    padding-bottom: 0.22em;
+    margin-bottom: -0.22em;
+    /* A sliver of clip-room on the right so a serif glyph's overhang (the final "e"
 	   in Language) isn't shaved off by the overflow clip. */
-	padding-right: 0.06em;
+    padding-right: 0.06em;
 }
 .hero__rot-item {
-	grid-area: 1 / 1;
-	width: max-content;
-	transform: translateY(110%);
-	opacity: 0;
-	transition: transform 1.1s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.85s ease;
+    grid-area: 1 / 1;
+    width: max-content;
+    transform: translateY(110%);
+    opacity: 0;
+    transition:
+        transform 1.1s cubic-bezier(0.22, 1, 0.36, 1),
+        opacity 0.85s ease;
 }
 .hero__rot-item.is-current {
-	transform: translateY(0);
-	opacity: 1;
+    transform: translateY(0);
+    opacity: 1;
 }
 .hero__rot-item.is-prev {
-	transform: translateY(-110%);
-	opacity: 0;
+    transform: translateY(-110%);
+    opacity: 0;
 }
 /* Used to snap an item back below the band without animating through the view. */
 .hero__rot-item.is-instant {
-	transition: none;
+    transition: none;
 }
 @media (prefers-reduced-motion: reduce) {
-	.hero__rot-item {
-		transition: none;
-	}
+    .hero__rot-item {
+        transition: none;
+    }
 }
 .hero__sub {
-	font-size: clamp(0.84rem, 1.28vw, 1.04rem);
-	line-height: 1.55;
-	/* Matched to the Download button's text color. */
-	color: var(--download-fg);
-	max-width: 46ch;
-	margin: 2.25rem 0 0;
-	/* Shift the sub + Download button + availability line down as a group (7% of
-	   viewport height) without the headline. A transform is used rather than
-	   margin so the copy block's measured height is unchanged — otherwise the
-	   grid's 0.3fr/0.7fr centering re-balances and drags the headline upward. */
-	transform: translateY(7svh);
+    font-size: clamp(0.84rem, 1.28vw, 1.04rem);
+    line-height: 1.55;
+    /* Matched to the Download button's text color. */
+    color: var(--download-fg);
+    max-width: 46ch;
+    margin: 2.25rem 0 0;
 }
 .hero__actions {
-	margin-top: 2.5rem;
-	transform: translateY(7svh);
-	display: flex;
-	gap: 0.75rem;
-	justify-content: center;
-	flex-wrap: wrap;
+    margin-top: 2.5rem;
+    display: flex;
+    gap: 0.75rem;
+    justify-content: center;
+    flex-wrap: wrap;
 }
 .hero__availability {
-	font-size: 0.85rem;
-	color: var(--muted);
-	margin: 0.9rem 0 0;
-	transform: translateY(7svh);
+    font-size: 0.85rem;
+    color: var(--muted);
+    margin: 0.9rem 0 0;
 }
 /* Below ~1280px the longest phrase can't fit on one line, so bound the rotator to
    the viewport and let phrases wrap (still centered) instead of being clipped. Above
    it, the grid reserves the widest phrase's width and no wrapping is needed. */
 @media (max-width: 80rem) {
-	.hero__rotator {
-		width: 92vw; /* definite width so wrapped lines have room and stay on-screen */
-	}
-	.hero__rot-item {
-		white-space: normal; /* wrap instead of running off-screen */
-		width: 100%; /* fill the bounded box (overrides the desktop max-content) */
-	}
+    .hero__rotator {
+        width: 92vw; /* definite width so wrapped lines have room and stay on-screen */
+    }
+    .hero__rot-item {
+        white-space: normal; /* wrap instead of running off-screen */
+        width: 100%; /* fill the bounded box (overrides the desktop max-content) */
+    }
 }
 
-/* ── Pillars ──────────────────────────────────────────────────────────────── */
-.pillars {
-	max-width: 72rem;
-	margin-inline: auto;
-	padding: 1rem 1.5rem 5rem;
+/* ── Wisdom frieze ────────────────────────────────────────────────────────────
+   A slow right-to-left drift of Greek reflections on the Logos, framed by two
+   hairlines like an inscription. The track holds TWO identical sequences; the
+   drift is driven in JS by nudging scrollLeft (see initWisdom), so the visitor can
+   also grab and scroll the frieze left/right by hand; auto and manual share one
+   mechanism, and a whole-sequence wrap keeps either direction seamless. Edges fade
+   to the page (mask) so quotes surface and dissolve like half-remembered text.
+   Hover/focus pauses the drift so a passage can be read and selected, and the Greek
+   is real, copyable text, not an image. Each quote is a centered multi-line stanza. */
+.wisdom {
+    position: relative;
+    /* The band itself: solid darker cream running edge to edge, framed by the two
+       hairlines. The edge fade lives on the inner scroller (below) so only the
+       TEXT dissolves at the sides, never the band or its hairlines. */
+    background: var(--surface);
+    /* A medium gap between the hero's availability line and the frieze. */
+    margin-top: clamp(3rem, 8vh, 6rem);
+    border-block: 1px solid var(--hairline);
+    padding-block: 2rem;
 }
-.pillars h2 {
-	font-family: var(--serif);
-	font-size: clamp(1.8rem, 4vw, 2.6rem);
-	letter-spacing: -0.01em;
-	text-align: center;
-	margin-bottom: 2.5rem;
-	color: var(--heading);
+/* The scroller: horizontally scrollable by hand (the drift shares the same
+   scrollLeft, see initWisdom); the scrollbar itself is hidden, since the drift
+   would otherwise keep it visible. */
+.wisdom__scroll {
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none; /* Firefox */
+    overscroll-behavior-x: contain;
+    /* Fade the left/right edges into the band so text emerges from and returns to
+       nothing rather than being hard-clipped. */
+    -webkit-mask-image: linear-gradient(
+        90deg,
+        transparent,
+        #000 12%,
+        #000 88%,
+        transparent
+    );
+    mask-image: linear-gradient(
+        90deg,
+        transparent,
+        #000 12%,
+        #000 88%,
+        transparent
+    );
 }
-.pillar-grid {
-	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
-	gap: 1.25rem;
+.wisdom__scroll::-webkit-scrollbar {
+    display: none; /* WebKit/Blink */
 }
-.pillar {
-	border: 1px solid var(--hairline);
-	border-radius: 12px;
-	padding: 1.4rem;
-	/* The one creamy white, same as the page; the border alone sets the card apart. */
-	background: var(--bg);
+.wisdom__track {
+    display: flex;
+    width: max-content;
 }
-.pillar h3 {
-	margin: 0 0 0.6rem;
-	font-size: 1.1rem;
-	color: var(--heading);
+.wisdom__seq {
+    display: flex;
+    align-items: center;
+    flex: none;
 }
-.pillar p {
-	margin: 0;
-	color: var(--muted);
-	font-size: 0.95rem;
+.wisdom__quote {
+    flex: none;
+    margin: 0;
+    padding-inline: 2.75rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    /* Honor the explicit line breaks baked into each quote (multi-line stanza), while
+	   still wrapping if a line is too wide for a narrow screen. */
+    white-space: pre-line;
+    text-align: center;
 }
-.pillar code {
-	font-family: var(--mono);
-	font-size: 0.85em;
+.wisdom__greek {
+    margin: 0;
+    font-family: var(--serif);
+    font-style: italic;
+    /* "Not quite small": comfortably readable, not a footnote. */
+    font-size: clamp(1.1rem, 1.7vw, 1.4rem);
+    line-height: 1.4;
+    color: var(--heading);
+}
+.wisdom__author {
+    font-family: var(--serif);
+    font-size: 0.82rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+}
+.wisdom__sep {
+    flex: none;
+    align-self: center;
+    font-size: 1.15rem;
+    line-height: 1;
+    color: var(--logo);
+    opacity: 0.55;
+    /* Sit the ornament on the Greek line, not the author line below it. */
+    transform: translateY(-0.55em);
+}
+/* No motion: initWisdom bails out (no auto-drift), so the frieze just holds still
+   and the reader scrolls it by hand. Drop the edge fade and the duplicate sequence,
+   which only exist to serve the seamless loop. */
+@media (prefers-reduced-motion: reduce) {
+    .wisdom__scroll {
+        -webkit-mask-image: none;
+        mask-image: none;
+    }
+    .wisdom__seq[aria-hidden="true"] {
+        display: none;
+    }
 }
 
 /* ── Vision / placeholder ─────────────────────────────────────────────────── */
 .vision {
-	max-width: 48rem;
-	margin-inline: auto;
-	padding: clamp(2rem, 6vw, 4rem) 1.5rem 5rem;
-	font-size: 1.05rem;
-	line-height: 1.7;
+    max-width: 48rem;
+    margin-inline: auto;
+    padding: clamp(2rem, 6vw, 4rem) 1.5rem 5rem;
+    font-size: 1.05rem;
+    line-height: 1.7;
 }
 .vision__lead {
-	font-size: 1.3rem;
-	line-height: 1.6;
-	color: var(--heading);
+    font-size: 1.3rem;
+    line-height: 1.6;
+    color: var(--heading);
 }
 .vision h2 {
-	font-family: var(--serif);
-	font-size: clamp(1.6rem, 3.5vw, 2.2rem);
-	margin-top: 2.75rem;
-	color: var(--heading);
+    font-family: var(--serif);
+    font-size: clamp(1.6rem, 3.5vw, 2.2rem);
+    margin-top: 2.75rem;
+    color: var(--heading);
 }
 .vision code {
-	font-family: var(--mono);
-	font-size: 0.9em;
+    font-family: var(--mono);
+    font-size: 0.9em;
 }
 .placeholder {
-	max-width: 48rem;
-	margin-inline: auto;
-	padding: clamp(4rem, 12vw, 8rem) 1.5rem;
-	text-align: center;
+    max-width: 48rem;
+    margin-inline: auto;
+    padding: clamp(4rem, 12vw, 8rem) 1.5rem;
+    text-align: center;
+}
+
+/* ── About ────────────────────────────────────────────────────────────────── */
+.about {
+    max-width: 60rem;
+    margin-inline: auto;
+    padding: clamp(2rem, 6vw, 4rem) 1.5rem 5rem;
+    font-size: 1.05rem;
+    line-height: 1.7;
+}
+.about__title {
+    font-family: var(--serif);
+    font-size: clamp(2rem, 5vw, 3rem);
+    color: var(--heading);
+    margin: 0 0 1.25rem;
+}
+.about__lead {
+    font-size: 1.3rem;
+    line-height: 1.6;
+    color: var(--heading);
+}
+/* The portrait sits centred at the BOTTOM of the page at every width, as a
+   circle rather than a card. */
+.about__portrait {
+    margin: 3rem auto 0;
+    width: min(16rem, 70vw);
+}
+.about__portrait img {
+    display: block;
+    width: 100%;
+    /* Overrides the height="900" attribute; without this the attribute wins and
+	   aspect-ratio is ignored (it only applies when a dimension is auto). */
+    height: auto;
+    aspect-ratio: 1;
+    object-fit: cover; /* square centre-crop of the source photo */
+    border: 1px solid var(--dock-border);
+    border-radius: 50%;
+    box-shadow: 0 10px 30px -18px rgba(22, 22, 15, 0.4);
+}
+.about__portrait figcaption {
+    margin-top: 0.8rem;
+    text-align: center;
+    font-size: 0.85rem;
+    color: var(--muted);
 }
 .placeholder h1 {
-	font-family: var(--serif);
-	font-size: clamp(2rem, 5vw, 3rem);
-	color: var(--heading);
+    font-family: var(--serif);
+    font-size: clamp(2rem, 5vw, 3rem);
+    color: var(--heading);
 }
 .placeholder p {
-	color: var(--muted);
+    color: var(--muted);
 }
 
 /* ── Roadmap ──────────────────────────────────────────────────────────────── */
 .roadmap {
-	max-width: 60rem;
-	margin-inline: auto;
-	padding: clamp(2rem, 6vw, 4rem) 1.5rem 5rem;
+    max-width: 60rem;
+    margin-inline: auto;
+    padding: clamp(2rem, 6vw, 4rem) 1.5rem 5rem;
 }
 .roadmap__title {
-	font-family: var(--serif);
-	font-size: clamp(2rem, 5vw, 3rem);
-	margin: 0;
-	color: var(--heading);
+    font-family: var(--serif);
+    font-size: clamp(2rem, 5vw, 3rem);
+    margin: 0;
+    color: var(--heading);
 }
 .roadmap__lead {
-	font-size: 1.2rem;
-	line-height: 1.6;
-	color: var(--muted);
-	margin: 1rem 0 2.75rem;
-	max-width: 52ch;
+    font-size: 1.2rem;
+    line-height: 1.6;
+    color: var(--muted);
+    margin: 1rem 0 2.75rem;
+    max-width: 52ch;
 }
 
 /* ── Roadmap milestones + dependency graph ──────────────────────────────────
@@ -592,715 +846,762 @@ a {
    with arrows from a blocker down to what it unblocks, and later milestones sit
    below. Status colours: done = green, ready = accent, blocked = amber. */
 .chip {
-	display: inline-block;
-	font-size: 0.68rem;
-	font-weight: 600;
-	letter-spacing: 0.03em;
-	text-transform: uppercase;
-	padding: 0.26rem 0.58rem;
-	border-radius: 999px;
-	line-height: 1.2;
+    display: inline-block;
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    padding: 0.26rem 0.58rem;
+    border-radius: 999px;
+    line-height: 1.2;
 }
 .chip--done {
-	background: var(--ok-bg);
-	color: var(--ok-text);
+    background: var(--ok-bg);
+    color: var(--ok-text);
 }
 .chip--ready {
-	background: var(--code-bg);
-	color: var(--accent);
-	box-shadow: inset 0 0 0 1px var(--accent);
+    background: var(--code-bg);
+    color: var(--accent);
+    box-shadow: inset 0 0 0 1px var(--accent);
 }
 .chip--blocked {
-	background: var(--warn-bg);
-	color: var(--warn-text);
+    background: var(--warn-bg);
+    color: var(--warn-text);
 }
 
 .depmap-legend {
-	display: flex;
-	flex-wrap: wrap;
-	gap: 1.1rem;
-	list-style: none;
-	margin: 0 0 1.75rem;
-	padding: 0;
-	font-size: 0.82rem;
-	color: var(--muted);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.1rem;
+    list-style: none;
+    margin: 0 0 1.75rem;
+    padding: 0;
+    font-size: 0.82rem;
+    color: var(--muted);
 }
 .depmap-legend li {
-	display: inline-flex;
-	align-items: center;
-	gap: 0.4rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
 }
 .depmap-legend li::before {
-	content: "";
-	width: 0.7rem;
-	height: 0.7rem;
-	border-radius: 50%;
+    content: "";
+    width: 0.7rem;
+    height: 0.7rem;
+    border-radius: 50%;
 }
 .depmap-legend .is-done::before {
-	background: var(--ok-text);
+    background: var(--ok-text);
 }
 .depmap-legend .is-ready::before {
-	background: var(--accent);
+    background: var(--accent);
 }
 .depmap-legend .is-blocked::before {
-	background: var(--warn-border);
+    background: var(--warn-border);
 }
 
-/* The dependency map: HTML node cards positioned over an SVG edge layer (dagre
-   computes the coordinates at build time). Cards are opaque, so an edge passing
-   nearby never shows through; scrolls horizontally when wider than the page. */
+/* The dependency map: HTML node cards positioned over an SVG edge layer (the build
+   computes the coordinates, see bandedMap in build/pages.ts). Cards are opaque, so an
+   edge passing nearby never shows through; scrolls horizontally when wider than the
+   page. */
 .depmap-scroll {
-	overflow-x: auto;
-	/* Full-bleed: break out of the .roadmap max-width so the graph area spans the
+    overflow-x: auto;
+    /* Never a vertical scrollbar: the box grows with the graph, so the only vertical
+	   overflow is the sliver the horizontal scrollbar itself eats, and letting that
+	   spawn a second bar (classic-scrollbar platforms) helps no one. */
+    overflow-y: clip;
+    /* No visible horizontal scrollbar either (`scrollbar-color` inherits, so the
+	   page's auto-hiding thumb would light this one up on every page scroll). The
+	   graph still pans by wheel, trackpad, and touch, like the wisdom frieze. */
+    scrollbar-width: none; /* Firefox */
+    /* Full-bleed: break out of the .roadmap max-width so the graph area spans the
 	   whole window. `html { overflow-x: clip }` keeps this from adding page scroll.
 	   `safe center` centres the graph when it fits and left-aligns it (so nothing is
 	   clipped) when it is wider than the window and needs to scroll. */
-	width: 100vw;
-	margin-inline: calc(50% - 50vw);
-	box-sizing: border-box;
-	padding: 0 1.5rem 0.5rem;
-	display: flex;
-	justify-content: safe center;
+    width: 100vw;
+    margin-inline: calc(50% - 50vw);
+    box-sizing: border-box;
+    padding: 0 1.5rem 0.5rem;
+    display: flex;
+    justify-content: safe center;
+}
+.depmap-scroll::-webkit-scrollbar {
+    display: none; /* WebKit/Blink */
 }
 .depmap {
-	position: relative;
-	flex: none;
+    position: relative;
+    flex: none;
 }
 .depmap__edges {
-	position: absolute;
-	inset: 0;
-	overflow: visible;
-	pointer-events: none;
+    position: absolute;
+    inset: 0;
+    overflow: visible;
+    pointer-events: none;
 }
 .depedge {
-	fill: none;
-	stroke: var(--hairline);
-	stroke-width: 2;
+    fill: none;
+    stroke: var(--hairline);
+    stroke-width: 2;
 }
 #dep-arrow path {
-	fill: var(--muted);
+    fill: var(--muted);
 }
 .depnode {
-	position: absolute;
-	box-sizing: border-box;
-	display: block;
-	/* The inline width is the build-time layout width; never let a card be wider than
+    position: absolute;
+    box-sizing: border-box;
+    display: block;
+    /* The inline width is the build-time layout width; never let a card be wider than
 	   the window, so on a phone it caps to the viewport and wraps a little taller. */
-	max-width: calc(100vw - 3rem);
-	padding: 0.55rem 0.75rem;
-	border: 1px solid var(--hairline);
-	border-left: 3px solid var(--hairline);
-	border-radius: 10px;
-	background: var(--bg);
-	overflow: visible;
-	text-decoration: none;
-	color: inherit;
-	transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    max-width: calc(100vw - 3rem);
+    padding: 0.55rem 0.75rem;
+    border: 1px solid var(--hairline);
+    border-left: 3px solid var(--hairline);
+    border-radius: 10px;
+    background: var(
+        --surface
+    ); /* opaque: edges passing near a card must not show through */
+    overflow: visible;
+    text-decoration: none;
+    color: inherit;
+    transition:
+        border-color 0.15s ease,
+        box-shadow 0.15s ease;
 }
 .depnode:hover {
-	box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
 }
 .depnode__num {
-	font-family: var(--mono, monospace);
-	font-size: 0.72rem;
-	color: var(--muted);
-	flex-shrink: 0;
+    font-family: var(--mono, monospace);
+    font-size: 0.72rem;
+    color: var(--muted);
+    flex-shrink: 0;
 }
 .depnode__title {
-	font-family: var(--sans);
-	font-size: 0.95rem;
-	font-weight: 600;
-	line-height: 1.25;
-	color: var(--heading);
-	margin: 0.1rem 0 0.3rem;
+    font-family: var(--sans);
+    font-size: 0.95rem;
+    font-weight: 600;
+    line-height: 1.25;
+    color: var(--heading);
+    margin: 0.1rem 0 0.3rem;
 }
 .depnode__desc {
-	margin: 0;
-	font-size: 0.82rem;
-	line-height: 1.4;
-	color: var(--muted);
+    margin: 0;
+    font-size: 0.82rem;
+    line-height: 1.4;
+    color: var(--muted);
 }
 /* Top row of a node: the issue number, then its GitHub label chips to the right (all
    labels except `roadmap`; colours come from each label's own GitHub colour, inline).
    Wraps to a new row when the tags do not fit. */
 .depnode__top {
-	display: flex;
-	flex-wrap: wrap;
-	align-items: center;
-	gap: 0.28rem 0.4rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.28rem 0.4rem;
 }
 .deplabel {
-	font-size: 0.66rem;
-	font-weight: 600;
-	line-height: 1.2;
-	padding: 0.12rem 0.44rem;
-	border-radius: 999px;
-	white-space: nowrap;
+    font-size: 0.66rem;
+    font-weight: 600;
+    line-height: 1.2;
+    padding: 0.12rem 0.44rem;
+    border-radius: 999px;
+    white-space: nowrap;
 }
 .depnode--done {
-	border-left-color: var(--ok-text);
+    border-left-color: var(--ok-text);
 }
 .depnode--done:hover {
-	border-color: var(--ok-text);
+    border-color: var(--ok-text);
 }
 .depnode--ready {
-	border-left-color: var(--accent);
+    border-left-color: var(--accent);
 }
 .depnode--ready:hover {
-	border-color: var(--accent);
+    border-color: var(--accent);
 }
 .depnode--blocked {
-	border-left-color: var(--warn-border);
+    border-left-color: var(--warn-border);
 }
 .depnode--blocked:hover {
-	border-color: var(--warn-border);
+    border-color: var(--warn-border);
 }
 
 /* Milestone "finish line": a full-width dashed rule with a label pill on the left.
    Positioned absolutely (like the nodes) at the band boundary; the issues of the
    milestone sit above it, later milestones below. */
 .msline {
-	position: absolute;
-	box-sizing: border-box;
-	display: flex;
-	align-items: center;
-	gap: 0.85rem;
+    position: absolute;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
 }
 .msline__line {
-	flex: 1;
-	height: 0;
-	border-top: 2px dashed var(--accent);
-	opacity: 0.7;
+    flex: 1;
+    height: 0;
+    border-top: 2px dashed var(--accent);
+    opacity: 0.7;
 }
 .msline__label {
-	display: inline-flex;
-	align-items: baseline;
-	gap: 0.5rem;
-	padding: 0.3rem 0.7rem;
-	border-radius: 999px;
-	background: var(--code-bg);
-	box-shadow: inset 0 0 0 1px var(--accent);
-	text-decoration: none;
-	white-space: nowrap;
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    padding: 0.3rem 0.7rem;
+    border-radius: 999px;
+    background: var(--code-bg);
+    box-shadow: inset 0 0 0 1px var(--accent);
+    text-decoration: none;
+    white-space: nowrap;
 }
 .msline__flag {
-	font-size: 0.62rem;
-	font-weight: 700;
-	letter-spacing: 0.08em;
-	text-transform: uppercase;
-	color: var(--muted);
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
 }
 .msline__title {
-	font-family: var(--serif);
-	font-size: 1rem;
-	font-weight: 600;
-	color: var(--heading);
+    font-family: var(--serif);
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--heading);
 }
 .msline__meta {
-	font-size: 0.75rem;
-	color: var(--muted);
+    font-size: 0.75rem;
+    color: var(--muted);
 }
 .msline--closed .msline__line {
-	border-top-color: var(--ok-text);
+    border-top-color: var(--ok-text);
 }
 .msline--closed .msline__label {
-	box-shadow: inset 0 0 0 1px var(--ok-text);
+    box-shadow: inset 0 0 0 1px var(--ok-text);
+}
+/* Portrait windows (client re-render, build/roadmap-render.ts): no room for a label
+   gutter beside the graph, so the pill stacks above its rule instead. */
+.msline--stack {
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-end;
+    gap: 0.4rem;
+}
+.msline--stack .msline__line {
+    flex: none;
+    width: 100%;
 }
 /* ── Footer ───────────────────────────────────────────────────────────────── */
 .site-footer {
-	display: flex;
-	justify-content: center;
-	padding: 1.5rem;
-	border-top: 1px solid var(--hairline);
+    display: flex;
+    justify-content: center;
+    padding: 1.5rem;
+    border-top: 1px solid var(--hairline);
 }
 .gh-link {
-	display: inline-flex;
-	align-items: center;
-	gap: 0.5rem;
-	font-size: 0.9rem;
-	font-weight: 500;
-	color: var(--muted);
-	text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--muted);
+    text-decoration: none;
 }
 .gh-link:hover {
-	color: var(--logo);
+    color: var(--logo);
 }
 
 /* ── Docs layout (logo lives atop the sidebar; independent-scroll panes) ───── */
 body.docs-page {
-	height: 100vh;
-	overflow: hidden;
+    height: 100vh;
+    overflow: hidden;
 }
 body.docs-page .page-main {
-	padding-top: 0;
+    padding-top: 0;
 }
 
 .docs {
-	position: relative;
-	--sidebar-w: 16rem; /* updated live by the draggable divider */
-	display: grid;
-	grid-template-columns: var(--sidebar-w) minmax(0, 1fr);
-	/* Full width so the content pane's scrollbar sits at the true right edge; the
+    position: relative;
+    --sidebar-w: 16rem; /* updated live by the draggable divider */
+    display: grid;
+    grid-template-columns: var(--sidebar-w) minmax(0, 1fr);
+    /* Full width so the content pane's scrollbar sits at the true right edge; the
 	   article itself is capped below so the text keeps a right margin. */
 }
 /* Draggable splitter sitting over the sidebar/content divider. */
 .docs-resizer {
-	position: absolute;
-	inset-block: 0;
-	inset-inline-start: var(--sidebar-w);
-	width: 11px;
-	transform: translateX(-50%);
-	cursor: col-resize;
-	z-index: 5;
-	touch-action: none;
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: var(--sidebar-w);
+    width: 11px;
+    transform: translateX(-50%);
+    cursor: col-resize;
+    z-index: 5;
+    touch-action: none;
 }
 .docs-resizer::after {
-	content: '';
-	position: absolute;
-	inset-block: 0;
-	inset-inline-start: 50%;
-	width: 2px;
-	transform: translateX(-50%);
-	background: var(--accent);
-	opacity: 0;
-	transition: opacity 0.12s ease;
+    content: "";
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: 50%;
+    width: 2px;
+    transform: translateX(-50%);
+    background: var(--accent);
+    opacity: 0;
+    transition: opacity 0.12s ease;
 }
 .docs-resizer:hover::after,
 .docs-resizer.is-dragging::after {
-	opacity: 0.6;
+    opacity: 0.6;
 }
 .docs-sidebar {
-	height: 100vh;
-	overflow-y: auto;
-	/* No inline padding here: the logo dock can then centre across the full panel
-	   width; the controls and tree carry their own inline padding instead. */
-	padding: 1.4rem 0 2rem 0;
-	border-inline-end: 1px solid var(--hairline); /* divider between nav and content */
+    height: 100vh;
+    overflow-y: auto;
+    /* No inline padding here: the logo dock can then centre across the full panel
+	   width; the controls and tree carry their own inline padding instead. The
+	   0.85rem top matches the floating dock's inset so the logo sits at the same
+	   height as on every other page. */
+    padding: 0.85rem 0 2rem 0;
+    border-inline-end: 1px solid var(--hairline); /* divider between nav and content */
 }
 .docs-logo {
-	display: block;
-	width: fit-content;
-	margin: 0 auto 1.6rem; /* centred between the panel's left edge and the divider */
-	padding: 0.4rem 1.5rem;
-	border: 1px solid var(--dock-border);
-	border-radius: 14px;
-	background: var(--dock-bg);
-	-webkit-backdrop-filter: saturate(140%) blur(12px);
-	backdrop-filter: saturate(140%) blur(12px);
-	box-shadow: 0 10px 30px -18px rgba(22, 22, 15, 0.4);
-	font-family: var(--serif);
-	font-size: 1.6rem;
-	font-weight: 500;
-	letter-spacing: 0.01em;
-	color: var(--logo);
-	text-decoration: none;
+    display: block;
+    width: fit-content;
+    margin: 0 auto 1.6rem; /* centred between the panel's left edge and the divider */
+    padding: 0.55rem 1.5rem; /* same vertical padding as .dock: equal logo height */
+    border: 1px solid var(--dock-border);
+    border-radius: 14px;
+    background: var(--surface-frost);
+    -webkit-backdrop-filter: saturate(140%) blur(12px);
+    backdrop-filter: saturate(140%) blur(12px);
+    box-shadow: 0 10px 30px -18px rgba(22, 22, 15, 0.4);
+    font-family: var(--serif);
+    font-size: 1.6rem;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    color: var(--logo);
+    text-decoration: none;
+    transition: color 0.12s ease;
+}
+/* The docs home button hovers to ink/creamy white, matching the dock links' hover. */
+.docs-logo:hover {
+    color: var(--btn-hover);
 }
 .docs-main {
-	height: 100vh;
-	min-width: 0;
-	overflow-y: auto; /* single scroll; the topbar sticks while the article scrolls */
-	padding: 0 0 0 3rem; /* left margin between the divider and the content */
+    height: 100vh;
+    min-width: 0;
+    overflow-y: auto; /* single scroll; the topbar sticks while the article scrolls */
+    padding: 0 0 0 3rem; /* left margin between the divider and the content */
 }
 
 /* Auto-hiding scrollbar (every page): no track, and the thumb shows only while
-   scrolling — the `is-scrolling` class is toggled by the client on the whole-page
+   scrolling; the `is-scrolling` class is toggled by the client on the whole-page
    scroll (<html>) and on the docs panes alike. */
 html,
 .docs-main,
 .docs-sidebar {
-	scrollbar-width: thin;
-	scrollbar-color: transparent transparent;
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
 }
 html.is-scrolling,
 .docs-main.is-scrolling,
 .docs-sidebar.is-scrolling {
-	scrollbar-color: var(--muted) transparent;
+    scrollbar-color: var(--muted) transparent;
 }
 html::-webkit-scrollbar,
 .docs-main::-webkit-scrollbar,
 .docs-sidebar::-webkit-scrollbar {
-	width: 9px;
+    width: 9px;
 }
 html::-webkit-scrollbar-track,
 .docs-main::-webkit-scrollbar-track,
 .docs-sidebar::-webkit-scrollbar-track {
-	background: transparent;
+    background: transparent;
 }
 html::-webkit-scrollbar-thumb,
 .docs-main::-webkit-scrollbar-thumb,
 .docs-sidebar::-webkit-scrollbar-thumb {
-	background: transparent;
-	border: 2px solid transparent;
-	border-radius: 999px;
-	background-clip: padding-box;
-	transition: background 0.3s ease;
+    background: transparent;
+    border: 2px solid transparent;
+    border-radius: 999px;
+    background-clip: padding-box;
+    transition: background 0.3s ease;
 }
 html.is-scrolling::-webkit-scrollbar-thumb,
 .docs-main.is-scrolling::-webkit-scrollbar-thumb,
 .docs-sidebar.is-scrolling::-webkit-scrollbar-thumb {
-	background: var(--muted);
-	background-clip: padding-box;
+    background: var(--muted);
+    background-clip: padding-box;
 }
 
 /* Controls */
 .docs-controls {
-	display: flex;
-	flex-direction: column;
-	gap: 0.6rem;
-	margin-bottom: 1rem;
-	padding-inline: 1.4rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    margin-bottom: 1rem;
+    padding-inline: 1.4rem;
 }
 .docs-version {
-	display: flex;
-	align-items: center;
-	gap: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 .docs-version__label {
-	font-size: 0.8rem;
-	color: var(--muted);
-	text-transform: uppercase;
-	letter-spacing: 0.04em;
+    font-size: 0.8rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
 }
 .docs-version__select,
 .docs-search__input,
 .docs-search__regex {
-	font-size: 0.85rem;
-	border-radius: 7px;
-	border: 1px solid var(--dock-border);
-	background: var(--dock-bg);
-	color: var(--text);
+    font-size: 0.85rem;
+    border-radius: 7px;
+    border: 1px solid var(--dock-border);
+    background: var(
+        --surface
+    ); /* raised-surface tint, like the dock and cards */
+    color: var(--text);
 }
 .docs-version__select {
-	flex: 1;
-	font-family: var(--mono);
-	padding: 0.35rem 0.5rem;
+    flex: 1;
+    font-family: var(--mono);
+    padding: 0.35rem 0.5rem;
 }
 .docs-search {
-	display: flex;
-	gap: 0.4rem;
+    display: flex;
+    gap: 0.4rem;
 }
 .docs-search__input {
-	flex: 1;
-	min-width: 0;
-	padding: 0.4rem 0.55rem;
+    flex: 1;
+    min-width: 0;
+    padding: 0.4rem 0.55rem;
 }
 .docs-search__regex {
-	flex: none;
-	width: 2.1rem;
-	font-family: var(--mono);
-	color: var(--muted);
-	cursor: pointer;
+    flex: none;
+    width: 2.1rem;
+    font-family: var(--mono);
+    color: var(--muted);
+    cursor: pointer;
 }
 .docs-search__regex.active {
-	color: var(--download-fg);
-	background: var(--download-bg);
-	border-color: var(--download-fg);
+    color: var(--download-fg);
+    background: var(--download-bg);
+    border-color: var(--download-fg);
 }
 
 /* Search results */
 .docs-search-results {
-	display: flex;
-	flex-direction: column;
-	gap: 0.1rem;
-	margin-bottom: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    margin-bottom: 1rem;
 }
 .search-result {
-	display: flex;
-	justify-content: space-between;
-	gap: 0.5rem;
-	padding: 0.35rem 0.5rem;
-	border-radius: 6px;
-	text-decoration: none;
-	color: var(--text);
-	font-size: 0.85rem;
+    display: flex;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.35rem 0.5rem;
+    border-radius: 6px;
+    text-decoration: none;
+    color: var(--text);
+    font-size: 0.85rem;
 }
 .search-result:hover {
-	background: var(--hairline);
+    background: var(--hairline);
 }
 .search-result__meta {
-	color: var(--muted);
-	font-family: var(--mono);
-	font-size: 0.76rem;
-	white-space: nowrap;
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 0.76rem;
+    white-space: nowrap;
 }
 
 /* File tree: one indent per level, guide line under the chevron */
 .docs-tree {
-	padding-inline: 1.4rem;
+    padding-inline: 1.4rem;
 }
 .docs-tree .tree {
-	list-style: none;
-	margin: 0;
-	padding: 0;
+    list-style: none;
+    margin: 0;
+    padding: 0;
 }
 .docs-tree .tree--nested {
-	margin-inline-start: 0.78rem; /* aligns the guide under the chevron centre */
-	padding-inline-start: 0.6rem;
-	border-inline-start: 1px solid var(--hairline);
+    margin-inline-start: 0.78rem; /* aligns the guide under the chevron centre */
+    padding-inline-start: 0.6rem;
+    border-inline-start: 1px solid var(--hairline);
 }
 .tree-folder {
-	display: flex;
-	align-items: center;
-	gap: 0.35rem;
-	width: 100%;
-	padding: 0.3rem 0.4rem;
-	background: none;
-	border: none;
-	cursor: pointer;
-	font: inherit;
-	font-weight: 600;
-	font-size: 0.82rem;
-	letter-spacing: 0.03em;
-	text-transform: uppercase;
-	color: var(--heading);
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    width: 100%;
+    padding: 0.3rem 0.4rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font: inherit;
+    font-weight: 600;
+    font-size: 0.82rem;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: var(--heading);
 }
 .tree-folder::-webkit-details-marker,
 .tree-folder::marker {
-	display: none;
-	content: '';
+    display: none;
+    content: "";
 }
 .tree-chev {
-	flex: none;
-	color: var(--muted);
-	transition: transform 0.15s ease;
+    flex: none;
+    color: var(--muted);
+    transition: transform 0.15s ease;
 }
 details:not([open]) > .tree-folder .tree-chev {
-	transform: rotate(-90deg);
+    transform: rotate(-90deg);
 }
 .tree-folder__label {
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 .tree-link {
-	display: flex;
-	align-items: center;
-	padding: 0.3rem 0.4rem 0.3rem 1.5rem; /* align text under folder labels */
-	border: 1.5px solid transparent; /* reserved so the active outline never shifts layout */
-	border-radius: 6px;
-	font-size: 0.9rem;
-	color: var(--muted);
-	text-decoration: none;
+    display: flex;
+    align-items: center;
+    padding: 0.3rem 0.4rem 0.3rem 1.5rem; /* align text under folder labels */
+    border: 1.5px solid transparent; /* reserved so the active outline never shifts layout */
+    border-radius: 6px;
+    font-size: 0.9rem;
+    color: var(--muted);
+    text-decoration: none;
 }
 .tree-link:hover {
-	color: var(--heading);
-	background: var(--hairline);
+    color: var(--heading);
+    background: var(--hairline);
 }
 .tree-link.active {
-	color: var(--download-fg);
-	background: var(--download-bg);
-	border-color: var(--download-fg); /* black in light, white in dark — like the download button */
-	font-weight: 600;
+    color: var(--download-fg);
+    background: var(--download-bg);
+    border-color: var(
+        --download-fg
+    ); /* black in light, white in dark, like the download button */
+    font-weight: 600;
 }
 .tree-ver {
-	margin-inline-start: auto;
-	padding-inline-start: 0.5rem;
-	font-family: var(--mono);
-	font-size: 0.7rem;
-	color: var(--muted);
-	opacity: 0.85;
+    margin-inline-start: auto;
+    padding-inline-start: 0.5rem;
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    color: var(--muted);
+    opacity: 0.85;
 }
 .tree-link.active .tree-ver {
-	color: var(--download-fg);
-	opacity: 0.85;
+    color: var(--download-fg);
+    opacity: 0.85;
 }
 
 /* Topbar: per-section version nav (turns orange when off the correct version).
-   Pinned to the top of the scroll pane but transparent and click-through — only
+   Pinned to the top of the scroll pane but transparent and click-through; only
    the pills below carry a frosted-glass background, so they hover above the
    article and the text reads through rather than vanishing behind a solid bar.
    Switching versions keeps the picker in the exact same spot for comparison. */
 .docs-topbar {
-	position: sticky;
-	top: 0;
-	z-index: 2;
-	display: flex;
-	align-items: center;
-	gap: 0.85rem;
-	max-width: 60rem;
-	padding: 1.1rem 2.5rem 0.7rem 0;
-	background: transparent;
-	pointer-events: none;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    max-width: 60rem;
+    padding: 1.1rem 2.5rem 0.7rem 0;
+    background: transparent;
+    pointer-events: none;
 }
 .docs-snapnav__group {
-	display: inline-flex;
-	align-items: center;
-	gap: 0.3rem;
-	padding: 0.2rem;
-	border: 1px solid var(--dock-border);
-	border-radius: 999px;
-	background: var(--dock-bg);
-	-webkit-backdrop-filter: saturate(140%) blur(12px);
-	backdrop-filter: saturate(140%) blur(12px);
-	box-shadow: 0 10px 30px -18px rgba(22, 22, 15, 0.4);
-	color: var(--text);
-	pointer-events: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.2rem;
+    border: 1px solid var(--dock-border);
+    border-radius: 999px;
+    background: var(--surface-frost);
+    -webkit-backdrop-filter: saturate(140%) blur(12px);
+    backdrop-filter: saturate(140%) blur(12px);
+    box-shadow: 0 10px 30px -18px rgba(22, 22, 15, 0.4);
+    color: var(--text);
+    pointer-events: auto;
 }
 .docs-snapnav__group.off {
-	border-color: var(--warn-border);
-	color: var(--warn-text);
+    border-color: var(--warn-border);
+    color: var(--warn-text);
 }
 .docs-snapnav__btn {
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	width: 1.7rem;
-	height: 1.7rem;
-	border: none;
-	border-radius: 50%;
-	background: transparent;
-	color: inherit;
-	text-decoration: none;
-	cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.7rem;
+    height: 1.7rem;
+    border: none;
+    border-radius: 50%;
+    background: transparent;
+    color: inherit;
+    text-decoration: none;
+    cursor: pointer;
 }
 .docs-snapnav__btn:hover:not([aria-disabled]) {
-	background: var(--hairline);
+    background: var(--hairline);
 }
 .docs-snapnav__btn[aria-disabled] {
-	opacity: 0.35;
-	cursor: default;
+    opacity: 0.35;
+    cursor: default;
 }
 .docs-snapnav__ver {
-	font-family: var(--mono);
-	font-size: 0.85rem;
-	min-width: 3.6rem;
-	text-align: center;
-	color: var(--muted);
+    font-family: var(--mono);
+    font-size: 0.85rem;
+    min-width: 3.6rem;
+    text-align: center;
+    color: var(--muted);
 }
 .docs-snapnav__group.off .docs-snapnav__ver {
-	color: var(--warn-text);
+    color: var(--warn-text);
 }
 .docs-correct {
-	font-size: 0.85rem;
-	color: var(--warn-text);
-	text-decoration: none;
-	padding: 0.3rem 0.7rem;
-	border: 1px solid var(--warn-border);
-	border-radius: 999px;
-	background: var(--warn-bg);
-	-webkit-backdrop-filter: saturate(140%) blur(12px);
-	backdrop-filter: saturate(140%) blur(12px);
-	box-shadow: 0 10px 30px -18px rgba(22, 22, 15, 0.4);
-	pointer-events: auto;
+    font-size: 0.85rem;
+    color: var(--warn-text);
+    text-decoration: none;
+    padding: 0.3rem 0.7rem;
+    border: 1px solid var(--warn-border);
+    border-radius: 999px;
+    background: var(--warn-bg);
+    -webkit-backdrop-filter: saturate(140%) blur(12px);
+    backdrop-filter: saturate(140%) blur(12px);
+    box-shadow: 0 10px 30px -18px rgba(22, 22, 15, 0.4);
+    pointer-events: auto;
 }
 .docs-correct:hover {
-	text-decoration: underline;
+    text-decoration: underline;
 }
 
 .docs-content {
-	max-width: 60rem; /* keep readable line length and a margin before the scrollbar */
-	padding-top: 0.4rem;
-	padding-inline-end: 2.5rem;
-	padding-bottom: 4rem;
+    max-width: 60rem; /* keep readable line length and a margin before the scrollbar */
+    padding-top: 0.4rem;
+    padding-inline-end: 2.5rem;
+    padding-bottom: 4rem;
 }
 .docs-notice {
-	color: var(--muted);
-	font-style: italic;
+    color: var(--muted);
+    font-style: italic;
 }
 
 mark.search-hit {
-	background: #ffe08a;
-	color: inherit;
-	border-radius: 2px;
+    background: #ffe08a;
+    color: inherit;
+    border-radius: 2px;
 }
-:root[data-theme='dark'] mark.search-hit {
-	background: #7a5a12;
-	color: var(--white);
+:root[data-theme="dark"] mark.search-hit {
+    background: #7a5a12;
+    color: var(--white);
 }
 
 @media (max-width: 52rem) {
-	body.docs-page,
-	body.docs-page .page-main {
-		height: auto;
-		overflow: visible;
-	}
-	.docs {
-		grid-template-columns: 1fr;
-	}
-	.docs-sidebar {
-		height: auto;
-		border-inline-end: none;
-		border-block-end: 1px solid var(--hairline);
-		padding-inline-end: 1.4rem;
-	}
-	.docs-main {
-		height: auto;
-		padding-inline-start: 0;
-	}
-	.docs-content {
-		overflow: visible;
-	}
+    body.docs-page,
+    body.docs-page .page-main {
+        height: auto;
+        overflow: visible;
+    }
+    .docs {
+        grid-template-columns: 1fr;
+    }
+    .docs-sidebar {
+        height: auto;
+        border-inline-end: none;
+        border-block-end: 1px solid var(--hairline);
+        padding-inline-end: 1.4rem;
+    }
+    .docs-main {
+        height: auto;
+        /* Stacked layout: match the sidebar controls' inline padding so the
+		   article keeps a margin from the window edge. */
+        padding-inline-start: 1.4rem;
+    }
+    .docs-content {
+        overflow: visible;
+    }
+    /* The panes are stacked, so there is no vertical divider to drag: without
+	   this the invisible resizer strip still sits over the page and shows a
+	   col-resize cursor + hover line. */
+    .docs-resizer {
+        display: none;
+    }
 }
 
 /* ── Markdown content ─────────────────────────────────────────────────────── */
 .markdown {
-	font-size: 1rem;
-	line-height: 1.7;
-	color: var(--text);
+    font-size: 1rem;
+    line-height: 1.7;
+    color: var(--text);
 }
 .markdown h1 {
-	font-family: var(--serif);
-	font-size: clamp(1.9rem, 4vw, 2.6rem);
-	letter-spacing: -0.01em;
-	color: var(--heading);
-	margin: 0 0 1.25rem;
+    font-family: var(--serif);
+    font-size: clamp(1.9rem, 4vw, 2.6rem);
+    letter-spacing: -0.01em;
+    color: var(--heading);
+    margin: 0 0 1.25rem;
 }
 .markdown h2 {
-	font-family: var(--serif);
-	font-size: 1.6rem;
-	color: var(--heading);
-	margin: 2.25rem 0 0.75rem;
+    font-family: var(--serif);
+    font-size: 1.6rem;
+    color: var(--heading);
+    margin: 2.25rem 0 0.75rem;
 }
 .markdown h3 {
-	font-size: 1.2rem;
-	color: var(--heading);
-	margin: 1.75rem 0 0.5rem;
+    font-size: 1.2rem;
+    color: var(--heading);
+    margin: 1.75rem 0 0.5rem;
 }
 .markdown a {
-	color: var(--accent);
+    color: var(--accent);
 }
 .markdown code {
-	font-family: var(--mono);
-	font-size: 0.88em;
-	background: var(--hairline);
-	padding: 0.12em 0.36em;
-	border-radius: 5px;
+    font-family: var(--mono);
+    font-size: 0.88em;
+    background: var(--hairline);
+    padding: 0.12em 0.36em;
+    border-radius: 5px;
 }
 .markdown pre {
-	margin: 1.25rem 0;
-	padding: 1rem 1.2rem;
-	border: 1px solid var(--hairline);
-	border-radius: 10px;
-	background: var(--code-bg);
-	overflow-x: auto;
+    margin: 1.25rem 0;
+    padding: 1rem 1.2rem;
+    border: 1px solid var(--hairline);
+    border-radius: 10px;
+    background: var(--code-bg);
+    overflow-x: auto;
 }
 .markdown pre code {
-	background: none;
-	padding: 0;
-	font-size: 0.9rem;
-	line-height: 1.6;
+    background: none;
+    padding: 0;
+    font-size: 0.9rem;
+    line-height: 1.6;
 }
 .markdown table {
-	width: 100%;
-	border-collapse: collapse;
-	margin: 1.25rem 0;
-	font-size: 0.95rem;
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1.25rem 0;
+    font-size: 0.95rem;
 }
 .markdown th,
 .markdown td {
-	border: 1px solid var(--hairline);
-	padding: 0.5rem 0.75rem;
-	text-align: left;
+    border: 1px solid var(--hairline);
+    padding: 0.5rem 0.75rem;
+    text-align: left;
 }
 .markdown th {
-	background: var(--dock-bg);
-	color: var(--heading);
+    background: var(--dock-bg);
+    color: var(--heading);
 }
 .markdown blockquote {
-	margin: 1.25rem 0;
-	padding-left: 1rem;
-	border-left: 3px solid var(--dock-border);
-	color: var(--muted);
+    margin: 1.25rem 0;
+    padding-left: 1rem;
+    border-left: 3px solid var(--dock-border);
+    color: var(--muted);
 }
 
 /* Shiki dual-theme: only the token colours switch on [data-theme]. We deliberately
@@ -1308,406 +1609,406 @@ mark.search-hit {
    coffee page); the code block keeps the warm --code-bg from `.markdown pre`. */
 .shiki,
 .shiki span {
-	color: var(--shiki-light);
-	background-color: transparent;
+    color: var(--shiki-light);
+    background-color: transparent;
 }
-:root[data-theme='dark'] .shiki,
-:root[data-theme='dark'] .shiki span {
-	color: var(--shiki-dark);
-	background-color: transparent;
+:root[data-theme="dark"] .shiki,
+:root[data-theme="dark"] .shiki span {
+    color: var(--shiki-dark);
+    background-color: transparent;
 }
 
 /* ── Download page ────────────────────────────────────────────────────────── */
 .download {
-	max-width: 64rem;
-	margin-inline: auto;
-	padding: clamp(2rem, 6vw, 4rem) 1.5rem 5rem;
+    max-width: 64rem;
+    margin-inline: auto;
+    padding: clamp(2rem, 6vw, 4rem) 1.5rem 5rem;
 }
 .download__title {
-	font-family: var(--serif);
-	font-size: clamp(2rem, 5vw, 3rem);
-	margin: 0;
-	color: var(--heading);
+    font-family: var(--serif);
+    font-size: clamp(2rem, 5vw, 3rem);
+    margin: 0;
+    color: var(--heading);
 }
 .download__lead {
-	font-size: 1.15rem;
-	line-height: 1.6;
-	color: var(--muted);
-	margin: 1rem 0 2.25rem;
-	max-width: 60ch;
+    font-size: 1.15rem;
+    line-height: 1.6;
+    color: var(--muted);
+    margin: 1rem 0 2.25rem;
+    max-width: 60ch;
 }
 .download__bar {
-	display: flex;
-	flex-wrap: wrap;
-	align-items: center;
-	gap: 1rem;
-	margin-bottom: 1.75rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.75rem;
 }
 .download__version {
-	display: inline-flex;
-	align-items: center;
-	gap: 0.6rem;
-	font-family: var(--sans);
-	font-weight: 600;
-	color: var(--heading);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-family: var(--sans);
+    font-weight: 600;
+    color: var(--heading);
 }
 #dl-version {
-	font-family: var(--mono);
-	font-size: 0.9rem;
-	padding: 0.5rem 0.7rem;
-	border-radius: 7px;
-	border: 1.5px solid var(--hairline);
-	background: var(--code-bg);
-	color: var(--text);
-	cursor: pointer;
+    font-family: var(--mono);
+    font-size: 0.9rem;
+    padding: 0.5rem 0.7rem;
+    border-radius: 7px;
+    border: 1.5px solid var(--hairline);
+    background: var(--code-bg);
+    color: var(--text);
+    cursor: pointer;
 }
 #dl-version:focus-visible {
-	outline: 2px solid var(--accent);
-	outline-offset: 1px;
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
 }
 .download__meta {
-	font-size: 0.85rem;
-	color: var(--muted);
+    font-size: 0.85rem;
+    color: var(--muted);
 }
 .download__grid {
-	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
-	gap: 1.1rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
+    gap: 1.1rem;
 }
 .dl-card {
-	position: relative;
-	border: 1.5px solid var(--hairline);
-	border-radius: 12px;
-	padding: 1.2rem 1.2rem 1.35rem;
-	background: var(--bg);
-	display: flex;
-	flex-direction: column;
-	gap: 1rem;
+    position: relative;
+    border: 1.5px solid var(--hairline);
+    border-radius: 12px;
+    padding: 1.2rem 1.2rem 1.35rem;
+    background: var(--bg);
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
 }
 .dl-card.is-recommended {
-	border-color: var(--accent);
+    border-color: var(--accent);
 }
 .dl-card.is-recommended::after {
-	content: 'Detected';
-	position: absolute;
-	top: -0.7rem;
-	right: 1rem;
-	font-family: var(--sans);
-	font-size: 0.68rem;
-	font-weight: 700;
-	letter-spacing: 0.03em;
-	text-transform: uppercase;
-	color: var(--white);
-	background: var(--accent);
-	padding: 0.18rem 0.5rem;
-	border-radius: 999px;
+    content: "Detected";
+    position: absolute;
+    top: -0.7rem;
+    right: 1rem;
+    font-family: var(--sans);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: var(--white);
+    background: var(--accent);
+    padding: 0.18rem 0.5rem;
+    border-radius: 999px;
 }
 .dl-card__os {
-	font-family: var(--serif);
-	font-size: 1.4rem;
-	margin: 0;
-	color: var(--heading);
+    font-family: var(--serif);
+    font-size: 1.4rem;
+    margin: 0;
+    color: var(--heading);
 }
 .dl-card__none {
-	margin: 0;
-	color: var(--muted);
-	font-size: 0.9rem;
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.9rem;
 }
 .dl-row {
-	display: flex;
-	flex-direction: column;
-	gap: 0.55rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
 }
 .dl-row + .dl-row {
-	padding-top: 0.9rem;
-	border-top: 1px solid var(--hairline);
+    padding-top: 0.9rem;
+    border-top: 1px solid var(--hairline);
 }
 .dl-row__head {
-	display: flex;
-	flex-wrap: wrap;
-	align-items: center;
-	justify-content: space-between;
-	gap: 0.6rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.6rem;
 }
 .dl-row__arch {
-	font-family: var(--sans);
-	font-size: 0.85rem;
-	font-weight: 600;
-	color: var(--muted);
+    font-family: var(--sans);
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--muted);
 }
 .dl-row__dl {
-	white-space: nowrap;
+    white-space: nowrap;
 }
 .dl-cmd {
-	position: relative;
+    position: relative;
 }
 .dl-cmd__pre {
-	margin: 0;
-	background: var(--code-bg);
-	border: 1px solid var(--hairline);
-	border-radius: 8px;
-	padding: 0.7rem 4.2rem 0.7rem 0.85rem;
-	overflow-x: auto;
+    margin: 0;
+    background: var(--code-bg);
+    border: 1px solid var(--hairline);
+    border-radius: 8px;
+    padding: 0.7rem 4.2rem 0.7rem 0.85rem;
+    overflow-x: auto;
 }
 .dl-cmd__pre code {
-	font-family: var(--mono);
-	font-size: 0.82rem;
-	line-height: 1.5;
-	color: var(--text);
-	white-space: pre;
+    font-family: var(--mono);
+    font-size: 0.82rem;
+    line-height: 1.5;
+    color: var(--text);
+    white-space: pre;
 }
 .dl-copy {
-	position: absolute;
-	top: 0.5rem;
-	right: 0.5rem;
-	font-family: var(--sans);
-	font-size: 0.72rem;
-	font-weight: 600;
-	color: var(--download-fg);
-	background: var(--download-bg);
-	border: 1px solid var(--download-fg);
-	border-radius: 6px;
-	padding: 0.28rem 0.6rem;
-	cursor: pointer;
-	transition: filter 0.12s ease;
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    font-family: var(--sans);
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--download-fg);
+    background: var(--download-bg);
+    border: 1px solid var(--download-fg);
+    border-radius: 6px;
+    padding: 0.28rem 0.6rem;
+    cursor: pointer;
+    transition: filter 0.12s ease;
 }
 .dl-copy:hover {
-	filter: brightness(1.05);
+    filter: brightness(1.05);
 }
 .dl-copy.is-copied {
-	background: var(--ok-bg);
-	color: var(--ok-text);
-	border-color: var(--ok-text);
+    background: var(--ok-bg);
+    color: var(--ok-text);
+    border-color: var(--ok-text);
 }
 .download__hint {
-	margin-top: 2rem;
-	font-size: 0.9rem;
-	color: var(--muted);
-	max-width: 60ch;
+    margin-top: 2rem;
+    font-size: 0.9rem;
+    color: var(--muted);
+    max-width: 60ch;
 }
 .download__hint code {
-	font-family: var(--mono);
-	font-size: 0.85em;
+    font-family: var(--mono);
+    font-size: 0.85em;
 }
 .download--empty {
-	text-align: center;
+    text-align: center;
 }
 .download--empty .download__lead {
-	margin-inline: auto;
+    margin-inline: auto;
 }
 .download__empty-actions {
-	display: flex;
-	flex-wrap: wrap;
-	gap: 0.8rem;
-	justify-content: center;
-	margin-top: 0.5rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.8rem;
+    justify-content: center;
+    margin-top: 0.5rem;
 }
 
 /* ── Playground page ──────────────────────────────────────────────────────── */
 .playground {
-	max-width: 64rem;
-	margin-inline: auto;
-	padding: clamp(2rem, 6vw, 4rem) 1.5rem 5rem;
+    max-width: 64rem;
+    margin-inline: auto;
+    padding: clamp(2rem, 6vw, 4rem) 1.5rem 5rem;
 }
 .playground__title {
-	font-family: var(--serif);
-	font-size: clamp(2rem, 5vw, 3rem);
-	margin: 0 0 1rem;
-	color: var(--heading);
+    font-family: var(--serif);
+    font-size: clamp(2rem, 5vw, 3rem);
+    margin: 0 0 1rem;
+    color: var(--heading);
 }
 .playground__lead {
-	font-size: 1.15rem;
-	line-height: 1.6;
-	color: var(--muted);
-	max-width: 60ch;
+    font-size: 1.15rem;
+    line-height: 1.6;
+    color: var(--muted);
+    max-width: 60ch;
 }
 .playground--empty .playground__lead {
-	margin-bottom: 1.5rem;
+    margin-bottom: 1.5rem;
 }
 .playground__empty-actions {
-	display: flex;
-	flex-wrap: wrap;
-	gap: 0.8rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.8rem;
 }
 .pg-bar {
-	display: flex;
-	flex-wrap: wrap;
-	align-items: center;
-	gap: 1rem;
-	margin-bottom: 1rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
 }
 .pg-version-label {
-	display: inline-flex;
-	align-items: center;
-	gap: 0.6rem;
-	font-family: var(--sans);
-	font-weight: 600;
-	color: var(--heading);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-family: var(--sans);
+    font-weight: 600;
+    color: var(--heading);
 }
 #pg-version {
-	font-family: var(--mono);
-	font-size: 0.9rem;
-	padding: 0.5rem 0.7rem;
-	border-radius: 7px;
-	border: 1.5px solid var(--hairline);
-	background: var(--code-bg);
-	color: var(--text);
-	cursor: pointer;
+    font-family: var(--mono);
+    font-size: 0.9rem;
+    padding: 0.5rem 0.7rem;
+    border-radius: 7px;
+    border: 1.5px solid var(--hairline);
+    background: var(--code-bg);
+    color: var(--text);
+    cursor: pointer;
 }
 #pg-version:focus-visible {
-	outline: 2px solid var(--accent);
-	outline-offset: 1px;
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
 }
 #pg-run {
-	cursor: pointer;
+    cursor: pointer;
 }
 .pg-meta {
-	font-size: 0.85rem;
-	color: var(--muted);
+    font-size: 0.85rem;
+    color: var(--muted);
 }
 .pg-grid {
-	display: grid;
-	grid-template-columns: 1fr 1fr;
-	gap: 1rem;
-	min-height: 22rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    min-height: 22rem;
 }
 @media (max-width: 40rem) {
-	.pg-grid {
-		grid-template-columns: 1fr;
-	}
+    .pg-grid {
+        grid-template-columns: 1fr;
+    }
 }
 .pg-editor,
 .pg-output {
-	font-family: var(--mono);
-	font-size: 0.85rem;
-	line-height: 1.6;
-	border: 1.5px solid var(--hairline);
-	border-radius: 10px;
-	padding: 1rem;
-	background: var(--code-bg);
-	color: var(--text);
-	margin: 0;
-	min-height: 22rem;
-	overflow: auto;
+    font-family: var(--mono);
+    font-size: 0.85rem;
+    line-height: 1.6;
+    border: 1.5px solid var(--hairline);
+    border-radius: 10px;
+    padding: 1rem;
+    background: var(--code-bg);
+    color: var(--text);
+    margin: 0;
+    min-height: 22rem;
+    overflow: auto;
 }
 .pg-editor {
-	resize: vertical;
-	width: 100%;
-	tab-size: 2;
+    resize: vertical;
+    width: 100%;
+    tab-size: 2;
 }
 .pg-editor:focus-visible {
-	outline: 2px solid var(--accent);
-	outline-offset: 1px;
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
 }
 .pg-output {
-	white-space: pre-wrap;
-	color: var(--muted);
+    white-space: pre-wrap;
+    color: var(--muted);
 }
 .pg-note {
-	margin-top: 1.5rem;
-	font-size: 0.9rem;
-	color: var(--warn-text);
-	background: var(--warn-bg);
-	border: 1px solid var(--warn-border);
-	border-radius: 8px;
-	padding: 0.7rem 0.9rem;
-	max-width: 70ch;
+    margin-top: 1.5rem;
+    font-size: 0.9rem;
+    color: var(--warn-text);
+    background: var(--warn-bg);
+    border: 1px solid var(--warn-border);
+    border-radius: 8px;
+    padding: 0.7rem 0.9rem;
+    max-width: 70ch;
 }
 
 /* ── Footer legal links ───────────────────────────────────────────────────── */
 .footer-links {
-	display: inline-flex;
-	flex-wrap: wrap;
-	align-items: center;
-	gap: 1rem;
-	margin-left: 1.25rem;
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem;
+    margin-left: 1.25rem;
 }
 .footer-link {
-	font-family: var(--sans);
-	font-size: 0.85rem;
-	color: var(--muted);
-	background: none;
-	border: none;
-	padding: 0;
-	cursor: pointer;
-	text-decoration: none;
+    font-family: var(--sans);
+    font-size: 0.85rem;
+    color: var(--muted);
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    text-decoration: none;
 }
 .footer-link:hover {
-	color: var(--logo);
-	text-decoration: underline;
+    color: var(--logo);
+    text-decoration: underline;
 }
 
 /* ── Cookie consent banner ────────────────────────────────────────────────── */
 .consent {
-	position: fixed;
-	inset-inline: 1rem;
-	inset-block-end: 1rem;
-	z-index: 80;
-	max-width: 30rem;
-	margin-inline: auto;
-	display: flex;
-	flex-direction: column;
-	gap: 0.85rem;
-	padding: 1rem 1.1rem;
-	background: var(--dock-bg);
-	border: 1.5px solid var(--dock-border);
-	border-radius: 12px;
-	backdrop-filter: blur(12px);
-	box-shadow: 0 8px 30px rgba(0, 0, 0, 0.18);
+    position: fixed;
+    inset-inline: 1rem;
+    inset-block-end: 1rem;
+    z-index: 80;
+    max-width: 30rem;
+    margin-inline: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+    padding: 1rem 1.1rem;
+    background: var(--surface-frost); /* one token for all frosted panels */
+    border: 1.5px solid var(--dock-border);
+    border-radius: 12px;
+    backdrop-filter: blur(12px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.18);
 }
 .consent[hidden] {
-	display: none;
+    display: none;
 }
 .consent__text {
-	margin: 0;
-	font-size: 0.88rem;
-	line-height: 1.5;
-	color: var(--text);
+    margin: 0;
+    font-size: 0.88rem;
+    line-height: 1.5;
+    color: var(--text);
 }
 .consent__text a {
-	color: var(--accent);
+    color: var(--accent);
 }
 .consent__actions {
-	display: flex;
-	justify-content: flex-end;
-	gap: 0.6rem;
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.6rem;
 }
 
 /* ── Legal / privacy page ─────────────────────────────────────────────────── */
 .legal {
-	max-width: 48rem;
-	margin-inline: auto;
-	padding: clamp(2rem, 6vw, 4rem) 1.5rem 5rem;
+    max-width: 48rem;
+    margin-inline: auto;
+    padding: clamp(2rem, 6vw, 4rem) 1.5rem 5rem;
 }
 .legal__title {
-	font-family: var(--serif);
-	font-size: clamp(2rem, 5vw, 3rem);
-	margin: 0;
-	color: var(--heading);
+    font-family: var(--serif);
+    font-size: clamp(2rem, 5vw, 3rem);
+    margin: 0;
+    color: var(--heading);
 }
 .legal__updated {
-	color: var(--muted);
-	font-size: 0.9rem;
-	margin: 0.25rem 0 2rem;
+    color: var(--muted);
+    font-size: 0.9rem;
+    margin: 0.25rem 0 2rem;
 }
 .legal h2 {
-	font-family: var(--serif);
-	font-size: 1.5rem;
-	color: var(--heading);
-	margin: 2rem 0 0.5rem;
+    font-family: var(--serif);
+    font-size: 1.5rem;
+    color: var(--heading);
+    margin: 2rem 0 0.5rem;
 }
 .legal p,
 .legal li {
-	line-height: 1.7;
-	color: var(--text);
+    line-height: 1.7;
+    color: var(--text);
 }
 .legal a {
-	color: var(--accent);
+    color: var(--accent);
 }
 .legal code {
-	font-family: var(--mono);
-	font-size: 0.88em;
-	background: var(--code-bg);
-	padding: 0.1em 0.35em;
-	border-radius: 4px;
+    font-family: var(--mono);
+    font-size: 0.88em;
+    background: var(--code-bg);
+    padding: 0.1em 0.35em;
+    border-radius: 4px;
 }

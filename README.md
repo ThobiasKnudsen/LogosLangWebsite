@@ -1,4 +1,4 @@
-# Λόγος — logoslang.dev
+# Λόγος · logoslang.dev
 
 The marketing + documentation website for **Logos**, a self-hosting systems
 language built on radical unification.
@@ -35,10 +35,10 @@ page.
 
 ## Stack & conventions
 
-- **Custom SSG** — no framework. `npm run build` (`build/build.ts`) renders every
+- **Custom SSG**: no framework. `npm run build` (`build/build.ts`) renders every
   page to a real static URL under `dist/`; `npm run dev` (`build/server.ts`) builds
   once, serves `dist/`, watches the sources, rebuilds, and live-reloads.
-- **Markdown** — `markdown-it` for docs, with [Shiki](https://shiki.style) code
+- **Markdown**: `markdown-it` for docs, with [Shiki](https://shiki.style) code
   highlighting (dual light/dark via CSS variables). Internal doc links are
   version-less and resolved within the viewed version at build time.
 - **Versioned docs.** Each version is a complete, self-contained tree under
@@ -47,10 +47,10 @@ page.
   `build/version.ts` (covered by `build/version.test.ts`), while the *guard* that
   enforces the layout + freeze lives in LogosLang as bash. The version picker and
   per-page version arrows are server-rendered and progressively enhanced by the client.
-- **Bundling** — [esbuild](https://esbuild.github.io) bundles `client/main.ts` and
+- **Bundling**: [esbuild](https://esbuild.github.io) bundles `client/main.ts` and
   `styles/theme.css` into `dist/assets/`, with self-hosted fonts emitted to
   `dist/assets/fonts/`.
-- **SEO / AI discovery** — every page emits canonical + Open Graph/Twitter tags and
+- **SEO / AI discovery**: every page emits canonical + Open Graph/Twitter tags and
   schema.org JSON-LD; the build also writes `sitemap.xml` and an
   [`llms.txt`](https://llmstxt.org) map so AI answer-engines can read the site.
 - **Fonts** (self-hosted via Fontsource): Figtree (UI/body), EB Garamond (serif +
@@ -127,7 +127,7 @@ list is **baked at build time** by `build/fetch-releases.ts` (a deploy hook rebu
 it on each release), and `client/main.ts` re-renders the grid on version change and
 highlights the visitor's OS. With JS off, the latest version's commands all work.
 
-**Asset naming convention** — the contract between LogosLang's `release.yml` and the
+**Asset naming convention**: the contract between LogosLang's `release.yml` and the
 download + playground pages (`build/releases.ts`). Assets that don't match are ignored:
 
 ```
@@ -146,7 +146,7 @@ a runtime that targets WebAssembly. Each `<option>` already carries its wasm URL
 `data-wasm`, and the eventual harness should run it in a **Web Worker** with a
 timeout/terminate kill-switch so runaway user code can't freeze the tab.
 
-> ⚠️ Both build steps in `release.yml` are **clearly-marked placeholders** — the native
+> ⚠️ Both build steps in `release.yml` are **clearly-marked placeholders**: the native
 > jobs upload a stub archive, and the wasm job uploads a minimal valid (empty) wasm
 > module. They wire the pipeline end to end; replace them with the real toolchain build
 > once there's a compiler/seed to compile. The download and playground pages need no
@@ -174,7 +174,7 @@ is what makes a completed version un-revisitable through normal merges.
 ### Releasing safely (multiple pushes, hotfixes)
 
 A *push* and a *release* are different events. Push to `main` as many times as you
-like while a version is in progress — nothing is finalized until you **tag** it, and
+like while a version is in progress; nothing is finalized until you **tag** it, and
 only the tag triggers the build + freeze. So "many pushes, one tag" is the normal flow.
 
 - **Releasing is serialized.** Both release workflows use a `concurrency` group, so two
@@ -203,16 +203,16 @@ add `logoslang.dev` as a custom domain in the Pages project.
 Analytics is **consent-gated and off by default**. The build reads three optional env
 vars; with the ids unset, there is no banner, no scripts, and no cookies at all:
 
-- `GA4_ID` — Google Analytics 4 measurement id (`G-XXXXXXXXXX`).
-- `CLARITY_ID` — Microsoft Clarity project id (heatmaps, session replays).
-- `PRIVACY_CONTACT` — optional email shown on `/privacy/` (else it points at GitHub).
+- `GA4_ID`: Google Analytics 4 measurement id (`G-XXXXXXXXXX`).
+- `CLARITY_ID`: Microsoft Clarity project id (heatmaps, session replays).
+- `PRIVACY_CONTACT`: optional email shown on `/privacy/` (else it points at GitHub).
 
 When either id is set, every page gets a cookie consent banner (`templates.ts` +
 `initConsent` in `client/main.ts`). **Nothing tracking loads until the visitor clicks
-Accept** — only then are the GA4 and Clarity scripts injected and their cookies set.
+Accept**; only then are the GA4 and Clarity scripts injected and their cookies set.
 Reject loads nothing; the choice lives in a strictly-necessary `consent` cookie, and
 "Cookie settings" in the footer reopens the banner to change it. The `/privacy/` page
-(`privacyPage` in `build/pages.ts`) documents what's collected — review/adjust it.
+(`privacyPage` in `build/pages.ts`) documents what's collected; review/adjust it.
 
 To turn it on: create the GA4 + Clarity projects, then add `GA4_ID`, `CLARITY_ID`
 (and optionally `PRIVACY_CONTACT`) as **Production environment variables** in the

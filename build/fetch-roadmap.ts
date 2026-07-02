@@ -51,7 +51,15 @@ function readSnapshot(): Roadmap {
 
 function writeSnapshot(roadmap: Roadmap): void {
   try {
-    writeFileSync(SNAPSHOT_PATH, `${JSON.stringify(roadmap, null, 2)}\n`);
+    const next = `${JSON.stringify(roadmap, null, 2)}\n`;
+    // Skip identical writes: a rewrite bumps the mtime, and anything watching the
+    // file (editors, tooling) would see a phantom change on every build.
+    try {
+      if (readFileSync(SNAPSHOT_PATH, "utf8") === next) return;
+    } catch {
+      /* no snapshot yet -> write it */
+    }
+    writeFileSync(SNAPSHOT_PATH, next);
   } catch (err) {
     console.warn(`roadmap: could not write snapshot (${(err as Error).message}).`);
   }

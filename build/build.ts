@@ -26,6 +26,7 @@ import {
   playgroundPage,
   privacyPage,
   notFoundPage,
+  aboutPage,
 } from "./pages.ts";
 import { renderDocsMain } from "./docs-render.ts";
 import { fetchReleases } from "./fetch-releases.ts";
@@ -405,6 +406,8 @@ export async function build(): Promise<void> {
     "An in-browser Logos playground is on the way: evaluate expressions and watch the same engine the compiler uses rewrite them live.";
   const downloadDesc =
     "Download Logos: pick a version and get a one-line install command and a direct download for macOS, Linux, and Windows.";
+  const aboutDesc =
+    "About the creator of Logos: Thobias Melfjord Knudsen, systems programmer from Trondheim and winner of Norway's first national AI championship.";
 
   // Released builds, baked into the download page. Never fails the build (see
   // fetch-releases.ts); a release fires a deploy hook that rebuilds this page.
@@ -502,6 +505,16 @@ export async function build(): Promise<void> {
     }),
   );
   await writePage(
+    "about/index.html",
+    page({
+      title: "About",
+      active: "about",
+      path: "/about/",
+      description: aboutDesc,
+      main: aboutPage(),
+    }),
+  );
+  await writePage(
     "privacy/index.html",
     page({
       title: "Privacy & Cookies",
@@ -539,6 +552,7 @@ export async function build(): Promise<void> {
     { path: "/examples/", title: "Examples", desc: examplesDesc },
     { path: "/playground/", title: "Playground", desc: playgroundDesc },
     { path: "/download/", title: "Download", desc: downloadDesc },
+    { path: "/about/", title: "About", desc: aboutDesc },
   ];
   const docsLanding = docs.docEntries.length
     ? [
