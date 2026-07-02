@@ -58,6 +58,9 @@
     --warn-bg: #fdf1e1;
     --warn-border: #e9a23b;
     --warn-text: #8a4b00;
+    /* Pre-alpha hero note: one yellow-orange for both its text and its edge line,
+       darker here so it reads on the cream page (lighter in the dark theme). */
+    --hero-note: #9a5b00;
     --ok-bg: #e7f3ea;
     --ok-text: #2b6b34;
     --metro-main: var(--accent);
@@ -95,6 +98,7 @@
     --warn-bg: #2b1f12;
     --warn-border: #b9772a;
     --warn-text: #f0c089;
+    --hero-note: #f2b160; /* lighter yellow-orange over the near-black page */
     --ok-bg: #16291a;
     --ok-text: #8ce0a0;
     --metro-main: var(--accent);
@@ -521,6 +525,19 @@ a {
     flex-direction: column;
     align-items: center;
     padding-inline: 1rem;
+}
+/* Pre-alpha notice above the headline: yellow-orange text with an edge line in the
+   SAME colour (--hero-note: darker in the light theme, lighter in the dark theme).
+   Its bottom margin is the extra space between the note and the headline. */
+.hero__note {
+    margin: 0 0 clamp(2rem, 6vh, 3.5rem);
+    max-width: 46rem;
+    padding: 0.7rem 1.2rem;
+    border: 1px solid var(--hero-note);
+    border-radius: 12px;
+    color: var(--hero-note);
+    font-size: 0.9rem;
+    line-height: 1.55;
 }
 .hero__headline {
     font-family: var(--serif);
