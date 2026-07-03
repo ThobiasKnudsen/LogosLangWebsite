@@ -182,11 +182,28 @@ assign(declare(&mut logos, «:=»), ?, ?)
 assign(declare(&mut logos, «=»), ?, ?)`;
 
 const LOGOS_KEYWORDS = new Set([
-  "fn", "mut", "immut", "type", "struct", "shared", "if", "else", "for",
-  "while", "and", "or", "xor", "not", "where", "eval", "self", "error",
+  "fn",
+  "mut",
+  "immut",
+  "type",
+  "struct",
+  "shared",
+  "if",
+  "else",
+  "for",
+  "while",
+  "and",
+  "or",
+  "xor",
+  "not",
+  "where",
+  "eval",
+  "self",
+  "error",
   "undefined",
 ]);
-const LOGOS_TYPES = /^(?:[iu](?:8|16|32|64)|f32|f64|string|bool|dyad@?|void@|exec@)$/;
+const LOGOS_TYPES =
+  /^(?:[iu](?:8|16|32|64)|f32|f64|string|bool|dyad@?|void@|exec@)$/;
 
 /** Minimal Logos highlighter for the fixed homepage sample: comments, «strings»,
  *  numbers, keywords, primitive types, and operators become spans; everything else
@@ -201,7 +218,8 @@ function highlightLogos(source: string): string {
     for (const m of code.matchAll(TOKEN)) {
       out += escapeHtml(code.slice(idx, m.index));
       const t = m[0];
-      if (t.startsWith("«")) out += `<span class="tok-str">${escapeHtml(t)}</span>`;
+      if (t.startsWith("«"))
+        out += `<span class="tok-str">${escapeHtml(t)}</span>`;
       else if (/^\d/.test(t)) out += `<span class="tok-num">${t}</span>`;
       else if (/^[A-Za-z_]/.test(t))
         out += LOGOS_KEYWORDS.has(t)
@@ -260,7 +278,20 @@ interface CompareRow {
   cells: CompareCell[];
 }
 
-const COMPARE_LANGS = ["Logos", "C/C++", "Rust", "Zig", "Lean 4", "Unison", "Racket", "Smalltalk", "Julia", "Python", "TS/JS", "Mojo"];
+const COMPARE_LANGS = [
+  "Logos",
+  "C/C++",
+  "Rust",
+  "Zig",
+  "Lean 4",
+  "Unison",
+  "Racket",
+  "Smalltalk",
+  "Julia",
+  "Python",
+  "TS/JS",
+  "Mojo",
+];
 
 // Cells are in COMPARE_LANGS order: Logos, C/C++, Rust, Zig, Lean 4, Unison,
 // Racket, Smalltalk, Julia, Python, TS/JS, Mojo.
@@ -268,117 +299,416 @@ const COMPARE_ROWS: CompareRow[] = [
   {
     label: "Memory safety without a GC",
     sub: "ownership and borrow checking, zero runtime cost",
-    cells: [{ v: "yes" }, { v: "no", note: 16 }, { v: "yes" }, { v: "no", note: 9 }, { v: "no" }, { v: "no" }, { v: "no" }, { v: "no" }, { v: "no" }, { v: "no" }, { v: "no" }, { v: "partial", note: 13 }],
+    cells: [
+      { v: "yes" },
+      { v: "no", note: 16 },
+      { v: "yes" },
+      { v: "no", note: 9 },
+      { v: "no" },
+      { v: "no" },
+      { v: "no" },
+      { v: "no" },
+      { v: "no" },
+      { v: "no" },
+      { v: "no" },
+      { v: "partial", note: 13 },
+    ],
   },
   {
     label: "Compiles to native machine code",
     sub: "AOT or JIT, systems-grade performance",
-    cells: [{ v: "yes" }, { v: "yes" }, { v: "yes" }, { v: "yes" }, { v: "yes", note: 1 }, { v: "partial" }, { v: "partial" }, { v: "partial" }, { v: "yes" }, { v: "partial", note: 18 }, { v: "partial" }, { v: "yes" }],
+    cells: [
+      { v: "yes" },
+      { v: "yes" },
+      { v: "yes" },
+      { v: "yes" },
+      { v: "yes", note: 1 },
+      { v: "partial" },
+      { v: "partial" },
+      { v: "partial" },
+      { v: "yes" },
+      { v: "partial", note: 18 },
+      { v: "partial" },
+      { v: "yes" },
+    ],
   },
   {
     label: "The speed ceiling of C and Rust",
     sub: "no GC or boxing tax, zero-cost abstractions",
-    cells: [{ v: "yes" }, { v: "yes" }, { v: "yes" }, { v: "yes" }, { v: "no", note: 1 }, { v: "no" }, { v: "no" }, { v: "no" }, { v: "partial", note: 21 }, { v: "no" }, { v: "no" }, { v: "yes" }],
+    cells: [
+      { v: "yes" },
+      { v: "yes" },
+      { v: "yes" },
+      { v: "yes" },
+      { v: "no", note: 1 },
+      { v: "no" },
+      { v: "no" },
+      { v: "no" },
+      { v: "partial", note: 21 },
+      { v: "no" },
+      { v: "no" },
+      { v: "yes" },
+    ],
   },
   {
     label: "Targets GPUs and custom hardware",
     sub: "kernels written in the language itself, not shader strings",
-    cells: [{ v: "yes" }, { v: "yes" }, { v: "partial", note: 11 }, { v: "partial" }, { v: "no" }, { v: "no" }, { v: "no" }, { v: "no" }, { v: "yes" }, { v: "partial", note: 19 }, { v: "no" }, { v: "yes" }],
+    cells: [
+      { v: "yes" },
+      { v: "yes" },
+      { v: "partial", note: 11 },
+      { v: "partial" },
+      { v: "no" },
+      { v: "no" },
+      { v: "no" },
+      { v: "no" },
+      { v: "yes" },
+      { v: "partial", note: 19 },
+      { v: "no" },
+      { v: "yes" },
+    ],
   },
   {
     label: "Runs in the browser",
     sub: "compiles to WebAssembly or runs in a web page",
-    cells: [{ v: "partial", note: 32 }, { v: "partial", note: 32 }, { v: "partial", note: 32 }, { v: "partial", note: 32 }, { v: "no" }, { v: "no" }, { v: "no" }, { v: "partial", note: 27 }, { v: "no" }, { v: "partial", note: 28 }, { v: "yes" }, { v: "no" }],
+    cells: [
+      { v: "partial", note: 32 },
+      { v: "partial", note: 32 },
+      { v: "partial", note: 32 },
+      { v: "partial", note: 32 },
+      { v: "no" },
+      { v: "no" },
+      { v: "no" },
+      { v: "partial", note: 27 },
+      { v: "no" },
+      { v: "partial", note: 28 },
+      { v: "yes" },
+      { v: "no" },
+    ],
   },
   {
     label: "Multithreaded parallelism",
     sub: "use every core with shared memory",
-    cells: [{ v: "yes" }, { v: "yes" }, { v: "yes" }, { v: "yes" }, { v: "partial" }, { v: "partial" }, { v: "partial" }, { v: "no" }, { v: "yes" }, { v: "partial", note: 20 }, { v: "partial" }, { v: "yes" }],
+    cells: [
+      { v: "yes" },
+      { v: "yes" },
+      { v: "yes" },
+      { v: "yes" },
+      { v: "partial" },
+      { v: "partial" },
+      { v: "partial" },
+      { v: "no" },
+      { v: "yes" },
+      { v: "partial", note: 20 },
+      { v: "partial" },
+      { v: "yes" },
+    ],
   },
   {
     label: "Async concurrency",
     sub: "async/await or lightweight tasks for IO-bound work",
-    cells: [{ v: "yes" }, { v: "partial", note: 25 }, { v: "yes" }, { v: "partial", note: 26 }, { v: "partial" }, { v: "yes" }, { v: "yes" }, { v: "partial" }, { v: "yes" }, { v: "yes" }, { v: "yes" }, { v: "partial" }],
+    cells: [
+      { v: "yes" },
+      { v: "partial", note: 25 },
+      { v: "yes" },
+      { v: "partial", note: 26 },
+      { v: "partial" },
+      { v: "yes" },
+      { v: "yes" },
+      { v: "partial" },
+      { v: "yes" },
+      { v: "yes" },
+      { v: "yes" },
+      { v: "partial" },
+    ],
   },
   {
     label: "Formal proofs in the language",
     sub: "dependent types / theorem proving built in",
-    cells: [{ v: "yes" }, { v: "no" }, { v: "no" }, { v: "no" }, { v: "yes" }, { v: "no" }, { v: "no" }, { v: "no" }, { v: "no" }, { v: "no" }, { v: "no" }, { v: "no" }],
+    cells: [
+      { v: "yes" },
+      { v: "no" },
+      { v: "no" },
+      { v: "no" },
+      { v: "yes" },
+      { v: "no" },
+      { v: "no" },
+      { v: "no" },
+      { v: "no" },
+      { v: "no" },
+      { v: "no" },
+      { v: "no" },
+    ],
   },
   {
     label: "Gradual verification",
     sub: "prove one part, leave the rest ordinary code",
-    cells: [{ v: "yes" }, { v: "no" }, { v: "no" }, { v: "no" }, { v: "yes" }, { v: "no" }, { v: "no" }, { v: "no" }, { v: "no" }, { v: "no" }, { v: "no" }, { v: "no" }],
+    cells: [
+      { v: "yes" },
+      { v: "no" },
+      { v: "no" },
+      { v: "no" },
+      { v: "yes" },
+      { v: "no" },
+      { v: "no" },
+      { v: "no" },
+      { v: "no" },
+      { v: "no" },
+      { v: "no" },
+      { v: "no" },
+    ],
   },
   {
     label: "Effects tracked in types",
     sub: "purity, IO, async as capabilities the compiler checks",
-    cells: [{ v: "yes" }, { v: "no" }, { v: "partial" }, { v: "no" }, { v: "yes" }, { v: "yes" }, { v: "no" }, { v: "no" }, { v: "no" }, { v: "no" }, { v: "no" }, { v: "partial" }],
+    cells: [
+      { v: "yes" },
+      { v: "no" },
+      { v: "partial" },
+      { v: "no" },
+      { v: "yes" },
+      { v: "yes" },
+      { v: "no" },
+      { v: "no" },
+      { v: "no" },
+      { v: "no" },
+      { v: "no" },
+      { v: "partial" },
+    ],
   },
   {
     label: "Code as data",
     sub: "programs are a structure the language can read",
-    cells: [{ v: "yes" }, { v: "no" }, { v: "partial", note: 2 }, { v: "no" }, { v: "yes" }, { v: "partial" }, { v: "yes" }, { v: "yes" }, { v: "yes" }, { v: "yes" }, { v: "partial" }, { v: "no" }],
+    cells: [
+      { v: "yes" },
+      { v: "no" },
+      { v: "partial", note: 2 },
+      { v: "no" },
+      { v: "yes" },
+      { v: "partial" },
+      { v: "yes" },
+      { v: "yes" },
+      { v: "yes" },
+      { v: "yes" },
+      { v: "partial" },
+      { v: "no" },
+    ],
   },
   {
     label: "Semantic reflection",
     sub: "the readable structure carries types and checked facts",
-    cells: [{ v: "yes" }, { v: "partial", note: 17 }, { v: "no" }, { v: "partial" }, { v: "yes" }, { v: "no" }, { v: "partial" }, { v: "partial", note: 3 }, { v: "partial" }, { v: "partial" }, { v: "partial", note: 29 }, { v: "no" }],
+    cells: [
+      { v: "yes" },
+      { v: "partial", note: 17 },
+      { v: "no" },
+      { v: "partial" },
+      { v: "yes" },
+      { v: "no" },
+      { v: "partial" },
+      { v: "partial", note: 3 },
+      { v: "partial" },
+      { v: "partial" },
+      { v: "partial", note: 29 },
+      { v: "no" },
+    ],
   },
   {
     label: "Compile-time code execution",
     sub: "run ordinary code at compile time, results baked in",
-    cells: [{ v: "yes" }, { v: "partial" }, { v: "partial" }, { v: "yes" }, { v: "yes" }, { v: "no" }, { v: "yes" }, { v: "partial", note: 15 }, { v: "yes" }, { v: "no" }, { v: "no" }, { v: "yes" }],
+    cells: [
+      { v: "yes" },
+      { v: "partial" },
+      { v: "partial" },
+      { v: "yes" },
+      { v: "yes" },
+      { v: "no" },
+      { v: "yes" },
+      { v: "partial", note: 15 },
+      { v: "yes" },
+      { v: "no" },
+      { v: "no" },
+      { v: "yes" },
+    ],
   },
   {
     label: "Compiler extensible as a library",
     sub: "new syntax and optimizations as ordinary libraries",
-    cells: [{ v: "yes" }, { v: "no" }, { v: "partial", note: 2 }, { v: "no" }, { v: "yes" }, { v: "no" }, { v: "yes", note: 4 }, { v: "yes" }, { v: "partial" }, { v: "no" }, { v: "partial" }, { v: "no" }],
+    cells: [
+      { v: "yes" },
+      { v: "no" },
+      { v: "partial", note: 2 },
+      { v: "no" },
+      { v: "yes" },
+      { v: "no" },
+      { v: "yes", note: 4 },
+      { v: "yes" },
+      { v: "partial" },
+      { v: "no" },
+      { v: "partial" },
+      { v: "no" },
+    ],
   },
   {
     label: "Hosts other languages as libraries",
     sub: "embed an HDL or shader language without a new compiler",
-    cells: [{ v: "yes" }, { v: "no" }, { v: "partial" }, { v: "partial" }, { v: "yes", note: 14 }, { v: "no" }, { v: "yes", note: 4 }, { v: "no" }, { v: "partial" }, { v: "no" }, { v: "partial" }, { v: "no" }],
+    cells: [
+      { v: "yes" },
+      { v: "no" },
+      { v: "partial" },
+      { v: "partial" },
+      { v: "yes", note: 14 },
+      { v: "no" },
+      { v: "yes", note: 4 },
+      { v: "no" },
+      { v: "partial" },
+      { v: "no" },
+      { v: "partial" },
+      { v: "no" },
+    ],
   },
   {
     label: "Hygienic syntax extension",
     sub: "syntax extensions can't capture names by accident",
-    cells: [{ v: "yes", note: 22 }, { v: "no" }, { v: "partial" }, { v: "no" }, { v: "yes" }, { v: "no" }, { v: "yes" }, { v: "no" }, { v: "yes" }, { v: "no" }, { v: "no" }, { v: "no" }],
+    cells: [
+      { v: "yes", note: 22 },
+      { v: "no" },
+      { v: "partial" },
+      { v: "no" },
+      { v: "yes" },
+      { v: "no" },
+      { v: "yes" },
+      { v: "no" },
+      { v: "yes" },
+      { v: "no" },
+      { v: "no" },
+      { v: "no" },
+    ],
   },
   {
     label: "First-class rewrite engine",
     sub: "equality saturation shared by compiler and user code",
-    cells: [{ v: "yes" }, { v: "no" }, { v: "no" }, { v: "no" }, { v: "partial", note: 5 }, { v: "no" }, { v: "partial", note: 8 }, { v: "partial", note: 8 }, { v: "no", note: 12 }, { v: "no" }, { v: "no" }, { v: "no" }],
+    cells: [
+      { v: "yes" },
+      { v: "no" },
+      { v: "no" },
+      { v: "no" },
+      { v: "partial", note: 5 },
+      { v: "no" },
+      { v: "partial", note: 8 },
+      { v: "partial", note: 8 },
+      { v: "no", note: 12 },
+      { v: "no" },
+      { v: "no" },
+      { v: "no" },
+    ],
   },
   {
     label: "Live system",
     sub: "redefine parts of a running program",
-    cells: [{ v: "yes" }, { v: "no" }, { v: "no" }, { v: "no" }, { v: "no" }, { v: "partial" }, { v: "partial" }, { v: "yes" }, { v: "yes" }, { v: "partial" }, { v: "partial" }, { v: "no" }],
+    cells: [
+      { v: "yes" },
+      { v: "no" },
+      { v: "no" },
+      { v: "no" },
+      { v: "no" },
+      { v: "partial" },
+      { v: "partial" },
+      { v: "yes" },
+      { v: "yes" },
+      { v: "partial" },
+      { v: "partial" },
+      { v: "no" },
+    ],
   },
   {
     label: "Image persistence",
     sub: "save the whole running system, resume it later",
-    cells: [{ v: "partial", note: 23 }, { v: "no" }, { v: "no" }, { v: "no" }, { v: "no" }, { v: "no" }, { v: "no" }, { v: "yes" }, { v: "partial", note: 24 }, { v: "no" }, { v: "no" }, { v: "no" }],
+    cells: [
+      { v: "partial", note: 23 },
+      { v: "no" },
+      { v: "no" },
+      { v: "no" },
+      { v: "no" },
+      { v: "no" },
+      { v: "no" },
+      { v: "yes" },
+      { v: "partial", note: 24 },
+      { v: "no" },
+      { v: "no" },
+      { v: "no" },
+    ],
   },
   {
     label: "Content-addressed code",
     sub: "definitions identified by hash of their content",
-    cells: [{ v: "partial", note: 6 }, { v: "no" }, { v: "no" }, { v: "no" }, { v: "no" }, { v: "yes" }, { v: "no" }, { v: "no" }, { v: "no" }, { v: "no" }, { v: "no" }, { v: "no" }],
+    cells: [
+      { v: "partial", note: 6 },
+      { v: "no" },
+      { v: "no" },
+      { v: "no" },
+      { v: "no" },
+      { v: "yes" },
+      { v: "no" },
+      { v: "no" },
+      { v: "no" },
+      { v: "no" },
+      { v: "no" },
+      { v: "no" },
+    ],
   },
   {
     label: "Usable today",
     sub: "a stable compiler you can build real software on now",
-    cells: [{ v: "no" }, { v: "yes" }, { v: "yes" }, { v: "partial", note: 10 }, { v: "yes" }, { v: "yes", note: 7 }, { v: "yes" }, { v: "yes" }, { v: "yes" }, { v: "yes" }, { v: "yes" }, { v: "partial", note: 13 }],
+    cells: [
+      { v: "no" },
+      { v: "yes" },
+      { v: "yes" },
+      { v: "partial", note: 10 },
+      { v: "yes" },
+      { v: "yes", note: 7 },
+      { v: "yes" },
+      { v: "yes" },
+      { v: "yes" },
+      { v: "yes" },
+      { v: "yes" },
+      { v: "partial", note: 13 },
+    ],
   },
   {
     label: "Backward-compatibility promise",
     sub: "code from years ago still builds and runs today",
-    cells: [{ v: "partial", note: 30 }, { v: "yes" }, { v: "yes" }, { v: "no", note: 10 }, { v: "partial" }, { v: "partial" }, { v: "yes" }, { v: "partial" }, { v: "yes" }, { v: "partial" }, { v: "yes" }, { v: "no" }],
+    cells: [
+      { v: "partial", note: 30 },
+      { v: "yes" },
+      { v: "yes" },
+      { v: "no", note: 10 },
+      { v: "partial" },
+      { v: "partial" },
+      { v: "yes" },
+      { v: "partial" },
+      { v: "yes" },
+      { v: "partial" },
+      { v: "yes" },
+      { v: "no" },
+    ],
   },
   {
     label: "Package ecosystem",
     sub: "packages, users, production track record",
-    cells: [{ v: "partial", note: 31 }, { v: "yes" }, { v: "yes" }, { v: "partial" }, { v: "partial" }, { v: "partial", note: 7 }, { v: "partial" }, { v: "partial" }, { v: "yes" }, { v: "yes" }, { v: "yes" }, { v: "no" }],
+    cells: [
+      { v: "partial", note: 31 },
+      { v: "yes" },
+      { v: "yes" },
+      { v: "partial" },
+      { v: "partial" },
+      { v: "partial", note: 7 },
+      { v: "partial" },
+      { v: "partial" },
+      { v: "yes" },
+      { v: "yes" },
+      { v: "yes" },
+      { v: "no" },
+    ],
   },
 ];
 
@@ -467,8 +797,13 @@ export function homePage(): string {
   return `<section class="hero">
   <div class="hero__copy">
     <p class="hero__note"><strong>NOTE:</strong> The Logos programming language isn't done yet, so much of what is stated here isn't something you can download today, but rather an attempt to show what Logos aims towards.</p>
-    <h1 class="hero__headline"><span class="hero__brand" aria-hidden="true">Λόγος</span><span class="hero__rotator" data-rotator aria-hidden="true"><span class="hero__rot-item is-current">Compiles to Native Speed</span><span class="hero__rot-item">Ships Its Compiler as a Library</span><span class="hero__rot-item">Reads and Writes Itself</span><span class="hero__rot-item">Is a Complete Meta-Language</span><span class="hero__rot-item">Mirrors the Mind</span><span class="hero__rot-item">Is Radical Unification</span><span class="hero__rot-item">Makes English Programmable</span><span class="hero__rot-item">Reflects on Every Aspect of Itself</span><span class="hero__rot-item">Proves Its Own Code Correct</span><span class="hero__rot-item">Borrow-Checks Without a GC</span><span class="hero__rot-item">Optimizes Like Algebra</span></span><span class="sr-only">Logos: a self-proving meta-language.</span></h1>
-    <p class="hero__sub">The compiler, the parser, the files, the build, the types, the borrow checker, the proofs, all in one structure. The same operations that run your code can read, rewrite, optimize, and prove any of it.</p>
+    <h1 class="hero__headline">
+      <span class="hero__brand" aria-hidden="true">Λόγος</span>
+      <span class="hero__lead" aria-hidden="true">One language for everything</span>
+      <span class="hero__rot-line" aria-hidden="true"><span class="hero__rot-prefix">instead of a different one for</span> <span class="hero__rotator" data-rotator><span class="hero__rot-item is-current">systems</span><span class="hero__rot-item">speed</span><span class="hero__rot-item">the GPU</span><span class="hero__rot-item">async</span><span class="hero__rot-item">proofs</span><span class="hero__rot-item">true metaprogramming</span><span class="hero__rot-item">new languages</span><span class="hero__rot-item">dedicated hardware</span><span class="hero__rot-item">JIT</span><span class="hero__rot-item">special use cases</span><span class="hero__rot-item">the compiler itself</span></span></span>
+      <span class="sr-only">One language for everything: Logos aims to be a single language for systems code, speed, GPUs, async, proofs, metaprogramming, new languages, dedicated hardware, and its own compiler, instead of a different one for every job.</span>
+    </h1>
+    <p class="hero__sub">Systems code, GPU kernels, dedicated hardware, and machine-checked proofs in one language instead of a toolbox of them, where the compiler, the types, the borrow checker, and the proofs are the same structure your program is.</p>
     ${notifyFormHtml("home-hero")}
     <p class="hero__availability">No public builds yet. You will get an email for the most important builds. You will not be spammed (<a href="/privacy/">privacy</a>).</p>
     <div class="hero__actions"><a class="logos-btn logos-btn--ghost" href="/vision/">the Vision</a><a class="logos-btn logos-btn--ghost" href="/roadmap/">Roadmap</a></div>
@@ -522,17 +857,24 @@ export function visionPage(): string {
 // ThobiasKnudsen.jpg).
 export function aboutPage(): string {
   return `<article class="about">
-  <h1 class="about__title">About</h1>
-  <p class="about__lead">I'm <strong>Thobias Melfjord Knudsen</strong>, a systems programmer from Trondheim, Norway, and I design and build Logos.</p>
-  <p>In March 2026 I won Norway's first national AI championship, <a href="https://app.ainm.no" target="_blank" rel="noopener noreferrer">NM i AI</a>, placing first ahead of more than 1,100 teams and 3,100 participants. I did not win by writing everything by hand, but by understanding the problems deeply and orchestrating fleets of AI agents with precision. That is the same way I build Logos.</p>
-  <p>In the subject Algorithms and Data Structures at NTNU, one of the hardest subjects on the university with 900 students, I made the fastest algorithm most times through the fall of 2025.</p>
-  <p>My background is close to the metal: hash tables in Zig, logging and concurrency libraries in C, systems work in Rust. That history is why Logos insists on being a serious systems language first, with a borrow checker and native compilation, even as it reaches for proofs, reflection, and the unification the <a href="/vision/">vision</a> describes.</p>
-  <p>Ever since I learned programming in 2020 I've always wanted a programming language where the language itself has no boundaries of expressiveness. I wanted something where you could express anything logical in the programming language, just like English. Mathematics is its own language, but in nearly all math problems there is English text to explain and answer the maths involved. That means math itself is an incomplete language in terms of expressiveness. English is more expressive. Since Logos aims to have no restrictions on expressiveness, Logos should be able to express all languages (linguistic, programmatic, Rust, Python, C, WASM, GPU languages, HDL, proof systems, Verilog, etc.) and it should be able to read all aspects of itself. But Logos also needs to have some sort of restrictions so that it catches errors, just like Rust. And since Logos should be able to express anything and can host a proof system, it should be able to go way beyond Rust when it comes to safety long term.</p>
-  <p class="about__links">Find me on <a href="https://github.com/ThobiasKnudsen" target="_blank" rel="noopener noreferrer">GitHub</a>, <a href="https://no.linkedin.com/in/thobias-melfjord-knudsen-510084320" target="_blank" rel="noopener noreferrer">LinkedIn</a>, and <a href="https://x.com/thobknu" target="_blank" rel="noopener noreferrer">X</a>.</p>
+  <h1 class="about__title">Thobias Melfjord Knudsen</h1>
+  <p class="about__lead">In my first year of high school I could not put down one question: given a set of data points, why is there no way to find a mathematical formula, over any number of variables, that fits them?</p>
   <figure class="about__portrait">
     <img src="/thobias.jpg" alt="Thobias Melfjord Knudsen" width="843" height="900" loading="lazy" />
     <figcaption>Thobias Melfjord Knudsen</figcaption>
   </figure>
+  <p>I am a systems programmer studying infromatics. I started programming in Python in 2020, and by 2022 I was building a math application to chase that question, learning C++ as I went. I had a working version in about six months.</p>
+  <p>Chasing it, I understood why no such tool exists. Through any finite set of points you can draw endlessly many curves, so there is no single formula waiting to be found. The most you can do is decide in advance what shape of formula you will accept, then search for one of that shape that fits the points, and even then you might find nothing, or infinitely many. What the problem really needs is a language where formulas are as easy to build and reshape as numbers, and where the language can look at and rewrite its own expressions: functions that write other functions, shaped by whatever you give them. Lisp came closest, treating code as data, but it still falls short of what the problem demands.</p>
+  <p>The decisive turn was seeing that this generalizes to almost everything logical. Building a memory system for agents, I ran into the same wall from a completely separate direction. There too, the real limit was the language. I saw that if English could be made programmable (which Logos could do) it would open up for making a memory system as good as our own memory or even better. Two separate roads ended in the same place.</p>
+  <blockquote class="about__pull-quote"><p>The bottleneck was never the mathematics. It was the language.</p></blockquote>
+  <h2 class="about__subhead">What I have built</h2>
+  <p><a href="https://github.com/ThobiasKnudsen/LogosMath" target="_blank" rel="noopener noreferrer">LogosMath</a> is where it began: a working math application with its own small language, built to go further than symbolic tools like Wolfram Alpha and Matlab. Chasing it is what led me to the language itself. Along the way I also built <a href="https://github.com/ThobiasKnudsen/Memra" target="_blank" rel="noopener noreferrer">Memra</a>, the memory system mentioned earlier. In my benchmarks it came close to the best available.</p>
+  <p>During my military service I built a high-resolution offline <a href="https://github.com/ThobiasKnudsen/Map" target="_blank" rel="noopener noreferrer">map</a>, written in C++. Some month ago I made <a href="https://github.com/ThobiasKnudsen/verztable" target="_blank" rel="noopener noreferrer">hash table in Zig</a> that runs almost as fast as the fastest I could find.</p>
+  <p>In NTNU's Algorithms and Data Structures course, one of the university's hardest courses, with around 900 students, I made the fastest algorithm most times in the weekly challenges through the autumn of 2025. This year, together with a teammate, I placed first in Norway's first national championship in AI, out of more than 1,100 teams. The <a href="https://github.com/JardarIversen/ainm-2026" target="_blank" rel="noopener noreferrer">solution</a> is on GitHub.</p>
+  <p>Recently I turned from the math-application to the language itself. Logos is an attempt at one language for everything, built on a single commitment: radical unification. The program, its types, its proofs, the compiler, and the grammar itself all live in one structure. It is a serious systems language, with a borrow checker, native compilation, and no garbage collector, reaching also for machine-checked proofs and self-reflection. It does not run yet. A small Rust bootstrap seed is all there is so far.</p>
+  <p class="about__coda">Sometimes I suspect that a complete meta-language, where each word is defined using all other words, is the closest one can get to reflecting on how God works.</p>
+  <p class="about__cta">If it interests you, you are welcome to follow along on GitHub: star the <a href="https://github.com/ThobiasKnudsen/LogosLang" target="_blank" rel="noopener noreferrer">seed</a>, watch the language take shape, and word of the first build will come there.</p>
+  <p class="about__links">Find me on <a href="https://github.com/ThobiasKnudsen" target="_blank" rel="noopener noreferrer">GitHub</a>, <a href="https://no.linkedin.com/in/thobias-melfjord-knudsen-510084320" target="_blank" rel="noopener noreferrer">LinkedIn</a>, and <a href="https://x.com/thobknu" target="_blank" rel="noopener noreferrer">X</a>.</p>
 </article>`;
 }
 
@@ -717,7 +1059,7 @@ export function roadmapPage(roadmap: Roadmap): string {
   <p class="roadmap__lead">The roadmap is generated from the project's GitHub milestones and issues, and will appear here once they're published.</p>
 </article>`;
   }
-  const lead = `The roadmap is generated directly from the <a href="${GITHUB}" target="_blank" rel="noopener noreferrer">LogosLang GitHub repository</a>: every card below is an issue labelled <code>roadmap</code>, and every dashed line is a milestone. A milestone is a finish line: the issues above it are the work that gets Logos there, and everything below it comes later. Arrows point from a piece of work down to the work it unblocks.`;
+  const lead = `The roadmap is generated directly from the <a href="${GITHUB}" target="_blank" rel="noopener noreferrer">LogosLang GitHub repository</a>: every node below is an issue labelled <code>roadmap</code>, and every dashed line is a milestone. A milestone is a finish line: the issues above it are the work that gets Logos there, and everything below it comes later. Arrows point from a piece of work down to the work it unblocks.`;
   const legend = `<ul class="depmap-legend"><li class="is-done">Done</li><li class="is-ready">Ready</li><li class="is-blocked">Blocked</li></ul>`;
   const baked = JSON.stringify(roadmap).replace(/</g, "\\u003c");
   return `<article class="roadmap">

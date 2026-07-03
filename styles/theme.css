@@ -591,10 +591,42 @@ a {
    intrinsic width is the WIDEST phrase (inline-grid, below), so it never changes
    size as phrases rotate and the centered headline stays put. The lead text owns
    the accessible heading (see .sr-only). */
-/* The fixed wordmark that leads the rotating headline, in the brand blue-purple. */
+/* The wordmark leads the headline at the SAME size as the thesis line, in the brand
+   blue-purple, with a hair of separation beneath it. */
 .hero__brand {
     color: var(--logo);
-    white-space: nowrap; /* keep "Λόγος is" together as one unit */
+    white-space: nowrap;
+    margin-bottom: 0.1em;
+}
+/* The fixed thesis line, the one sentence a first-time visitor should read. It
+   inherits the full headline size, so it is the largest thing in the hero. */
+.hero__lead {
+    display: block;
+    color: var(--heading);
+}
+/* The rotating enumeration beneath the thesis: a fixed "instead of a different one
+   for" followed by the rotating tail (systems, the GPU, … the compiler itself),
+   so the motion now argues the one-language claim instead of scattering superlatives.
+   Medium and muted so it supports the thesis without competing with it; the prefix
+   and the rotating word flow inline and wrap together on narrow screens. */
+.hero__rot-line {
+    font-size: 0.4em; /* medium relative to the fluid headline size */
+    font-weight: 500;
+    letter-spacing: 0;
+    line-height: 1.25;
+    color: var(--muted);
+    margin-top: 0.7em;
+    /* Bounded so the prefix sits on one line on wide screens (34ch clears it) and
+       wraps within the viewport on phones (90vw), never overflowing. */
+    max-width: min(90vw, 34ch);
+    text-align: center;
+}
+/* The prefix owns its own line, so the rotator (which reserves its WIDEST word's
+   width via inline-grid) sits stably below it and the hero never reflows vertically
+   as the word cycles between "systems" and "the compiler itself". */
+.hero__rot-prefix {
+    display: block;
+    color: var(--muted);
 }
 .hero__rotator {
     display: inline-grid;
@@ -808,19 +840,6 @@ a {
     color: var(--tok-comment);
     font-style: italic;
 }
-/* Below ~1280px the longest phrase can't fit on one line, so bound the rotator to
-   the viewport and let phrases wrap (still centered) instead of being clipped. Above
-   it, the grid reserves the widest phrase's width and no wrapping is needed. */
-@media (max-width: 80rem) {
-    .hero__rotator {
-        width: 92vw; /* definite width so wrapped lines have room and stay on-screen */
-    }
-    .hero__rot-item {
-        white-space: normal; /* wrap instead of running off-screen */
-        width: 100%; /* fill the bounded box (overrides the desktop max-content) */
-    }
-}
-
 /* ── Wisdom frieze ────────────────────────────────────────────────────────────
    A slow right-to-left drift of Greek reflections on the Logos, framed by two
    hairlines like an inscription. Each quote exists exactly ONCE in the track; the
@@ -1231,11 +1250,12 @@ a {
     line-height: 1.6;
     color: var(--heading);
 }
-/* The portrait sits centred at the BOTTOM of the page at every width, as a
-   circle rather than a card. */
+/* The portrait sits near the TOP, floated to the side so the opening story flows
+   beside it; it drops to a centred block on narrow screens. A circle, not a card. */
 .about__portrait {
-    margin: 3rem auto 0;
-    width: min(16rem, 70vw);
+    float: right;
+    width: min(13rem, 38vw);
+    margin: 0.25rem 0 1.25rem 2rem;
 }
 .about__portrait img {
     display: block;
@@ -1253,6 +1273,55 @@ a {
     margin-top: 0.8rem;
     text-align: center;
     font-size: 0.85rem;
+    color: var(--muted);
+}
+@media (max-width: 40rem) {
+    .about__portrait {
+        float: none;
+        width: min(12rem, 60vw);
+        margin: 1.5rem auto;
+    }
+}
+/* A single serif line lifted out of the story: the hinge of the whole page. */
+.about__pull-quote {
+    clear: both;
+    margin: 2.75rem auto;
+    max-width: 34rem;
+    text-align: center;
+    font-family: var(--serif);
+    font-size: clamp(1.35rem, 3vw, 1.9rem);
+    line-height: 1.3;
+    color: var(--heading);
+}
+.about__pull-quote p {
+    margin: 0;
+}
+.about__subhead {
+    clear: both;
+    font-family: var(--serif);
+    font-size: clamp(1.4rem, 3.2vw, 1.9rem);
+    color: var(--heading);
+    margin: 2.75rem 0 1rem;
+}
+/* The closing reflection (the Logos-as-the-Word line): a personal aside, set apart
+   in the serif face and centred. */
+.about__coda {
+    margin: 2.75rem auto 0;
+    max-width: 42rem;
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 1.2rem;
+    line-height: 1.6;
+    text-align: center;
+    color: var(--heading);
+}
+.about__cta {
+    margin-top: 2.5rem;
+    color: var(--heading);
+}
+.about__links {
+    margin-top: 2.5rem;
+    font-size: 0.95rem;
     color: var(--muted);
 }
 .placeholder h1 {
