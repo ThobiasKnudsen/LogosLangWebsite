@@ -1081,7 +1081,7 @@ a {
 
 /* Fixed clone of the header row, built and shown by initCompare while the page
    scroll position is inside the table, parked just below the menu dock so the
-   language columns stay identifiable in a 22-row table. The inner clip mirrors
+   language columns stay identifiable through the long table. The inner clip mirrors
    the real container's scrollLeft (an overflow:hidden box is still
    programmatically scrollable), which also keeps the capability corner pinned
    via the same sticky rule as the real header. */

@@ -380,11 +380,6 @@ const COMPARE_ROWS: CompareRow[] = [
     sub: "packages, users, production track record",
     cells: [{ v: "partial", note: 31 }, { v: "yes" }, { v: "yes" }, { v: "partial" }, { v: "partial" }, { v: "partial", note: 7 }, { v: "partial" }, { v: "partial" }, { v: "yes" }, { v: "yes" }, { v: "yes" }, { v: "no" }],
   },
-  {
-    label: "Mature IDE and tooling",
-    sub: "completion, go-to-definition, refactoring that work now",
-    cells: [{ v: "no" }, { v: "yes" }, { v: "yes" }, { v: "partial" }, { v: "yes" }, { v: "partial" }, { v: "partial" }, { v: "yes" }, { v: "partial" }, { v: "yes" }, { v: "yes" }, { v: "partial" }],
-  },
 ];
 
 const COMPARE_NOTES: string[] = [
