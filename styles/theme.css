@@ -932,7 +932,7 @@ a {
 }
 
 /* ── Comparison matrix ────────────────────────────────────────────────────────
-   "Next to its neighbors" on the homepage: Logos against ten other languages.
+   "Next to its neighbors" on the homepage: Logos against eleven other languages.
    One glyph per cell (has it / partial / no), colored green / yellow / red; the
    not-done-yet disclaimer lives once in the lead paragraph, not per cell or in
    the header. The section is wide enough that the whole table shows on a
@@ -943,7 +943,7 @@ a {
     /* The pinned capability column's exact width; the left scroll hint starts
        where it ends. Referenced by .compare__cap and .compare__shadows::before. */
     --compare-cap: 15rem;
-    max-width: 82rem;
+    max-width: 88rem;
     margin: clamp(4rem, 10vh, 7rem) auto clamp(4rem, 10vh, 6rem);
     padding-inline: 1.25rem;
 }
@@ -1053,7 +1053,7 @@ a {
 }
 .compare__table {
     width: 100%;
-    min-width: 76rem;
+    min-width: 82rem;
     border-collapse: collapse;
     font-size: 0.85rem;
 }
