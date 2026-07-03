@@ -389,9 +389,7 @@ const VERDICT_TEXT: Record<CompareVerdict, string> = {
 function compareHtml(): string {
   const head = COMPARE_LANGS.map(
     (lang, i) =>
-      `<th scope="col" class="compare__lang${i === 0 ? " compare__lang--logos" : ""}">${lang}${
-        i === 0 ? '<span class="compare__pre">in development</span>' : ""
-      }</th>`,
+      `<th scope="col" class="compare__lang${i === 0 ? " compare__lang--logos" : ""}">${lang}</th>`,
   ).join("");
   const rows = COMPARE_ROWS.map((row) => {
     const cells = row.cells

@@ -923,8 +923,8 @@ a {
 /* ── Comparison matrix ────────────────────────────────────────────────────────
    "Next to its neighbors" on the homepage: Logos against eight other languages.
    One glyph per cell (has it / partial / no), colored green / yellow / red; the
-   not-done-yet disclaimer lives once in the lead paragraph and the column header,
-   not per cell. The section is wide enough that the whole table shows on a
+   not-done-yet disclaimer lives once in the lead paragraph, not per cell or in
+   the header. The section is wide enough that the whole table shows on a
    desktop; where it can't, it scrolls horizontally and the .compare__shadows
    overlays (fade + chevron, toggled by initCompare) show WHICH direction holds
    more columns. The Logos column carries a faint accent wash. */
@@ -1080,15 +1080,6 @@ a {
 .compare__lang--logos,
 .compare__cell--logos {
     background: color-mix(in srgb, var(--accent) 7%, transparent);
-}
-.compare__pre {
-    display: block;
-    font-size: 0.62rem;
-    letter-spacing: 0.08em;
-    /* warn-text, not hero-note: at ~10px on the accent-washed Logos column the
-       hero-note orange falls just under AA contrast; warn-text clears it in both
-       themes. */
-    color: var(--warn-text);
 }
 .compare__cell {
     text-align: center;
