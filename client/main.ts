@@ -254,7 +254,7 @@ function initNotify(): void {
 					} | null;
 					if (res.ok && data?.ok) {
 						form.reset();
-						show('ok', "You're on the list. One email at the first release.");
+						show('ok', "You're on the list. Emails for the most important builds only.");
 					} else if (res.status === 503) {
 						show('error', 'Signup is not wired up yet; watch releases on GitHub instead.');
 					} else if (data?.error === 'invalid-email') {

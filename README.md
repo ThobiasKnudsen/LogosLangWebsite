@@ -206,10 +206,10 @@ deployed automatically from the `functions/` directory, which stores signups in 
 Workers KV namespace: key `email:<address>`, value `{ email, subscribedAt, source }`.
 Nothing else is stored (no IP, no user agent); `/privacy/` documents this.
 
-**The promise made on the forms and on `/privacy/` is exactly one email, sent when
-the first public build ships, after which the list is deleted.** Widening that scope
-(e.g. announcing every release) requires changing the form copy, `/privacy/`, and
-the function's HTML page first, and only applies to signups collected after the
+**The promise made on the forms and on `/privacy/` is a low-volume list: emails for
+the most important builds only, never spam, removal any time.** Changing that scope
+requires changing the form copy, `/privacy/`, the client success message, and the
+function's HTML page together, and only applies to signups collected after the
 change.
 
 **One-time setup** (until then the function answers 503 and the client tells the
@@ -221,8 +221,7 @@ visitor to watch GitHub releases instead, so the form degrades honestly):
    **`SUBSCRIBERS`** (Production, and Preview if you want preview deploys to work).
 3. Redeploy.
 
-Export the list when the first release goes out (then delete the namespace, per the
-promise above):
+Export the list when a release announcement goes out:
 
 ```sh
 wrangler kv key list --namespace-id=<id> | jq -r '.[].name' | sed 's/^email://'

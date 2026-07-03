@@ -68,7 +68,7 @@ function respond(
 
 const SUCCESS = {
   title: "You're on the list",
-  body: "One email when the first Logos build ships, nothing more.",
+  body: "You'll get an email when the most important Logos builds ship. You will not be spammed.",
 };
 
 export async function onRequestPost(context: {

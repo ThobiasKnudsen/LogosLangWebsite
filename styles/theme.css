@@ -918,10 +918,10 @@ a {
 
 /* ── Comparison matrix ────────────────────────────────────────────────────────
    "Next to its neighbors" on the homepage: Logos against Rust, Lean 4, Unison,
-   Racket, and Smalltalk. One glyph per cell (has it / partial / no / planned),
-   colored via the status tokens; the wide table scrolls inside its own container
-   on narrow screens. The Logos column carries a faint accent wash so the "this
-   column is mostly a plan" honesty is impossible to miss. */
+   Racket, and Smalltalk. One glyph per cell (has it / partial / no), colored
+   green / yellow / red; the pre-alpha disclaimer lives once in the lead paragraph
+   and the column header, not per cell. The wide table scrolls inside its own
+   container on narrow screens, and the Logos column carries a faint accent wash. */
 .compare {
     max-width: 62rem;
     margin: clamp(4rem, 10vh, 7rem) auto clamp(4rem, 10vh, 6rem);
@@ -962,6 +962,8 @@ a {
 .compare__cell > span[aria-hidden] {
     font-family: var(--mono);
 }
+/* Green / yellow / red: ok-text and warn-text are the theme's green and amber
+   status tokens; line-exec is its themed red. */
 .compare__legend .is-yes > span {
     color: var(--ok-text);
 }
@@ -969,10 +971,7 @@ a {
     color: var(--warn-text);
 }
 .compare__legend .is-no > span {
-    color: var(--muted);
-}
-.compare__legend .is-planned > span {
-    color: var(--accent);
+    color: var(--line-exec);
 }
 .compare__scroll {
     margin-top: 1.2rem;
@@ -1039,10 +1038,7 @@ a {
     color: var(--warn-text);
 }
 .compare__cell.is-no {
-    color: var(--muted);
-}
-.compare__cell.is-planned {
-    color: var(--accent);
+    color: var(--line-exec);
 }
 .compare__ref {
     margin-left: 0.15rem;
