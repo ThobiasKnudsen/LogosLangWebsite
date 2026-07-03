@@ -309,6 +309,14 @@ function initCompare(): void {
 	const place = (): void => {
 		const top = Math.max(dock ? dock.getBoundingClientRect().bottom : 0, 0) + 6;
 		const rect = scroll.getBoundingClientRect();
+		// Keep the edge-hint chevrons at the vertical center of the table's
+		// VISIBLE slice (see --hint-y in the CSS), so they stay on screen however
+		// far into the table the page is scrolled.
+		const visTop = Math.max(rect.top, 0);
+		const visBottom = Math.min(rect.bottom, window.innerHeight);
+		if (visBottom > visTop) {
+			wrap.style.setProperty('--hint-y', `${(visTop + visBottom) / 2 - rect.top}px`);
+		}
 		const headH = thead.getBoundingClientRect().height;
 		const show = rect.top < top && rect.bottom > top + headH;
 		float.hidden = !show;

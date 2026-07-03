@@ -943,9 +943,17 @@ a {
     /* The pinned capability column's exact width; the left scroll hint starts
        where it ends. Referenced by .compare__cap and .compare__shadows::before. */
     --compare-cap: 15rem;
-    max-width: 88rem;
+    /* Same side gutters as the menu dock's minimum (the corner reserved for the
+       theme toggle), so the table spans the dock's footprint instead of a fixed
+       cap. Narrow screens fall back to the ordinary page gutter. */
+    max-width: none;
     margin: clamp(4rem, 10vh, 7rem) auto clamp(4rem, 10vh, 6rem);
-    padding-inline: 1.25rem;
+    padding-inline: var(--theme-toggle-reserve);
+}
+@media (max-width: 48rem) {
+    .compare {
+        padding-inline: 1.25rem;
+    }
 }
 @media (max-width: 40rem) {
     .compare {
@@ -1024,7 +1032,12 @@ a {
     z-index: 2;
     width: 2.4rem;
     display: grid;
-    place-items: center;
+    justify-items: center;
+    align-content: start;
+    /* The chevron rides at the center of the table's VISIBLE slice, not the
+       center of its full height: initCompare keeps --hint-y at the visible
+       midpoint so the arrow stays on screen wherever the page is scrolled. */
+    padding-top: calc(var(--hint-y, 50vh) - 0.6em);
     font-size: 0.85rem;
     color: var(--heading);
     pointer-events: none;
