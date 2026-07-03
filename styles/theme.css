@@ -988,12 +988,13 @@ a {
     font-family: var(--mono);
     line-height: 1;
 }
-/* The verdict glyphs carry the whole table; render them at display size. */
+/* The verdict glyphs carry the whole table; render them at display size
+   (1.6x the 1.35rem base). */
 .compare__cell > span[aria-hidden] {
-    font-size: 2.7rem;
+    font-size: 2.16rem;
 }
 .compare__legend li > span {
-    font-size: 1.35rem;
+    font-size: 1.15rem;
 }
 /* Green / yellow / red: ok-text and warn-text are the theme's green and amber
    status tokens; line-exec is its themed red. */
