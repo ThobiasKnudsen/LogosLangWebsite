@@ -373,12 +373,12 @@ const COMPARE_ROWS: CompareRow[] = [
   {
     label: "Backward-compatibility promise",
     sub: "code from years ago still builds and runs today",
-    cells: [{ v: "no" }, { v: "yes" }, { v: "yes" }, { v: "no", note: 10 }, { v: "partial" }, { v: "partial" }, { v: "yes" }, { v: "partial" }, { v: "yes" }, { v: "partial" }, { v: "yes" }, { v: "no" }],
+    cells: [{ v: "partial", note: 30 }, { v: "yes" }, { v: "yes" }, { v: "no", note: 10 }, { v: "partial" }, { v: "partial" }, { v: "yes" }, { v: "partial" }, { v: "yes" }, { v: "partial" }, { v: "yes" }, { v: "no" }],
   },
   {
     label: "Package ecosystem",
     sub: "packages, users, production track record",
-    cells: [{ v: "no" }, { v: "yes" }, { v: "yes" }, { v: "partial" }, { v: "partial" }, { v: "partial", note: 7 }, { v: "partial" }, { v: "partial" }, { v: "yes" }, { v: "yes" }, { v: "yes" }, { v: "no" }],
+    cells: [{ v: "partial", note: 31 }, { v: "yes" }, { v: "yes" }, { v: "partial" }, { v: "partial" }, { v: "partial", note: 7 }, { v: "partial" }, { v: "partial" }, { v: "yes" }, { v: "yes" }, { v: "yes" }, { v: "no" }],
   },
   {
     label: "Mature IDE and tooling",
@@ -417,6 +417,8 @@ const COMPARE_NOTES: string[] = [
   "SqueakJS runs real Smalltalk images in the browser on a JavaScript virtual machine.",
   "Pyodide runs CPython on WebAssembly; C-extension packages need prebuilt WASM wheels.",
   "The TypeScript compiler API exposes the type checker to tooling; all types are erased at runtime.",
+  "Logos releases are designed immutable from day one (docs and builds freeze per version); the track record starts at the first release.",
+  "No Logos packages exist yet; the standard library is deliberately built before release to seed a coherent ecosystem.",
 ];
 
 const VERDICT_GLYPH: Record<CompareVerdict, string> = {

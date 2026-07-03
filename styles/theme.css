@@ -990,10 +990,10 @@ a {
 }
 /* The verdict glyphs carry the whole table; render them at display size. */
 .compare__cell > span[aria-hidden] {
-    font-size: 1.35rem;
+    font-size: 2.7rem;
 }
 .compare__legend li > span {
-    font-size: 1.05rem;
+    font-size: 1.35rem;
 }
 /* Green / yellow / red: ok-text and warn-text are the theme's green and amber
    status tokens; line-exec is its themed red. */
