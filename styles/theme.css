@@ -982,7 +982,7 @@ a {
 }
 .compare__table {
     width: 100%;
-    min-width: 46rem;
+    min-width: 64rem;
     border-collapse: collapse;
     font-size: 0.85rem;
 }
@@ -1007,6 +1007,20 @@ a {
     font-weight: 600;
     color: var(--heading);
     min-width: 15rem;
+    max-width: 16rem;
+    /* With nine language columns the table always scrolls; pin the capability
+       column so the row labels stay readable. Opaque background so scrolled
+       cells never show through, hairline seam on the scrolling edge. */
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    background: var(--surface);
+    border-right: 1px solid var(--hairline);
+}
+@media (max-width: 40rem) {
+    .compare__cap {
+        min-width: 9.5rem;
+    }
 }
 .compare__sub {
     display: block;

@@ -260,73 +260,100 @@ interface CompareRow {
   cells: CompareCell[];
 }
 
-const COMPARE_LANGS = ["Logos", "Rust", "Lean 4", "Unison", "Racket", "Smalltalk"];
+const COMPARE_LANGS = ["Logos", "Rust", "Zig", "Lean 4", "Unison", "Racket", "Smalltalk", "Julia", "Mojo"];
 
+// Cells are in COMPARE_LANGS order: Logos, Rust, Zig, Lean 4, Unison, Racket,
+// Smalltalk, Julia, Mojo.
 const COMPARE_ROWS: CompareRow[] = [
   {
     label: "Memory safety without a GC",
     sub: "ownership and borrow checking, zero runtime cost",
-    cells: [{ v: "yes" }, { v: "yes" }, { v: "no" }, { v: "no" }, { v: "no" }, { v: "no" }],
+    cells: [{ v: "yes" }, { v: "yes" }, { v: "no", note: 9 }, { v: "no" }, { v: "no" }, { v: "no" }, { v: "no" }, { v: "no" }, { v: "partial", note: 13 }],
   },
   {
     label: "Compiles to native machine code",
     sub: "AOT or JIT, systems-grade performance",
-    cells: [{ v: "yes" }, { v: "yes" }, { v: "yes", note: 1 }, { v: "partial" }, { v: "partial" }, { v: "partial" }],
+    cells: [{ v: "yes" }, { v: "yes" }, { v: "yes" }, { v: "yes", note: 1 }, { v: "partial" }, { v: "partial" }, { v: "partial" }, { v: "yes" }, { v: "yes" }],
+  },
+  {
+    label: "The speed ceiling of C and Rust",
+    sub: "no GC or boxing tax, zero-cost abstractions",
+    cells: [{ v: "yes" }, { v: "yes" }, { v: "yes" }, { v: "no", note: 1 }, { v: "no" }, { v: "no" }, { v: "no" }, { v: "partial" }, { v: "yes" }],
+  },
+  {
+    label: "Targets GPUs and custom hardware",
+    sub: "kernels written in the language itself, not shader strings",
+    cells: [{ v: "yes" }, { v: "partial", note: 11 }, { v: "partial" }, { v: "no" }, { v: "no" }, { v: "no" }, { v: "no" }, { v: "yes" }, { v: "yes" }],
   },
   {
     label: "Formal proofs in the language",
     sub: "dependent types / theorem proving built in",
-    cells: [{ v: "yes" }, { v: "no" }, { v: "yes" }, { v: "no" }, { v: "no" }, { v: "no" }],
+    cells: [{ v: "yes" }, { v: "no" }, { v: "no" }, { v: "yes" }, { v: "no" }, { v: "no" }, { v: "no" }, { v: "no" }, { v: "no" }],
   },
   {
     label: "Gradual verification",
     sub: "prove one part, leave the rest ordinary code",
-    cells: [{ v: "yes" }, { v: "no" }, { v: "yes" }, { v: "no" }, { v: "no" }, { v: "no" }],
+    cells: [{ v: "yes" }, { v: "no" }, { v: "no" }, { v: "yes" }, { v: "no" }, { v: "no" }, { v: "no" }, { v: "no" }, { v: "no" }],
+  },
+  {
+    label: "Effects tracked in types",
+    sub: "purity, IO, async as capabilities the compiler checks",
+    cells: [{ v: "yes" }, { v: "partial" }, { v: "no" }, { v: "yes" }, { v: "yes" }, { v: "no" }, { v: "no" }, { v: "no" }, { v: "partial" }],
   },
   {
     label: "Code as data",
     sub: "programs are a structure the language can read",
-    cells: [{ v: "yes" }, { v: "partial", note: 2 }, { v: "yes" }, { v: "partial" }, { v: "yes" }, { v: "yes" }],
+    cells: [{ v: "yes" }, { v: "partial", note: 2 }, { v: "no" }, { v: "yes" }, { v: "partial" }, { v: "yes" }, { v: "yes" }, { v: "yes" }, { v: "no" }],
   },
   {
     label: "Semantic reflection",
     sub: "the readable structure carries types and checked facts",
-    cells: [{ v: "yes" }, { v: "no" }, { v: "yes" }, { v: "no" }, { v: "partial" }, { v: "partial", note: 3 }],
+    cells: [{ v: "yes" }, { v: "no" }, { v: "partial" }, { v: "yes" }, { v: "no" }, { v: "partial" }, { v: "partial", note: 3 }, { v: "partial" }, { v: "no" }],
+  },
+  {
+    label: "Compile-time code execution",
+    sub: "run ordinary code at compile time, results baked in",
+    cells: [{ v: "yes" }, { v: "partial" }, { v: "yes" }, { v: "yes" }, { v: "no" }, { v: "yes" }, { v: "partial", note: 15 }, { v: "yes" }, { v: "yes" }],
   },
   {
     label: "Compiler extensible as a library",
     sub: "new syntax and optimizations as ordinary libraries",
-    cells: [{ v: "yes" }, { v: "partial", note: 2 }, { v: "yes" }, { v: "no" }, { v: "yes", note: 4 }, { v: "yes" }],
+    cells: [{ v: "yes" }, { v: "partial", note: 2 }, { v: "no" }, { v: "yes" }, { v: "no" }, { v: "yes", note: 4 }, { v: "yes" }, { v: "partial" }, { v: "no" }],
+  },
+  {
+    label: "Hosts other languages as libraries",
+    sub: "embed an HDL or shader language without a new compiler",
+    cells: [{ v: "yes" }, { v: "partial" }, { v: "partial" }, { v: "yes", note: 14 }, { v: "no" }, { v: "yes", note: 4 }, { v: "no" }, { v: "partial" }, { v: "no" }],
   },
   {
     label: "First-class rewrite engine",
     sub: "equality saturation shared by compiler and user code",
-    cells: [{ v: "yes" }, { v: "no" }, { v: "partial", note: 5 }, { v: "no" }, { v: "partial", note: 8 }, { v: "partial", note: 8 }],
+    cells: [{ v: "yes" }, { v: "no" }, { v: "no" }, { v: "partial", note: 5 }, { v: "no" }, { v: "partial", note: 8 }, { v: "partial", note: 8 }, { v: "no", note: 12 }, { v: "no" }],
   },
   {
     label: "Live system",
     sub: "redefine parts of a running program",
-    cells: [{ v: "yes" }, { v: "no" }, { v: "no" }, { v: "partial" }, { v: "partial" }, { v: "yes" }],
+    cells: [{ v: "yes" }, { v: "no" }, { v: "no" }, { v: "no" }, { v: "partial" }, { v: "partial" }, { v: "yes" }, { v: "yes" }, { v: "no" }],
   },
   {
     label: "Content-addressed code",
     sub: "definitions identified by hash of their content",
-    cells: [{ v: "no", note: 6 }, { v: "no" }, { v: "no" }, { v: "yes" }, { v: "no" }, { v: "no" }],
+    cells: [{ v: "no", note: 6 }, { v: "no" }, { v: "no" }, { v: "no" }, { v: "yes" }, { v: "no" }, { v: "no" }, { v: "no" }, { v: "no" }],
   },
   {
     label: "Usable today",
     sub: "a stable compiler you can build real software on now",
-    cells: [{ v: "no" }, { v: "yes" }, { v: "yes" }, { v: "yes", note: 7 }, { v: "yes" }, { v: "yes" }],
+    cells: [{ v: "no" }, { v: "yes" }, { v: "partial", note: 10 }, { v: "yes" }, { v: "yes", note: 7 }, { v: "yes" }, { v: "yes" }, { v: "yes" }, { v: "partial", note: 13 }],
   },
   {
     label: "Package ecosystem",
     sub: "packages, users, production track record",
-    cells: [{ v: "no" }, { v: "yes" }, { v: "partial" }, { v: "partial", note: 7 }, { v: "partial" }, { v: "partial" }],
+    cells: [{ v: "no" }, { v: "yes" }, { v: "partial" }, { v: "partial" }, { v: "partial", note: 7 }, { v: "partial" }, { v: "partial" }, { v: "yes" }, { v: "no" }],
   },
   {
     label: "Mature IDE and tooling",
     sub: "completion, go-to-definition, refactoring that work now",
-    cells: [{ v: "no" }, { v: "yes" }, { v: "yes" }, { v: "partial" }, { v: "partial" }, { v: "yes" }],
+    cells: [{ v: "no" }, { v: "yes" }, { v: "partial" }, { v: "yes" }, { v: "partial" }, { v: "partial" }, { v: "yes" }, { v: "partial" }, { v: "partial" }],
   },
 ];
 
@@ -339,6 +366,13 @@ const COMPARE_NOTES: string[] = [
   "Not a Logos goal: source files stay canonical, so a build is reproducible from text alone.",
   "Most of Unison's public production mileage is Unison Cloud, built by the language's own company.",
   "Racket's macro expander and Smalltalk's Refactoring-Browser rewriter are user-drivable tree rewriting; neither is equality saturation, and neither serves as the compiler's optimizer.",
+  "Zig has no GC, but its safety comes from runtime checks in safe builds, not compile-time proof.",
+  "Zig is pre-1.0 by design; Bun, TigerBeetle, and Ghostty ship on it in production anyway.",
+  "Rust reaches GPUs through rust-gpu (SPIR-V) and the tier-2 nvptx64 target; every path is still experimental.",
+  "Metatheory.jl gives Julia real e-graph rewriting as a library, but the compiler itself never uses it.",
+  "Mojo's 1.0 beta shipped in May 2026 with ownership checking working today; full default memory safety is deferred to Mojo 2.x.",
+  "Alloy embeds real C syntax inside Lean files through Lean's extensible grammar.",
+  "Smalltalk has no separate compile phase; evaluating code and saving the image plays the comptime role.",
 ];
 
 const VERDICT_GLYPH: Record<CompareVerdict, string> = {
@@ -375,7 +409,7 @@ function compareHtml(): string {
   ).join("");
   return `<section class="compare" aria-label="How Logos compares to other languages">
   <h2 class="compare__title">Next to its neighbors</h2>
-  <p class="compare__lead">The first question a language-literate visitor asks is "why not Rust, Lean, Unison, or a Lisp?". Here is the honest answer. <strong>Logos is pre-alpha</strong>: its column is the design it is being built toward, not software you can run today, while every other column is what ships now. Some rows are things other languages do well that Logos does not attempt at all.</p>
+  <p class="compare__lead">The first question a language-literate visitor asks is "why not Rust, Zig, Lean, Unison, Julia, or a Lisp?". Here is the honest answer. <strong>Logos is pre-alpha</strong>: its column is the design it is being built toward, not software you can run today, while every other column is what ships now. Some rows are things other languages do well that Logos does not attempt at all.</p>
   <ul class="compare__legend"><li class="is-yes"><span aria-hidden="true">✓</span> has it</li><li class="is-partial"><span aria-hidden="true">~</span> partial</li><li class="is-no"><span aria-hidden="true">✗</span> no</li></ul>
   <div class="compare__scroll">
     <table class="compare__table">
