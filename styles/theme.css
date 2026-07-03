@@ -1070,7 +1070,12 @@ a {
 .compare__table {
     width: 100%;
     min-width: 82rem;
-    border-collapse: collapse;
+    /* separate, not collapse: collapsed borders are painted at the table layer
+       and do not travel with sticky cells, which leaves a seam between the two
+       pinned columns where scrolling row lines and content bleed through. With
+       separate borders (spacing 0) every cell paints and carries its own. */
+    border-collapse: separate;
+    border-spacing: 0;
     font-size: 0.85rem;
 }
 
