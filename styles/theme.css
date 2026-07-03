@@ -921,7 +921,7 @@ a {
 }
 
 /* ── Comparison matrix ────────────────────────────────────────────────────────
-   "Next to its neighbors" on the homepage: Logos against eight other languages.
+   "Next to its neighbors" on the homepage: Logos against ten other languages.
    One glyph per cell (has it / partial / no), colored green / yellow / red; the
    not-done-yet disclaimer lives once in the lead paragraph, not per cell or in
    the header. The section is wide enough that the whole table shows on a
@@ -932,7 +932,7 @@ a {
     /* The pinned capability column's exact width; the left scroll hint starts
        where it ends. Referenced by .compare__cap and .compare__shadows::before. */
     --compare-cap: 15rem;
-    max-width: 71rem;
+    max-width: 82rem;
     margin: clamp(4rem, 10vh, 7rem) auto clamp(4rem, 10vh, 6rem);
     padding-inline: 1.25rem;
 }
@@ -1034,9 +1034,28 @@ a {
 }
 .compare__table {
     width: 100%;
-    min-width: 64rem;
+    min-width: 76rem;
     border-collapse: collapse;
     font-size: 0.85rem;
+}
+
+/* Fixed clone of the header row, built and shown by initCompare while the page
+   scroll position is inside the table, parked just below the menu dock so the
+   language columns stay identifiable in a 22-row table. The inner clip mirrors
+   the real container's scrollLeft (an overflow:hidden box is still
+   programmatically scrollable), which also keeps the capability corner pinned
+   via the same sticky rule as the real header. */
+.compare__float {
+    position: fixed;
+    z-index: 40;
+    background: var(--surface);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+}
+.compare__float-clip {
+    overflow: hidden;
+}
+.compare__float .compare__table {
+    min-width: 0;
 }
 .compare__table th,
 .compare__table td {

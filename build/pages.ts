@@ -260,100 +260,120 @@ interface CompareRow {
   cells: CompareCell[];
 }
 
-const COMPARE_LANGS = ["Logos", "Rust", "Zig", "Lean 4", "Unison", "Racket", "Smalltalk", "Julia", "Mojo"];
+const COMPARE_LANGS = ["Logos", "C/C++", "Rust", "Zig", "Lean 4", "Unison", "Racket", "Smalltalk", "Julia", "Python", "Mojo"];
 
-// Cells are in COMPARE_LANGS order: Logos, Rust, Zig, Lean 4, Unison, Racket,
-// Smalltalk, Julia, Mojo.
+// Cells are in COMPARE_LANGS order: Logos, C/C++, Rust, Zig, Lean 4, Unison,
+// Racket, Smalltalk, Julia, Python, Mojo.
 const COMPARE_ROWS: CompareRow[] = [
   {
     label: "Memory safety without a GC",
     sub: "ownership and borrow checking, zero runtime cost",
-    cells: [{ v: "yes" }, { v: "yes" }, { v: "no", note: 9 }, { v: "no" }, { v: "no" }, { v: "no" }, { v: "no" }, { v: "no" }, { v: "partial", note: 13 }],
+    cells: [{ v: "yes" }, { v: "no", note: 16 }, { v: "yes" }, { v: "no", note: 9 }, { v: "no" }, { v: "no" }, { v: "no" }, { v: "no" }, { v: "no" }, { v: "no" }, { v: "partial", note: 13 }],
   },
   {
     label: "Compiles to native machine code",
     sub: "AOT or JIT, systems-grade performance",
-    cells: [{ v: "yes" }, { v: "yes" }, { v: "yes" }, { v: "yes", note: 1 }, { v: "partial" }, { v: "partial" }, { v: "partial" }, { v: "yes" }, { v: "yes" }],
+    cells: [{ v: "yes" }, { v: "yes" }, { v: "yes" }, { v: "yes" }, { v: "yes", note: 1 }, { v: "partial" }, { v: "partial" }, { v: "partial" }, { v: "yes" }, { v: "partial", note: 18 }, { v: "yes" }],
   },
   {
     label: "The speed ceiling of C and Rust",
     sub: "no GC or boxing tax, zero-cost abstractions",
-    cells: [{ v: "yes" }, { v: "yes" }, { v: "yes" }, { v: "no", note: 1 }, { v: "no" }, { v: "no" }, { v: "no" }, { v: "partial" }, { v: "yes" }],
+    cells: [{ v: "yes" }, { v: "yes" }, { v: "yes" }, { v: "yes" }, { v: "no", note: 1 }, { v: "no" }, { v: "no" }, { v: "no" }, { v: "partial", note: 21 }, { v: "no" }, { v: "yes" }],
   },
   {
     label: "Targets GPUs and custom hardware",
     sub: "kernels written in the language itself, not shader strings",
-    cells: [{ v: "yes" }, { v: "partial", note: 11 }, { v: "partial" }, { v: "no" }, { v: "no" }, { v: "no" }, { v: "no" }, { v: "yes" }, { v: "yes" }],
+    cells: [{ v: "yes" }, { v: "yes" }, { v: "partial", note: 11 }, { v: "partial" }, { v: "no" }, { v: "no" }, { v: "no" }, { v: "no" }, { v: "yes" }, { v: "partial", note: 19 }, { v: "yes" }],
+  },
+  {
+    label: "Multithreaded parallelism",
+    sub: "use every core with shared memory",
+    cells: [{ v: "yes" }, { v: "yes" }, { v: "yes" }, { v: "yes" }, { v: "partial" }, { v: "partial" }, { v: "partial" }, { v: "no" }, { v: "yes" }, { v: "partial", note: 20 }, { v: "yes" }],
   },
   {
     label: "Formal proofs in the language",
     sub: "dependent types / theorem proving built in",
-    cells: [{ v: "yes" }, { v: "no" }, { v: "no" }, { v: "yes" }, { v: "no" }, { v: "no" }, { v: "no" }, { v: "no" }, { v: "no" }],
+    cells: [{ v: "yes" }, { v: "no" }, { v: "no" }, { v: "no" }, { v: "yes" }, { v: "no" }, { v: "no" }, { v: "no" }, { v: "no" }, { v: "no" }, { v: "no" }],
   },
   {
     label: "Gradual verification",
     sub: "prove one part, leave the rest ordinary code",
-    cells: [{ v: "yes" }, { v: "no" }, { v: "no" }, { v: "yes" }, { v: "no" }, { v: "no" }, { v: "no" }, { v: "no" }, { v: "no" }],
+    cells: [{ v: "yes" }, { v: "no" }, { v: "no" }, { v: "no" }, { v: "yes" }, { v: "no" }, { v: "no" }, { v: "no" }, { v: "no" }, { v: "no" }, { v: "no" }],
   },
   {
     label: "Effects tracked in types",
     sub: "purity, IO, async as capabilities the compiler checks",
-    cells: [{ v: "yes" }, { v: "partial" }, { v: "no" }, { v: "yes" }, { v: "yes" }, { v: "no" }, { v: "no" }, { v: "no" }, { v: "partial" }],
+    cells: [{ v: "yes" }, { v: "no" }, { v: "partial" }, { v: "no" }, { v: "yes" }, { v: "yes" }, { v: "no" }, { v: "no" }, { v: "no" }, { v: "no" }, { v: "partial" }],
   },
   {
     label: "Code as data",
     sub: "programs are a structure the language can read",
-    cells: [{ v: "yes" }, { v: "partial", note: 2 }, { v: "no" }, { v: "yes" }, { v: "partial" }, { v: "yes" }, { v: "yes" }, { v: "yes" }, { v: "no" }],
+    cells: [{ v: "yes" }, { v: "no" }, { v: "partial", note: 2 }, { v: "no" }, { v: "yes" }, { v: "partial" }, { v: "yes" }, { v: "yes" }, { v: "yes" }, { v: "yes" }, { v: "no" }],
   },
   {
     label: "Semantic reflection",
     sub: "the readable structure carries types and checked facts",
-    cells: [{ v: "yes" }, { v: "no" }, { v: "partial" }, { v: "yes" }, { v: "no" }, { v: "partial" }, { v: "partial", note: 3 }, { v: "partial" }, { v: "no" }],
+    cells: [{ v: "yes" }, { v: "partial", note: 17 }, { v: "no" }, { v: "partial" }, { v: "yes" }, { v: "no" }, { v: "partial" }, { v: "partial", note: 3 }, { v: "partial" }, { v: "partial" }, { v: "no" }],
   },
   {
     label: "Compile-time code execution",
     sub: "run ordinary code at compile time, results baked in",
-    cells: [{ v: "yes" }, { v: "partial" }, { v: "yes" }, { v: "yes" }, { v: "no" }, { v: "yes" }, { v: "partial", note: 15 }, { v: "yes" }, { v: "yes" }],
+    cells: [{ v: "yes" }, { v: "partial" }, { v: "partial" }, { v: "yes" }, { v: "yes" }, { v: "no" }, { v: "yes" }, { v: "partial", note: 15 }, { v: "yes" }, { v: "no" }, { v: "yes" }],
   },
   {
     label: "Compiler extensible as a library",
     sub: "new syntax and optimizations as ordinary libraries",
-    cells: [{ v: "yes" }, { v: "partial", note: 2 }, { v: "no" }, { v: "yes" }, { v: "no" }, { v: "yes", note: 4 }, { v: "yes" }, { v: "partial" }, { v: "no" }],
+    cells: [{ v: "yes" }, { v: "no" }, { v: "partial", note: 2 }, { v: "no" }, { v: "yes" }, { v: "no" }, { v: "yes", note: 4 }, { v: "yes" }, { v: "partial" }, { v: "no" }, { v: "no" }],
   },
   {
     label: "Hosts other languages as libraries",
     sub: "embed an HDL or shader language without a new compiler",
-    cells: [{ v: "yes" }, { v: "partial" }, { v: "partial" }, { v: "yes", note: 14 }, { v: "no" }, { v: "yes", note: 4 }, { v: "no" }, { v: "partial" }, { v: "no" }],
+    cells: [{ v: "yes" }, { v: "no" }, { v: "partial" }, { v: "partial" }, { v: "yes", note: 14 }, { v: "no" }, { v: "yes", note: 4 }, { v: "no" }, { v: "partial" }, { v: "no" }, { v: "no" }],
+  },
+  {
+    label: "Hygienic syntax extension",
+    sub: "syntax extensions can't capture names by accident",
+    cells: [{ v: "yes", note: 22 }, { v: "no" }, { v: "partial" }, { v: "no" }, { v: "yes" }, { v: "no" }, { v: "yes" }, { v: "no" }, { v: "yes" }, { v: "no" }, { v: "no" }],
   },
   {
     label: "First-class rewrite engine",
     sub: "equality saturation shared by compiler and user code",
-    cells: [{ v: "yes" }, { v: "no" }, { v: "no" }, { v: "partial", note: 5 }, { v: "no" }, { v: "partial", note: 8 }, { v: "partial", note: 8 }, { v: "no", note: 12 }, { v: "no" }],
+    cells: [{ v: "yes" }, { v: "no" }, { v: "no" }, { v: "no" }, { v: "partial", note: 5 }, { v: "no" }, { v: "partial", note: 8 }, { v: "partial", note: 8 }, { v: "no", note: 12 }, { v: "no" }, { v: "no" }],
   },
   {
     label: "Live system",
     sub: "redefine parts of a running program",
-    cells: [{ v: "yes" }, { v: "no" }, { v: "no" }, { v: "no" }, { v: "partial" }, { v: "partial" }, { v: "yes" }, { v: "yes" }, { v: "no" }],
+    cells: [{ v: "yes" }, { v: "no" }, { v: "no" }, { v: "no" }, { v: "no" }, { v: "partial" }, { v: "partial" }, { v: "yes" }, { v: "yes" }, { v: "partial" }, { v: "no" }],
+  },
+  {
+    label: "Image persistence",
+    sub: "save the whole running system, resume it later",
+    cells: [{ v: "partial", note: 23 }, { v: "no" }, { v: "no" }, { v: "no" }, { v: "no" }, { v: "no" }, { v: "no" }, { v: "yes" }, { v: "partial", note: 24 }, { v: "no" }, { v: "no" }],
   },
   {
     label: "Content-addressed code",
     sub: "definitions identified by hash of their content",
-    cells: [{ v: "no", note: 6 }, { v: "no" }, { v: "no" }, { v: "no" }, { v: "yes" }, { v: "no" }, { v: "no" }, { v: "no" }, { v: "no" }],
+    cells: [{ v: "partial", note: 6 }, { v: "no" }, { v: "no" }, { v: "no" }, { v: "no" }, { v: "yes" }, { v: "no" }, { v: "no" }, { v: "no" }, { v: "no" }, { v: "no" }],
   },
   {
     label: "Usable today",
     sub: "a stable compiler you can build real software on now",
-    cells: [{ v: "no" }, { v: "yes" }, { v: "partial", note: 10 }, { v: "yes" }, { v: "yes", note: 7 }, { v: "yes" }, { v: "yes" }, { v: "yes" }, { v: "partial", note: 13 }],
+    cells: [{ v: "no" }, { v: "yes" }, { v: "yes" }, { v: "partial", note: 10 }, { v: "yes" }, { v: "yes", note: 7 }, { v: "yes" }, { v: "yes" }, { v: "yes" }, { v: "yes" }, { v: "partial", note: 13 }],
+  },
+  {
+    label: "Backward-compatibility promise",
+    sub: "code from years ago still builds and runs today",
+    cells: [{ v: "no" }, { v: "yes" }, { v: "yes" }, { v: "no", note: 10 }, { v: "partial" }, { v: "partial" }, { v: "yes" }, { v: "partial" }, { v: "yes" }, { v: "partial" }, { v: "no" }],
   },
   {
     label: "Package ecosystem",
     sub: "packages, users, production track record",
-    cells: [{ v: "no" }, { v: "yes" }, { v: "partial" }, { v: "partial" }, { v: "partial", note: 7 }, { v: "partial" }, { v: "partial" }, { v: "yes" }, { v: "no" }],
+    cells: [{ v: "no" }, { v: "yes" }, { v: "yes" }, { v: "partial" }, { v: "partial" }, { v: "partial", note: 7 }, { v: "partial" }, { v: "partial" }, { v: "yes" }, { v: "yes" }, { v: "no" }],
   },
   {
     label: "Mature IDE and tooling",
     sub: "completion, go-to-definition, refactoring that work now",
-    cells: [{ v: "no" }, { v: "yes" }, { v: "partial" }, { v: "yes" }, { v: "partial" }, { v: "partial" }, { v: "yes" }, { v: "partial" }, { v: "partial" }],
+    cells: [{ v: "no" }, { v: "yes" }, { v: "yes" }, { v: "partial" }, { v: "yes" }, { v: "partial" }, { v: "partial" }, { v: "yes" }, { v: "partial" }, { v: "yes" }, { v: "partial" }],
   },
 ];
 
@@ -363,7 +383,7 @@ const COMPARE_NOTES: string[] = [
   "Smalltalk reflects everything at runtime, but nothing is statically typed or proved.",
   "Racket's #lang makes whole languages ordinary libraries; the optimizer itself is not user-extensible.",
   "Lean's simp and @[csimp] rule sets are first-class directed rewriting; there is no e-graph equality saturation.",
-  "Not a Logos goal: source files stay canonical, so a build is reproducible from text alone.",
+  "Logos source files stay canonical, but hash identity can be enforced as an opt-in wrapper discipline: persisted artifacts already key by content, never by address.",
   "Most of Unison's public production mileage is Unison Cloud, built by the language's own company.",
   "Racket's macro expander and Smalltalk's Refactoring-Browser rewriter are user-drivable tree rewriting; neither is equality saturation, and neither serves as the compiler's optimizer.",
   "Zig has no GC, but its safety comes from runtime checks in safe builds, not compile-time proof.",
@@ -373,6 +393,15 @@ const COMPARE_NOTES: string[] = [
   "Mojo's 1.0 beta shipped in May 2026 with ownership checking working today; full default memory safety is deferred to Mojo 2.x.",
   "Alloy embeds real C syntax inside Lean files through Lean's extensible grammar.",
   "Smalltalk has no separate compile phase; evaluating code and saving the image plays the comptime role.",
+  "C and C++ have no GC, but nothing enforces memory safety either; this row asks for both.",
+  "C++26 adds compile-time reflection of types (P2996), not reflection of program structure.",
+  "CPython 3.13+ ships an experimental JIT and PyPy is mature; neither approaches systems-grade performance.",
+  "Triton and JAX compile Python-syntax kernels for GPUs, as restricted subsets of the language.",
+  "Free-threaded CPython became officially supported in Python 3.14, as a separate build; the default build keeps the GIL.",
+  "Type-stable Julia kernels reach C speed; the GC and dynamic fallback keep whole programs below the ceiling.",
+  "Logos constructors emit resolved handles rather than names, so there is no name for a macro to capture.",
+  "The Logic Graph and boundary-materialized task state admit a save/resume library in Logos; source files stay the canonical form.",
+  "PackageCompiler sysimages snapshot a loaded Julia session, not live tasks.",
 ];
 
 const VERDICT_GLYPH: Record<CompareVerdict, string> = {
@@ -407,7 +436,7 @@ function compareHtml(): string {
   ).join("");
   return `<section class="compare" aria-label="How Logos compares to other languages">
   <h2 class="compare__title">Next to its neighbors</h2>
-  <p class="compare__lead">The first question a language-literate visitor asks is "why not Rust, Zig, Lean, Unison, Julia, or a Lisp?". Here is the honest answer. <strong>Logos is not done yet</strong>: its column is the design it is being built toward, not software you can run today, while every other column is what ships now. Some rows are things other languages do well that Logos does not attempt at all.</p>
+  <p class="compare__lead">The first question a language-literate visitor asks is "why not C++, Rust, Zig, Lean, Julia, Python, or a Lisp?". Here is the honest answer. <strong>Logos is not done yet</strong>: its column is the design it is being built toward, not software you can run today, while every other column is what ships now. Some rows are things other languages do well that Logos does not attempt at all.</p>
   <ul class="compare__legend"><li class="is-yes"><span aria-hidden="true">✓</span> has it</li><li class="is-partial"><span aria-hidden="true">~</span> partial</li><li class="is-no"><span aria-hidden="true">✗</span> no</li></ul>
   <div class="compare__shadows" data-compare>
     <div class="compare__scroll">

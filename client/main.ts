@@ -223,26 +223,96 @@ function initWisdom(): void {
 	requestAnimationFrame(step);
 }
 
-// ── Comparison matrix scroll hints ────────────────────────────────────────────
-// The matrix is wider than most viewports. Toggle the edge fade + chevron overlays
-// (.compare__shadows::before/::after) so the visitor can see in which direction
-// more language columns exist; both disappear on screens wide enough to show the
-// whole table. Re-checked on scroll, resize, and after fonts load (which changes
-// column widths).
+// ── Comparison matrix: scroll hints + floating header ─────────────────────────
+// Two enhancements for a table bigger than most viewports. (1) Edge fade + chevron
+// overlays (.compare__shadows::before/::after) show in which direction more
+// language columns exist; both disappear on screens wide enough to show the whole
+// table. (2) A fixed clone of the header row parks just below the menu dock while
+// the page scroll position is inside the table, so the language columns stay
+// identifiable through all 22 rows. The clone follows horizontal scrolling by
+// mirroring scrollLeft onto its own overflow:hidden clip box, which also keeps the
+// capability corner pinned via the same sticky rule as the real header. All of it
+// re-checks on scroll, resize, and font load (which changes column widths).
 function initCompare(): void {
 	const wrap = document.querySelector<HTMLElement>('[data-compare]');
 	const scroll = wrap?.querySelector<HTMLElement>('.compare__scroll');
-	if (!wrap || !scroll) return;
+	const table = scroll?.querySelector<HTMLTableElement>('.compare__table');
+	const thead = table?.querySelector('thead');
+	if (!wrap || !scroll || !table || !thead) return;
 
-	const update = (): void => {
+	const updateHints = (): void => {
 		const max = scroll.scrollWidth - scroll.clientWidth;
 		wrap.classList.toggle('show-left', scroll.scrollLeft > 4);
 		wrap.classList.toggle('show-right', scroll.scrollLeft < max - 4);
 	};
-	scroll.addEventListener('scroll', update, { passive: true });
-	window.addEventListener('resize', update);
-	void document.fonts?.ready.then(update);
-	update();
+
+	const float = document.createElement('div');
+	float.className = 'compare__float';
+	float.setAttribute('aria-hidden', 'true');
+	float.hidden = true;
+	const clip = document.createElement('div');
+	clip.className = 'compare__float-clip';
+	const floatTable = document.createElement('table');
+	floatTable.className = 'compare__table';
+	clip.appendChild(floatTable);
+	float.appendChild(clip);
+	document.body.appendChild(float);
+
+	// Lock the cloned header's column widths to the real ones (a thead-only table
+	// would otherwise compute its own layout), then match the full table width.
+	const rebuild = (): void => {
+		floatTable.innerHTML = '';
+		const clone = thead.cloneNode(true) as HTMLElement;
+		floatTable.appendChild(clone);
+		const src = [...thead.querySelectorAll<HTMLElement>('th')];
+		const dst = [...clone.querySelectorAll<HTMLElement>('th')];
+		dst.forEach((th, i) => {
+			const w = src[i]?.getBoundingClientRect().width ?? 0;
+			th.style.width = `${w}px`;
+			th.style.minWidth = `${w}px`;
+			th.style.maxWidth = `${w}px`;
+		});
+		floatTable.style.width = `${table.getBoundingClientRect().width}px`;
+	};
+
+	// Show the clone while the real header is scrolled under the dock but table
+	// rows are still on screen; align it with the scroll container's box.
+	const place = (): void => {
+		const dock = document.querySelector('.dock');
+		const top = (dock ? dock.getBoundingClientRect().bottom : 0) + 6;
+		const rect = scroll.getBoundingClientRect();
+		const headH = thead.getBoundingClientRect().height;
+		const show = rect.top < top && rect.bottom > top + headH;
+		float.hidden = !show;
+		if (!show) return;
+		float.style.top = `${top}px`;
+		float.style.left = `${rect.left + 1}px`;
+		float.style.width = `${rect.width - 2}px`;
+		clip.scrollLeft = scroll.scrollLeft;
+	};
+
+	scroll.addEventListener(
+		'scroll',
+		() => {
+			updateHints();
+			clip.scrollLeft = scroll.scrollLeft;
+		},
+		{ passive: true },
+	);
+	window.addEventListener('scroll', place, { passive: true });
+	window.addEventListener('resize', () => {
+		rebuild();
+		updateHints();
+		place();
+	});
+	void document.fonts?.ready.then(() => {
+		rebuild();
+		updateHints();
+		place();
+	});
+	rebuild();
+	updateHints();
+	place();
 }
 
 // ── Get-notified form ─────────────────────────────────────────────────────────
