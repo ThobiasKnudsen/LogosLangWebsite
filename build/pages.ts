@@ -288,7 +288,7 @@ const COMPARE_ROWS: CompareRow[] = [
   {
     label: "Runs in the browser",
     sub: "compiles to WebAssembly or runs in a web page",
-    cells: [{ v: "yes" }, { v: "yes" }, { v: "yes" }, { v: "yes" }, { v: "no" }, { v: "no" }, { v: "no" }, { v: "partial", note: 27 }, { v: "no" }, { v: "partial", note: 28 }, { v: "yes" }, { v: "no" }],
+    cells: [{ v: "partial", note: 32 }, { v: "partial", note: 32 }, { v: "partial", note: 32 }, { v: "partial", note: 32 }, { v: "no" }, { v: "no" }, { v: "no" }, { v: "partial", note: 27 }, { v: "no" }, { v: "partial", note: 28 }, { v: "yes" }, { v: "no" }],
   },
   {
     label: "Multithreaded parallelism",
@@ -419,6 +419,7 @@ const COMPARE_NOTES: string[] = [
   "The TypeScript compiler API exposes the type checker to tooling; all types are erased at runtime.",
   "Logos releases are designed immutable from day one (docs and builds freeze per version); the track record starts at the first release.",
   "No Logos packages exist yet; the standard library is deliberately built before release to seed a coherent ecosystem.",
+  "WebAssembly runs in every browser, but only JavaScript runs alone: wasm still needs JS glue to load, and all DOM and I/O access goes through JS.",
 ];
 
 const VERDICT_GLYPH: Record<CompareVerdict, string> = {
