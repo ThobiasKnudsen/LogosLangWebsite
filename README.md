@@ -198,6 +198,43 @@ Set `SITE_URL` to the production origin (defaults to `https://logoslang.dev`) so
 canonical URLs, social cards, the sitemap, and `llms.txt` resolve absolutely. Then
 add `logoslang.dev` as a custom domain in the Pages project.
 
+## Release notifications (email capture)
+
+The home hero and the (pre-release, empty) download page carry a "get notified"
+form. It posts to `functions/api/subscribe.ts`, a **Cloudflare Pages Function**
+deployed automatically from the `functions/` directory, which stores signups in a
+Workers KV namespace: key `email:<address>`, value `{ email, subscribedAt, source }`.
+Nothing else is stored (no IP, no user agent); `/privacy/` documents this.
+
+**The promise made on the forms and on `/privacy/` is exactly one email, sent when
+the first public build ships, after which the list is deleted.** Widening that scope
+(e.g. announcing every release) requires changing the form copy, `/privacy/`, and
+the function's HTML page first, and only applies to signups collected after the
+change.
+
+**One-time setup** (until then the function answers 503 and the client tells the
+visitor to watch GitHub releases instead, so the form degrades honestly):
+
+1. Cloudflare dashboard → Storage & Databases → KV → create a namespace (e.g.
+   `logos-subscribers`).
+2. Pages project → Settings → Functions → **KV namespace bindings** → bind it as
+   **`SUBSCRIBERS`** (Production, and Preview if you want preview deploys to work).
+3. Redeploy.
+
+Export the list when the first release goes out (then delete the namespace, per the
+promise above):
+
+```sh
+wrangler kv key list --namespace-id=<id> | jq -r '.[].name' | sed 's/^email://'
+```
+
+Client behavior: `initNotify` in `client/main.ts` submits via fetch and shows the
+outcome inline; with JS off the function answers with a small self-contained HTML
+page. A visually hidden `website` field is a honeypot: any value in it makes the
+function claim success and store nothing. `npm run dev` serves a stub at
+`/api/subscribe` (logs the email, answers `{ ok: true }`) so the forms work locally;
+to exercise the real function locally use `wrangler pages dev dist`.
+
 ## Analytics & privacy
 
 Analytics is **consent-gated and off by default**. The build reads three optional env

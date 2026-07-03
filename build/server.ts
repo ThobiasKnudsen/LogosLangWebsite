@@ -45,6 +45,22 @@ async function resolveFile(urlPath: string): Promise<string | null> {
 const server = http.createServer(async (req, res) => {
 	const url = req.url ?? '/';
 
+	// Dev-only stand-in for the Cloudflare Pages Function at functions/api/subscribe.ts
+	// (Pages Functions don't run under this plain static server). Reads the form, logs
+	// the email to the console, and answers like the real function's happy path so the
+	// notify forms can be exercised locally.
+	if (url.split('?')[0] === '/api/subscribe' && req.method === 'POST') {
+		let body = '';
+		req.on('data', (chunk) => (body += chunk));
+		req.on('end', () => {
+			const email = new URLSearchParams(body).get('email') ?? '(none)';
+			console.log(`subscribe stub: ${email}`);
+			res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+			res.end(JSON.stringify({ ok: true }));
+		});
+		return;
+	}
+
 	if (url.startsWith('/__reload')) {
 		res.writeHead(200, {
 			'Content-Type': 'text/event-stream',

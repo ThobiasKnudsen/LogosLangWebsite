@@ -71,6 +71,14 @@
     --line-proofs: #6f5de0;
     --line-interop: #c8466f;
     --line-tooling: #1a9088;
+    /* Code tokens for the homepage target-syntax card, in the roadmap line hues
+       darkened where needed to clear WCAG AA 4.5:1 on the cream --code-bg. */
+    --tok-kw: var(--accent);
+    --tok-type: #247a44;
+    --tok-num: #a8551a;
+    --tok-str: #c8466f;
+    --tok-op: #6f6a60;
+    --tok-comment: #6f6a60;
 }
 
 :root[data-theme="dark"] {
@@ -109,6 +117,12 @@
     --line-proofs: #9d8dff;
     --line-interop: #ec7ba0;
     --line-tooling: #3fc3b8;
+    --tok-kw: var(--accent);
+    --tok-type: #54c47e;
+    --tok-num: #e8964a;
+    --tok-str: #ec7ba0;
+    --tok-op: #9c978b;
+    --tok-comment: #8a8578;
 }
 
 * {
@@ -622,7 +636,7 @@ a {
     margin: 2.25rem 0 0;
 }
 .hero__actions {
-    margin-top: 2.5rem;
+    margin-top: 1.6rem;
     display: flex;
     gap: 0.75rem;
     justify-content: center;
@@ -632,6 +646,152 @@ a {
     font-size: 0.85rem;
     color: var(--muted);
     margin: 0.9rem 0 0;
+}
+
+/* ── Get-notified form ────────────────────────────────────────────────────────
+   The intent-capture form in the hero and on the empty download page: an email
+   field beside the download-styled submit button, with an inline status line the
+   client fills after the fetch. The honeypot field is parked off-screen (not
+   display:none, so naive bots still fill it). */
+.notify {
+    margin: 2.5rem 0 0;
+    width: 100%;
+}
+.notify__hp {
+    position: absolute;
+    left: -9999px;
+    margin: 0;
+}
+.notify__row {
+    display: flex;
+    gap: 0.6rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+.notify__email {
+    font: inherit;
+    font-size: 0.9rem;
+    padding: 0.6rem 0.95rem;
+    border: 1.5px solid var(--hairline);
+    border-radius: 7px;
+    background: var(--surface);
+    color: var(--text);
+    width: min(21rem, 72vw);
+}
+.notify__email::placeholder {
+    color: var(--muted);
+}
+.notify__email:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+}
+.notify__submit:disabled {
+    opacity: 0.6;
+    cursor: default;
+}
+.notify__status {
+    margin: 0.7rem 0 0;
+    font-size: 0.85rem;
+    color: var(--muted);
+}
+/* The status is a permanent (never display:none) live region so screen readers
+   announce its updates; while empty it must not reserve its margin. */
+.notify__status:empty {
+    margin: 0;
+}
+.notify__status.is-ok {
+    color: var(--ok-text);
+}
+.notify__status.is-error {
+    color: var(--warn-text);
+}
+
+/* ── Homepage code sample ─────────────────────────────────────────────────────
+   A single code window of target syntax under the hero: an editor-style card with
+   a filename bar and an explicit "target syntax" badge so it never reads as a
+   shipped feature. Tokens are colored by the build's small highlighter
+   (highlightLogos in build/pages.ts) via the --tok-* vars. */
+.code-peek {
+    max-width: 46rem;
+    margin: clamp(4rem, 10vh, 7rem) auto 0;
+    padding-inline: 1.25rem;
+    text-align: center;
+}
+.code-peek__title {
+    font-family: var(--serif);
+    font-size: clamp(1.5rem, 3vw, 2.2rem);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: var(--heading);
+    margin: 0;
+}
+.code-peek__lead {
+    font-size: 0.95rem;
+    max-width: 56ch;
+    margin: 0.9rem auto 0;
+}
+.code-card {
+    margin: 1.8rem 0 0;
+    text-align: left;
+    border: 1px solid var(--hairline);
+    border-radius: 12px;
+    background: var(--code-bg);
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+.code-card__bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    padding: 0.55rem 0.95rem;
+    background: var(--surface);
+    border-bottom: 1px solid var(--hairline);
+}
+.code-card__name {
+    font-family: var(--mono);
+    font-size: 0.78rem;
+    color: var(--muted);
+}
+.code-card__badge {
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--hero-note);
+    border: 1px solid var(--hero-note);
+    border-radius: 999px;
+    padding: 0.15rem 0.6rem;
+}
+.code-card__pre {
+    margin: 0;
+    padding: 1.1rem 1.2rem;
+    overflow-x: auto;
+    font-family: var(--mono);
+    font-size: 0.82rem;
+    line-height: 1.65;
+    color: var(--text);
+}
+.tok-kw {
+    color: var(--tok-kw);
+    font-weight: 600;
+}
+.tok-type {
+    color: var(--tok-type);
+}
+.tok-num {
+    color: var(--tok-num);
+}
+.tok-str {
+    color: var(--tok-str);
+}
+.tok-op {
+    color: var(--tok-op);
+}
+.tok-comment {
+    color: var(--tok-comment);
+    font-style: italic;
 }
 /* Below ~1280px the longest phrase can't fit on one line, so bound the rotator to
    the viewport and let phrases wrap (still centered) instead of being clipped. Above
@@ -648,13 +808,14 @@ a {
 
 /* ── Wisdom frieze ────────────────────────────────────────────────────────────
    A slow right-to-left drift of Greek reflections on the Logos, framed by two
-   hairlines like an inscription. The track holds TWO identical sequences; the
+   hairlines like an inscription. Each quote exists exactly ONCE in the track; the
    drift is driven in JS by nudging scrollLeft (see initWisdom), so the visitor can
    also grab and scroll the frieze left/right by hand; auto and manual share one
-   mechanism, and a whole-sequence wrap keeps either direction seamless. Edges fade
-   to the page (mask) so quotes surface and dissolve like half-remembered text.
-   Hover/focus pauses the drift so a passage can be read and selected, and the Greek
-   is real, copyable text, not an image. Each quote is a centered multi-line stanza. */
+   mechanism, and rotating whole units across the track's ends keeps either
+   direction seamless without duplicating a quote. Edges fade to the page (mask) so
+   quotes surface and dissolve like half-remembered text. Hover/focus pauses the
+   drift so a passage can be read and selected, and the Greek is real, copyable
+   text, not an image. Each quote is a centered multi-line stanza. */
 .wisdom {
     position: relative;
     /* The band itself: solid darker cream running edge to edge, framed by the two
@@ -674,6 +835,9 @@ a {
     overflow-y: hidden;
     scrollbar-width: none; /* Firefox */
     overscroll-behavior-x: contain;
+    /* initWisdom rotates units between the track's ends and compensates scrollLeft
+       itself; browser scroll anchoring would fight that compensation. */
+    overflow-anchor: none;
     /* Fade the left/right edges into the band so text emerges from and returns to
        nothing rather than being hard-clipped. */
     -webkit-mask-image: linear-gradient(
@@ -698,7 +862,7 @@ a {
     display: flex;
     width: max-content;
 }
-.wisdom__seq {
+.wisdom__unit {
     display: flex;
     align-items: center;
     flex: none;
@@ -742,17 +906,162 @@ a {
     /* Sit the ornament on the Greek line, not the author line below it. */
     transform: translateY(-0.55em);
 }
-/* No motion: initWisdom bails out (no auto-drift), so the frieze just holds still
-   and the reader scrolls it by hand. Drop the edge fade and the duplicate sequence,
-   which only exist to serve the seamless loop. */
+/* No motion: initWisdom skips the auto-drift, so the frieze just holds still and
+   the reader scrolls it by hand. Drop the edge fade, which only exists to serve
+   the drifting loop. */
 @media (prefers-reduced-motion: reduce) {
     .wisdom__scroll {
         -webkit-mask-image: none;
         mask-image: none;
     }
-    .wisdom__seq[aria-hidden="true"] {
-        display: none;
-    }
+}
+
+/* ── Comparison matrix ────────────────────────────────────────────────────────
+   "Next to its neighbors" on the homepage: Logos against Rust, Lean 4, Unison,
+   Racket, and Smalltalk. One glyph per cell (has it / partial / no / planned),
+   colored via the status tokens; the wide table scrolls inside its own container
+   on narrow screens. The Logos column carries a faint accent wash so the "this
+   column is mostly a plan" honesty is impossible to miss. */
+.compare {
+    max-width: 62rem;
+    margin: clamp(4rem, 10vh, 7rem) auto clamp(4rem, 10vh, 6rem);
+    padding-inline: 1.25rem;
+}
+.compare__title {
+    font-family: var(--serif);
+    font-size: clamp(1.5rem, 3vw, 2.2rem);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: var(--heading);
+    text-align: center;
+    margin: 0;
+}
+.compare__lead {
+    font-size: 0.95rem;
+    max-width: 64ch;
+    margin: 0.9rem auto 0;
+    text-align: center;
+}
+.compare__legend {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.4rem 1.4rem;
+    padding: 0;
+    margin: 1.4rem 0 0;
+    font-size: 0.8rem;
+    color: var(--muted);
+}
+.compare__legend li {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+.compare__legend li > span,
+.compare__cell > span[aria-hidden] {
+    font-family: var(--mono);
+}
+.compare__legend .is-yes > span {
+    color: var(--ok-text);
+}
+.compare__legend .is-partial > span {
+    color: var(--warn-text);
+}
+.compare__legend .is-no > span {
+    color: var(--muted);
+}
+.compare__legend .is-planned > span {
+    color: var(--accent);
+}
+.compare__scroll {
+    margin-top: 1.2rem;
+    overflow-x: auto;
+    border: 1px solid var(--hairline);
+    border-radius: 12px;
+    background: var(--surface);
+}
+.compare__table {
+    width: 100%;
+    min-width: 46rem;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+}
+.compare__table th,
+.compare__table td {
+    padding: 0.6rem 0.75rem;
+    border-bottom: 1px solid var(--hairline);
+}
+.compare__table thead th {
+    font-size: 0.75rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-align: center;
+}
+.compare__table tbody tr:last-child th,
+.compare__table tbody tr:last-child td {
+    border-bottom: 0;
+}
+.compare__cap {
+    text-align: left;
+    font-weight: 600;
+    color: var(--heading);
+    min-width: 15rem;
+}
+.compare__sub {
+    display: block;
+    font-weight: 400;
+    font-size: 0.75rem;
+    color: var(--muted);
+}
+.compare__lang--logos,
+.compare__cell--logos {
+    background: color-mix(in srgb, var(--accent) 7%, transparent);
+}
+.compare__pre {
+    display: block;
+    font-size: 0.62rem;
+    letter-spacing: 0.08em;
+    /* warn-text, not hero-note: at ~10px on the accent-washed Logos column the
+       hero-note orange falls just under AA contrast; warn-text clears it in both
+       themes. */
+    color: var(--warn-text);
+}
+.compare__cell {
+    text-align: center;
+    font-size: 0.95rem;
+}
+.compare__cell.is-yes {
+    color: var(--ok-text);
+}
+.compare__cell.is-partial {
+    color: var(--warn-text);
+}
+.compare__cell.is-no {
+    color: var(--muted);
+}
+.compare__cell.is-planned {
+    color: var(--accent);
+}
+.compare__ref {
+    margin-left: 0.15rem;
+}
+.compare__ref a {
+    color: var(--accent);
+    text-decoration: none;
+    font-family: var(--sans);
+    font-size: 0.72rem;
+}
+.compare__notes {
+    margin: 1.1rem auto 0;
+    padding-left: 1.2rem;
+    font-size: 0.78rem;
+    color: var(--muted);
+    max-width: 80ch;
+}
+.compare__notes li {
+    margin-top: 0.25rem;
 }
 
 /* ── Vision / placeholder ─────────────────────────────────────────────────── */
@@ -1812,13 +2121,23 @@ mark.search-hit {
 }
 .download--empty .download__lead {
     margin-inline: auto;
+    margin-bottom: 0;
+}
+.download--empty .notify {
+    margin-top: 1.9rem;
+}
+.download__notify-note {
+    margin: 0.9rem auto 0;
+    font-size: 0.85rem;
+    color: var(--muted);
+    max-width: 60ch;
 }
 .download__empty-actions {
     display: flex;
     flex-wrap: wrap;
     gap: 0.8rem;
     justify-content: center;
-    margin-top: 0.5rem;
+    margin-top: 1.9rem;
 }
 
 /* ── Playground page ──────────────────────────────────────────────────────── */

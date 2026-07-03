@@ -25,6 +25,7 @@ initHeroRotator();
 initWisdom();
 initScrollbars();
 initConsent();
+initNotify();
 if (document.getElementById('docs-app')) initDocs();
 if (document.getElementById('dl-grid')) initDownload();
 if (document.getElementById('pg-run')) initPlayground();
@@ -147,36 +148,53 @@ function initHeroRotator(): void {
 }
 
 // ── Wisdom frieze: shared auto-drift + manual scroll ──────────────────────────
-// The frieze holds two identical quote sequences. A rAF loop nudges scrollLeft to
-// give a slow ambient drift; because it's the same scrollLeft the visitor moves when
-// they swipe or scroll, auto and manual share one mechanism. Whenever the position
-// crosses out of the first sequence we shift it back by exactly one sequence width
-// (both sequences are identical, so the jump is invisible), giving an endless loop in
-// either direction. Drift pauses while the pointer is over the frieze or it holds
-// focus, so a passage can be read and selected. Pure progressive enhancement; with
-// reduced motion we skip the drift and leave it a plain manual scroll strip.
+// The frieze holds each quote exactly once, as a row of .wisdom__unit blocks. A rAF
+// loop nudges scrollLeft to give a slow ambient drift; because it's the same
+// scrollLeft the visitor moves when they swipe or scroll, auto and manual share one
+// mechanism. The endless loop comes from rotating whole units instead of duplicating
+// them: when the first unit has fully scrolled out of view it moves to the end of
+// the track (and the reverse when scrolling back past the start), with scrollLeft
+// compensated by the unit's width so the visible content never jumps. Drift pauses
+// while the pointer is over the frieze or it holds focus, so a passage can be read
+// and selected. Pure progressive enhancement; with reduced motion there is no drift
+// and the frieze is a plain scroll strip that still rotates at its ends.
 function initWisdom(): void {
 	const frieze = document.querySelector<HTMLElement>('.wisdom__scroll');
 	const track = frieze?.querySelector<HTMLElement>('.wisdom__track');
 	if (!frieze || !track) return;
+
+	// Rotate units across the ends so the strip loops without any quote existing
+	// twice. Read widths live each time: fonts loading can change them after init.
+	const rotate = (): void => {
+		if (track.scrollWidth <= frieze.clientWidth) return; // nothing overflows
+		let first = track.firstElementChild as HTMLElement | null;
+		// STRICTLY greater: after a backward rotation scrollLeft lands exactly on the
+		// new first unit's width, and `>=` would rotate that unit straight back,
+		// ping-ponging DOM moves on every scroll event when parked at the left edge.
+		while (first && first.offsetWidth > 0 && frieze.scrollLeft > first.offsetWidth) {
+			const w = first.offsetWidth;
+			track.appendChild(first); // now the last unit
+			frieze.scrollLeft -= w;
+			first = track.firstElementChild as HTMLElement | null;
+		}
+		let last = track.lastElementChild as HTMLElement | null;
+		while (last && last.offsetWidth > 0 && frieze.scrollLeft <= 0) {
+			const w = last.offsetWidth;
+			track.prepend(last); // now the first unit
+			frieze.scrollLeft += w;
+			last = track.lastElementChild as HTMLElement | null;
+		}
+	};
+	// A hand scroll/swipe needs the rotation too, so it also loops endlessly.
+	frieze.addEventListener('scroll', rotate, { passive: true });
+	// Rotate once up front: from the pristine scrollLeft=0 state no scroll event can
+	// fire (the position cannot go below 0), so without this the strip would dead-end
+	// leftward until something first scrolled it right.
+	rotate();
+
 	if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
 	const SPEED = 24; // px/second of ambient drift
-	// The track is two identical sequences laid side by side, so one sequence is half
-	// its scroll width. Read live each time: fonts loading can change it after init.
-	const seqWidth = (): number => track.scrollWidth / 2;
-
-	// Keep the position inside the first sequence's band. Jumping by a whole sequence
-	// width lands on the identical point in the other copy, so the loop shows no seam.
-	const wrap = (): void => {
-		const w = seqWidth();
-		if (w <= 0) return;
-		if (frieze.scrollLeft >= w) frieze.scrollLeft -= w;
-		else if (frieze.scrollLeft <= 0) frieze.scrollLeft += w;
-	};
-
-	// Start half a sequence in, so there's room to drift or scroll either way at once.
-	frieze.scrollLeft = seqWidth() / 2;
 
 	let paused = false;
 	frieze.addEventListener('pointerenter', () => {
@@ -191,19 +209,66 @@ function initWisdom(): void {
 	frieze.addEventListener('focusout', () => {
 		paused = false;
 	});
-	// A hand scroll/swipe still needs the wrap so it, too, loops endlessly.
-	frieze.addEventListener('scroll', wrap, { passive: true });
 
 	let last = 0;
 	const step = (t: number): void => {
 		if (last && !paused) {
 			frieze.scrollLeft += (SPEED * (t - last)) / 1000;
-			wrap();
+			rotate();
 		}
 		last = t;
 		requestAnimationFrame(step);
 	};
 	requestAnimationFrame(step);
+}
+
+// ── Get-notified form ─────────────────────────────────────────────────────────
+// Progressive enhancement over the plain notify form (build/pages.ts): submit via
+// fetch, show the outcome inline, and disable the button while in flight. With JS
+// off the form posts normally and the Pages Function answers with a small HTML
+// page, so the flow works either way.
+function initNotify(): void {
+	for (const form of document.querySelectorAll<HTMLFormElement>('form[data-notify]')) {
+		const status = form.querySelector<HTMLElement>('.notify__status');
+		const submit = form.querySelector<HTMLButtonElement>('.notify__submit');
+		// The status <p> is always in the DOM (an empty live region, its margin gated
+		// by :empty in CSS): text set into a display:none live region would not be
+		// announced by screen readers, so it is never `hidden`.
+		const show = (kind: 'ok' | 'error', text: string): void => {
+			if (!status) return;
+			status.textContent = text;
+			status.classList.toggle('is-ok', kind === 'ok');
+			status.classList.toggle('is-error', kind === 'error');
+		};
+		form.addEventListener('submit', (e) => {
+			e.preventDefault();
+			const body = new URLSearchParams(
+				new FormData(form) as unknown as Record<string, string>,
+			);
+			if (submit) submit.disabled = true;
+			fetch(form.action, { method: 'POST', body, headers: { Accept: 'application/json' } })
+				.then(async (res) => {
+					const data = (await res.json().catch(() => null)) as {
+						ok?: boolean;
+						error?: string;
+					} | null;
+					if (res.ok && data?.ok) {
+						form.reset();
+						show('ok', "You're on the list. One email at the first release.");
+					} else if (res.status === 503) {
+						show('error', 'Signup is not wired up yet; watch releases on GitHub instead.');
+					} else if (data?.error === 'invalid-email') {
+						show('error', 'That does not look like an email address.');
+					} else {
+						show('error', 'Something went wrong; try again in a moment.');
+					}
+				})
+				.catch(() => show('error', 'Network error; try again in a moment.'))
+				.finally(() => {
+					if (submit) submit.disabled = false;
+				});
+		});
+	}
 }
 
 // ── Auto-hiding scrollbar ─────────────────────────────────────────────────────

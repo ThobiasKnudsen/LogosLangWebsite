@@ -1,6 +1,7 @@
 // Inner HTML for the marketing pages. Kept faithful to the established design:
-// golden-section hero, single Download CTA, and a scrolling frieze of Greek
-// reflections on the Logos below it.
+// golden-section hero (whose primary action is the get-notified form until real
+// builds exist), a target-syntax code card, a scrolling frieze of Greek reflections
+// on the Logos, and the honest comparison matrix beneath it.
 import { escapeHtml } from "./templates.ts";
 import {
   OS_ORDER,
@@ -16,7 +17,6 @@ import {
 import { type Roadmap } from "./roadmap.ts";
 import { depmapHtml, DEFAULT_ASPECT } from "./roadmap-render.ts";
 
-const DOWNLOAD = "/download/";
 const GITHUB = "https://github.com/ThobiasKnudsen/LogosLang";
 
 // Reflections on the Logos across the ages, scrolled as a slow frieze beneath the
@@ -41,7 +41,7 @@ const GITHUB = "https://github.com/ThobiasKnudsen/LogosLang";
 // citation when you have one.
 // Ordered so Greek and Latin mix: with 10 Greek and 7 Latin, the Latin quotes sit at
 // positions 0/3/5/8/10/13/15, so no two Latin run back to back and Greek never runs
-// more than two in a row, including across the marquee's seamless loop wrap
+// more than two in a row, including across the frieze's loop wrap
 // (last -> first is Greek -> Latin).
 const WISDOM: { text: string; author: string }[] = [
   {
@@ -114,19 +114,273 @@ const WISDOM: { text: string; author: string }[] = [
   },
 ];
 
-/** One scrolling sequence of the Greek quotes, separated by a manuscript ornament.
- *  The marquee lays two of these side by side and translates by exactly one sequence
- *  width, so the loop is seamless. */
-function wisdomSequence(ariaHidden: boolean): string {
-  const items = WISDOM.map(
+/** 'grc' for the Greek stanzas, 'la' for the Latin ones, detected from the script so
+ *  the quote list stays plain data. The lang attribute lets screen readers switch
+ *  voice instead of reading ancient Greek with English pronunciation (WCAG 3.1.2). */
+function quoteLang(text: string): "grc" | "la" {
+  return /[Ͱ-Ͽἀ-῿]/.test(text) ? "grc" : "la";
+}
+
+/** The quote units of the frieze: each quote appears exactly once, as a stanza plus
+ *  its trailing manuscript ornament. The endless loop is achieved in the client by
+ *  rotating whole units from one end of the track to the other as they scroll out of
+ *  view (see initWisdom), never by rendering the sequence twice. */
+function wisdomUnits(): string {
+  return WISDOM.map(
     (q) =>
-      `<figure class="wisdom__quote"><blockquote class="wisdom__greek">${escapeHtml(
+      `<div class="wisdom__unit"><figure class="wisdom__quote"><blockquote class="wisdom__greek" lang="${quoteLang(
+        q.text,
+      )}">${escapeHtml(
         q.text,
       )}</blockquote><figcaption class="wisdom__author">- ${escapeHtml(
         q.author,
-      )}</figcaption></figure>`,
-  ).join(`<span class="wisdom__sep" aria-hidden="true">❦</span>`);
-  return `<div class="wisdom__seq"${ariaHidden ? ' aria-hidden="true"' : ""}>${items}<span class="wisdom__sep" aria-hidden="true">❦</span></div>`;
+      )}</figcaption></figure><span class="wisdom__sep" aria-hidden="true">❦</span></div>`,
+  ).join("");
+}
+
+// ── Get-notified form ─────────────────────────────────────────────────────────
+// The intent-capture form shown on the home hero and the (empty) download page.
+// Posts to the subscribe Pages Function (functions/api/subscribe.ts); client/main.ts
+// (initNotify) upgrades it to an inline fetch with a status line, and with JS off
+// the function answers with a small HTML page instead, so the form never dead-ends.
+// The `website` field is a honeypot: visually hidden and ignored by people, and any
+// value in it makes the function silently drop the submission.
+function notifyFormHtml(source: string): string {
+  return `<form class="notify" method="post" action="/api/subscribe" data-notify>
+      <input type="hidden" name="source" value="${source}" />
+      <p class="notify__hp" aria-hidden="true"><label>Leave this field empty <input type="text" name="website" tabindex="-1" autocomplete="off" /></label></p>
+      <div class="notify__row">
+        <input class="notify__email" type="email" name="email" required maxlength="254" placeholder="you@example.com" autocomplete="email" aria-label="Email address" />
+        <button class="logos-btn logos-btn--download notify__submit" type="submit">Get notified</button>
+      </div>
+      <p class="notify__status" role="status" aria-live="polite"></p>
+    </form>`;
+}
+
+// ── Homepage code sample ──────────────────────────────────────────────────────
+// Honest target syntax: every line is grounded in the LogosLang docs
+// (reference/operators, guides/the-rewriting-engine, guides/internals/logic-graph)
+// or DESIGN.md, and the card labels it as target syntax so it never overclaims.
+const HOME_SAMPLE = `# Declare with \`:=\`, reassign with \`=\`.
+count := mut i32 0
+count = count + 1
+
+# A function is a value whose body is a readable graph.
+square := fn (x : f64) -> f64 ( x * x )
+square.body                          # reflect: the Logic Graph of square
+
+# A type can carry a claim the checker must discharge.
+idx : u64 where self < xs.size
+
+# One rewrite engine serves the compiler and you.
+eval(simplify(sin(x)^2 + cos(x)^2))  # extracted as 1 at compile time`;
+
+const LOGOS_KEYWORDS = new Set([
+  "fn", "mut", "immut", "type", "struct", "shared", "if", "else", "for",
+  "while", "and", "or", "xor", "not", "where", "eval", "self", "error",
+  "undefined",
+]);
+const LOGOS_TYPES = /^(?:[iu](?:8|16|32|64)|f32|f64|string|bool|dyad|void@|exec@)$/;
+
+/** Minimal Logos highlighter for the fixed homepage sample: comments, «strings»,
+ *  numbers, keywords, primitive types, and operators become spans; everything else
+ *  (including whitespace) is escaped verbatim. Not a general lexer; just enough for
+ *  marketing snippets this file controls. */
+function highlightLogos(source: string): string {
+  const TOKEN =
+    /«[^»]*»|\d+(?:\.\d+)?|[A-Za-z_][A-Za-z0-9_@]*|:=|->|==|!=|<=|>=|[:=+\-*/%^<>.&@()[\]]/g;
+  const renderCode = (code: string): string => {
+    let out = "";
+    let idx = 0;
+    for (const m of code.matchAll(TOKEN)) {
+      out += escapeHtml(code.slice(idx, m.index));
+      const t = m[0];
+      if (t.startsWith("«")) out += `<span class="tok-str">${escapeHtml(t)}</span>`;
+      else if (/^\d/.test(t)) out += `<span class="tok-num">${t}</span>`;
+      else if (/^[A-Za-z_]/.test(t))
+        out += LOGOS_KEYWORDS.has(t)
+          ? `<span class="tok-kw">${t}</span>`
+          : LOGOS_TYPES.test(t)
+            ? `<span class="tok-type">${t}</span>`
+            : escapeHtml(t);
+      else out += `<span class="tok-op">${escapeHtml(t)}</span>`;
+      idx = m.index + t.length;
+    }
+    return out + escapeHtml(code.slice(idx));
+  };
+  return source
+    .split("\n")
+    .map((line) => {
+      const hash = line.indexOf("#");
+      if (hash < 0) return renderCode(line);
+      return (
+        renderCode(line.slice(0, hash)) +
+        `<span class="tok-comment">${escapeHtml(line.slice(hash))}</span>`
+      );
+    })
+    .join("\n");
+}
+
+function codePeekHtml(): string {
+  return `<section class="code-peek" aria-label="What Logos looks like">
+  <h2 class="code-peek__title">What Logos looks like</h2>
+  <p class="code-peek__lead">Target syntax, taken straight from the language design and the <a href="/docs/">docs</a>: one structure carrying the program, its types, its claims, and its rewrites. The compiler that runs it is pre-alpha; the <a href="/roadmap/">roadmap</a> tracks what actually works today.</p>
+  <figure class="code-card">
+    <figcaption class="code-card__bar"><span class="code-card__name">target-syntax.logos</span><span class="code-card__badge">target syntax, not yet runnable</span></figcaption>
+    <pre class="code-card__pre"><code>${highlightLogos(HOME_SAMPLE)}</code></pre>
+  </figure>
+</section>`;
+}
+
+// ── Comparison matrix ─────────────────────────────────────────────────────────
+// Logos next to the languages a PL-literate visitor reaches for first. Honest by
+// construction: Logos is pre-alpha, so its column is almost entirely "planned", and
+// the table keeps the rows where OTHER languages beat Logos (content-addressed code,
+// ecosystem, tooling, being usable at all). Verdicts for the other columns were
+// researched and adversarially fact-checked per language (July 2026); the numbered
+// footnotes carry the nuance a one-glyph cell cannot.
+
+type CompareVerdict = "yes" | "partial" | "no" | "planned";
+interface CompareCell {
+  v: CompareVerdict;
+  /** 1-based index into COMPARE_NOTES. */
+  note?: number;
+}
+interface CompareRow {
+  label: string;
+  sub: string;
+  /** One cell per language, in COMPARE_LANGS order. */
+  cells: CompareCell[];
+}
+
+const COMPARE_LANGS = ["Logos", "Rust", "Lean 4", "Unison", "Racket", "Smalltalk"];
+
+const COMPARE_ROWS: CompareRow[] = [
+  {
+    label: "Memory safety without a GC",
+    sub: "ownership and borrow checking, zero runtime cost",
+    cells: [{ v: "planned", note: 1 }, { v: "yes" }, { v: "no" }, { v: "no" }, { v: "no" }, { v: "no" }],
+  },
+  {
+    label: "Compiles to native machine code",
+    sub: "AOT or JIT, systems-grade performance",
+    cells: [{ v: "planned" }, { v: "yes" }, { v: "yes", note: 2 }, { v: "partial" }, { v: "partial" }, { v: "partial" }],
+  },
+  {
+    label: "Formal proofs in the language",
+    sub: "dependent types / theorem proving built in",
+    cells: [{ v: "planned", note: 1 }, { v: "no" }, { v: "yes" }, { v: "no" }, { v: "no" }, { v: "no" }],
+  },
+  {
+    label: "Gradual verification",
+    sub: "prove one part, leave the rest ordinary code",
+    cells: [{ v: "planned", note: 1 }, { v: "no" }, { v: "yes" }, { v: "no" }, { v: "no" }, { v: "no" }],
+  },
+  {
+    label: "Code as data",
+    sub: "programs are a structure the language can read",
+    cells: [{ v: "planned" }, { v: "partial", note: 3 }, { v: "yes" }, { v: "partial" }, { v: "yes" }, { v: "yes" }],
+  },
+  {
+    label: "Semantic reflection",
+    sub: "the readable structure carries types and checked facts",
+    cells: [{ v: "planned", note: 1 }, { v: "no" }, { v: "yes" }, { v: "no" }, { v: "partial" }, { v: "partial", note: 4 }],
+  },
+  {
+    label: "Compiler extensible as a library",
+    sub: "new syntax and optimizations as ordinary libraries",
+    cells: [{ v: "planned" }, { v: "partial", note: 3 }, { v: "yes" }, { v: "no" }, { v: "yes", note: 5 }, { v: "yes" }],
+  },
+  {
+    label: "First-class rewrite engine",
+    sub: "equality saturation shared by compiler and user code",
+    cells: [{ v: "planned" }, { v: "no" }, { v: "partial", note: 6 }, { v: "no" }, { v: "partial", note: 9 }, { v: "partial", note: 9 }],
+  },
+  {
+    label: "Live system",
+    sub: "redefine parts of a running program",
+    cells: [{ v: "planned" }, { v: "no" }, { v: "no" }, { v: "partial" }, { v: "partial" }, { v: "yes" }],
+  },
+  {
+    label: "Content-addressed code",
+    sub: "definitions identified by hash of their content",
+    cells: [{ v: "no", note: 7 }, { v: "no" }, { v: "no" }, { v: "yes" }, { v: "no" }, { v: "no" }],
+  },
+  {
+    label: "Usable today",
+    sub: "a stable compiler you can build real software on now",
+    cells: [{ v: "no" }, { v: "yes" }, { v: "yes" }, { v: "yes", note: 8 }, { v: "yes" }, { v: "yes" }],
+  },
+  {
+    label: "Package ecosystem",
+    sub: "packages, users, production track record",
+    cells: [{ v: "no" }, { v: "yes" }, { v: "partial" }, { v: "partial", note: 8 }, { v: "partial" }, { v: "partial" }],
+  },
+  {
+    label: "Mature IDE and tooling",
+    sub: "completion, go-to-definition, refactoring that work now",
+    cells: [{ v: "no" }, { v: "yes" }, { v: "yes" }, { v: "partial" }, { v: "partial" }, { v: "yes" }],
+  },
+];
+
+const COMPARE_NOTES: string[] = [
+  "Designed in depth but scheduled after v1 on the LogosLang roadmap, and parts are still marked unvalidated in the design doc. v1 is the self-hosting core, not the verification strata.",
+  "Lean 4 compiles through C, but its runtime uses reference counting: fast, yet not a no-GC systems language.",
+  "Rust proc macros transform token streams before type checking; the compiler's passes are not extensible.",
+  "Smalltalk reflects everything at runtime, but nothing is statically typed or proved.",
+  "Racket's #lang makes whole languages ordinary libraries; the optimizer itself is not user-extensible.",
+  "Lean's simp and @[csimp] rule sets are first-class directed rewriting; there is no e-graph equality saturation.",
+  "Not a Logos goal: source files stay canonical, so a build is reproducible from text alone.",
+  "Most of Unison's public production mileage is Unison Cloud, built by the language's own company.",
+  "Racket's macro expander and Smalltalk's Refactoring-Browser rewriter are user-drivable tree rewriting; neither is equality saturation, and neither serves as the compiler's optimizer.",
+];
+
+const VERDICT_GLYPH: Record<CompareVerdict, string> = {
+  yes: "✓",
+  partial: "~",
+  no: "✗",
+  planned: "◌",
+};
+const VERDICT_TEXT: Record<CompareVerdict, string> = {
+  yes: "yes",
+  partial: "partial",
+  no: "no",
+  planned: "planned, not built",
+};
+
+function compareHtml(): string {
+  const head = COMPARE_LANGS.map(
+    (lang, i) =>
+      `<th scope="col" class="compare__lang${i === 0 ? " compare__lang--logos" : ""}">${lang}${
+        i === 0 ? '<span class="compare__pre">pre-alpha</span>' : ""
+      }</th>`,
+  ).join("");
+  const rows = COMPARE_ROWS.map((row) => {
+    const cells = row.cells
+      .map((cell, i) => {
+        const sup = cell.note
+          ? `<sup class="compare__ref"><a href="#compare-note-${cell.note}" aria-label="Note ${cell.note}">${cell.note}</a></sup>`
+          : "";
+        return `<td class="compare__cell is-${cell.v}${i === 0 ? " compare__cell--logos" : ""}"><span aria-hidden="true">${VERDICT_GLYPH[cell.v]}</span><span class="sr-only">${VERDICT_TEXT[cell.v]}</span>${sup}</td>`;
+      })
+      .join("");
+    return `<tr><th scope="row" class="compare__cap">${row.label}<span class="compare__sub">${row.sub}</span></th>${cells}</tr>`;
+  }).join("");
+  const notes = COMPARE_NOTES.map(
+    (note, i) => `<li id="compare-note-${i + 1}">${note}</li>`,
+  ).join("");
+  return `<section class="compare" aria-label="How Logos compares to other languages">
+  <h2 class="compare__title">Next to its neighbors</h2>
+  <p class="compare__lead">The first question a language-literate visitor asks is "why not Rust, Lean, Unison, or a Lisp?". Here is the honest answer. Read the Logos column for what it is: <strong>Logos is pre-alpha</strong>, so nearly all of its column is design rather than shipped software, and some rows are things other languages do well that Logos does not attempt at all.</p>
+  <ul class="compare__legend"><li class="is-yes"><span aria-hidden="true">✓</span> has it</li><li class="is-partial"><span aria-hidden="true">~</span> partial</li><li class="is-no"><span aria-hidden="true">✗</span> no</li><li class="is-planned"><span aria-hidden="true">◌</span> planned, not built</li></ul>
+  <div class="compare__scroll">
+    <table class="compare__table">
+      <thead><tr><th scope="col" class="compare__cap">Capability</th>${head}</tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+  </div>
+  <ol class="compare__notes">${notes}</ol>
+</section>`;
 }
 
 export function homePage(): string {
@@ -135,13 +389,16 @@ export function homePage(): string {
     <p class="hero__note"><strong>NOTE:</strong> The Logos programming language isn't done yet, so much of what is stated here isn't something you can download today, but rather an attempt to show what Logos aims towards.</p>
     <h1 class="hero__headline"><span class="hero__brand" aria-hidden="true">Λόγος</span><span class="hero__rotator" data-rotator aria-hidden="true"><span class="hero__rot-item is-current">Compiles to Native Speed</span><span class="hero__rot-item">Ships Its Compiler as a Library</span><span class="hero__rot-item">Reads and Writes Itself</span><span class="hero__rot-item">Is a Complete Meta-Language</span><span class="hero__rot-item">Mirrors the Mind</span><span class="hero__rot-item">Is Radical Unification</span><span class="hero__rot-item">Makes English Programmable</span><span class="hero__rot-item">Reflects on Every Aspect of Itself</span><span class="hero__rot-item">Proves Its Own Code Correct</span><span class="hero__rot-item">Borrow-Checks Without a GC</span><span class="hero__rot-item">Optimizes Like Algebra</span></span><span class="sr-only">Logos: a self-proving meta-language.</span></h1>
     <p class="hero__sub">The compiler, the parser, the files, the build, the types, the borrow checker, the proofs, all in one structure. The same operations that run your code can read, rewrite, optimize, and prove any of it.</p>
-    <div class="hero__actions"><a class="logos-btn logos-btn--download" href="${DOWNLOAD}">Download</a><a class="logos-btn logos-btn--ghost" href="/roadmap/">Roadmap</a></div>
-    <p class="hero__availability">Pre-alpha build for Windows, Mac and Linux.</p>
+    ${notifyFormHtml("home-hero")}
+    <p class="hero__availability">Pre-alpha: no public builds yet. One email when the first build ships, nothing more (<a href="/privacy/">privacy</a>).</p>
+    <div class="hero__actions"><a class="logos-btn logos-btn--ghost" href="/vision/">Read the vision</a><a class="logos-btn logos-btn--ghost" href="/roadmap/">Roadmap</a></div>
   </div>
 </section>
+${codePeekHtml()}
 <section class="wisdom" aria-label="On the Logos, voices across the ages">
-  <div class="wisdom__scroll"><div class="wisdom__track">${wisdomSequence(false)}${wisdomSequence(true)}</div></div>
-</section>`;
+  <div class="wisdom__scroll"><div class="wisdom__track">${wisdomUnits()}</div></div>
+</section>
+${compareHtml()}`;
 }
 
 export function visionPage(): string {
@@ -239,9 +496,11 @@ export function downloadPage(releases: Release[]): string {
   if (releases.length === 0) {
     return `<section class="download download--empty">
   <h1 class="download__title">Download Logos</h1>
-  <p class="download__lead">Logos is pre-alpha, so there are no published builds yet. The moment a version is released, this page lists a one-line install command and a direct download for every OS.</p>
+  <p class="download__lead">Logos is pre-alpha and has no public builds yet. The moment the first version is released, this page lists a one-line install command and a direct download for every OS. Leave your email and you'll hear about it the day it happens.</p>
+  ${notifyFormHtml("download")}
+  <p class="download__notify-note">One email when the first build ships, nothing more. Removal any time; see <a href="/privacy/">Privacy</a>.</p>
   <div class="download__empty-actions">
-    <a class="logos-btn logos-btn--download" href="${GITHUB}/releases" target="_blank" rel="noopener noreferrer">Watch releases on GitHub</a>
+    <a class="logos-btn logos-btn--ghost" href="${GITHUB}/releases" target="_blank" rel="noopener noreferrer">Watch releases on GitHub</a>
     <a class="logos-btn logos-btn--ghost" href="/roadmap/">See the roadmap</a>
   </div>
 </section>`;
@@ -341,6 +600,10 @@ export function privacyPage(): string {
   </ul>
   <p>We do <strong>not</strong> collect your name, email, or other identifying details from ordinary browsing, and we do not attempt to identify individual visitors.</p>
 
+  <h2>Release notifications (only if you sign up)</h2>
+  <p>The home and download pages have an optional "get notified" form. If you submit it, we store the email address you entered, the time you signed up, and which page's form you used, in Cloudflare Workers KV, and use it for exactly one purpose: sending you a single email when the first public Logos build is released, after which the list is deleted. It is never sold, shared, or used for analytics, and it sets no cookies. The legal basis is your consent, given by submitting the form.</p>
+  <p>To be removed from the list before that email goes out, contact ${contactLine} and the address is deleted.</p>
+
   <h2>Cookies we use</h2>
   <ul>
     <li><code>consent</code>: remembers your accept/reject choice (strictly necessary). ~180 days.</li>
@@ -352,7 +615,7 @@ export function privacyPage(): string {
   <p>Analytics cookies are used on the basis of your <strong>consent</strong>. You can reject them (the site works fully without them), and change your mind at any time via <strong>“Cookie settings”</strong> in the footer. Rejecting or withdrawing stops new analytics cookies; you can clear existing ones in your browser.</p>
 
   <h2>Where your data goes</h2>
-  <p>When enabled, data is processed by Microsoft (Clarity) and Google (Google Analytics) as our processors, which may involve transfer outside your country. See the <a href="https://privacy.microsoft.com/privacystatement" target="_blank" rel="noopener noreferrer">Microsoft Privacy Statement</a> and the <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">Google Privacy Policy</a>.</p>
+  <p>If you sign up for release notifications, the address is stored with Cloudflare, which hosts this site. When enabled, analytics data is processed by Microsoft (Clarity) and Google (Google Analytics) as our processors, which may involve transfer outside your country. See the <a href="https://privacy.microsoft.com/privacystatement" target="_blank" rel="noopener noreferrer">Microsoft Privacy Statement</a> and the <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">Google Privacy Policy</a>.</p>
 
   <h2>Your rights</h2>
   <p>Depending on where you live (for example, the EEA or UK under the GDPR), you may have the right to access, correct, or erase your data, to object to or restrict processing, and to withdraw consent. To exercise these rights, contact ${contactLine}.</p>
