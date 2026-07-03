@@ -21,6 +21,7 @@ import type { Roadmap } from '../build/roadmap.ts';
 
 initThemeToggle();
 initNavMenu();
+initDockHide();
 initHeroRotator();
 initWisdom();
 initScrollbars();
@@ -103,6 +104,31 @@ function initNavMenu(): void {
 	menu.addEventListener('click', (e) => {
 		if ((e.target as Element)?.closest('a')) setOpen(false);
 	});
+}
+
+// ── Auto-hiding dock ──────────────────────────────────────────────────────────
+// Scrolling down tucks the menu dock away; scrolling up (even slightly) brings it
+// back. It never hides near the top of the page or while the hamburger dropdown
+// (which hangs off the dock) is open. Tiny deltas accumulate against the last
+// acted-on position instead of resetting it, so a slight upward scroll is enough
+// to reveal the dock while trackpad jitter alone never toggles it.
+function initDockHide(): void {
+	const dock = document.querySelector<HTMLElement>('.dock');
+	if (!dock) return;
+	const menu = document.getElementById('nav-menu');
+	let lastY = window.scrollY;
+	window.addEventListener(
+		'scroll',
+		() => {
+			const y = window.scrollY;
+			const dy = y - lastY;
+			if (Math.abs(dy) < 8) return;
+			if (dy > 0 && y > 90 && (menu?.hidden ?? true)) dock.classList.add('is-hidden');
+			else dock.classList.remove('is-hidden');
+			lastY = y;
+		},
+		{ passive: true },
+	);
 }
 
 // ── Hero headline rotator ─────────────────────────────────────────────────────
@@ -276,10 +302,12 @@ function initCompare(): void {
 	};
 
 	// Show the clone while the real header is scrolled under the dock but table
-	// rows are still on screen; align it with the scroll container's box.
+	// rows are still on screen; align it with the scroll container's box. When the
+	// auto-hiding dock is tucked away its rect sits above the viewport, so the
+	// clamp parks the clone at the top edge instead of following it off screen.
+	const dock = document.querySelector<HTMLElement>('.dock');
 	const place = (): void => {
-		const dock = document.querySelector('.dock');
-		const top = (dock ? dock.getBoundingClientRect().bottom : 0) + 6;
+		const top = Math.max(dock ? dock.getBoundingClientRect().bottom : 0, 0) + 6;
 		const rect = scroll.getBoundingClientRect();
 		const headH = thead.getBoundingClientRect().height;
 		const show = rect.top < top && rect.bottom > top + headH;
@@ -290,6 +318,9 @@ function initCompare(): void {
 		float.style.width = `${rect.width - 2}px`;
 		clip.scrollLeft = scroll.scrollLeft;
 	};
+	// Re-place when the dock finishes sliding in or out, so the clone settles at
+	// the dock's final position rather than a mid-animation one.
+	dock?.addEventListener('transitionend', place);
 
 	scroll.addEventListener(
 		'scroll',

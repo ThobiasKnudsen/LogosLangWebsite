@@ -188,6 +188,17 @@ a {
     -webkit-backdrop-filter: saturate(140%) blur(12px);
     backdrop-filter: saturate(140%) blur(12px);
     box-shadow: 0 10px 30px -18px rgba(22, 22, 15, 0.4);
+    transition: transform 0.28s ease;
+}
+/* Scrolling down tucks the dock away (initDockHide); scrolling up brings it back.
+   The offset covers the dock's own top inset plus its shadow. */
+.dock.is-hidden {
+    transform: translateY(calc(-100% - 1.35rem));
+}
+@media (prefers-reduced-motion: reduce) {
+    .dock {
+        transition: none;
+    }
 }
 .wordmark {
     font-family: var(--serif);
@@ -975,6 +986,14 @@ a {
 .compare__legend li > span,
 .compare__cell > span[aria-hidden] {
     font-family: var(--mono);
+    line-height: 1;
+}
+/* The verdict glyphs carry the whole table; render them at display size. */
+.compare__cell > span[aria-hidden] {
+    font-size: 1.35rem;
+}
+.compare__legend li > span {
+    font-size: 1.05rem;
 }
 /* Green / yellow / red: ok-text and warn-text are the theme's green and amber
    status tokens; line-exec is its themed red. */
