@@ -58,9 +58,12 @@
     --warn-bg: #fdf1e1;
     --warn-border: #e9a23b;
     --warn-text: #8a4b00;
-    /* Pre-alpha hero note: one yellow-orange for both its text and its edge line,
-       darker here so it reads on the cream page (lighter in the dark theme). */
+    /* Hero "isn't done yet" note: one yellow-orange for both its text and its edge
+       line, darker here so it reads on the cream page (lighter in the dark theme). */
     --hero-note: #9a5b00;
+    /* Edge hint for horizontally scrollable strips (the comparison matrix): the
+       fade + chevron that says "there is more content in this direction". */
+    --scroll-hint: rgba(22, 22, 15, 0.16);
     --ok-bg: #e7f3ea;
     --ok-text: #2b6b34;
     --metro-main: var(--accent);
@@ -107,6 +110,7 @@
     --warn-border: #b9772a;
     --warn-text: #f0c089;
     --hero-note: #f2b160; /* lighter yellow-orange over the near-black page */
+    --scroll-hint: rgba(0, 0, 0, 0.55);
     --ok-bg: #16291a;
     --ok-text: #8ce0a0;
     --metro-main: var(--accent);
@@ -540,9 +544,9 @@ a {
     align-items: center;
     padding-inline: 1rem;
 }
-/* Pre-alpha notice above the headline: yellow-orange text with an edge line in the
-   SAME colour (--hero-note: darker in the light theme, lighter in the dark theme).
-   Its bottom margin is the extra space between the note and the headline. */
+/* "Isn't done yet" notice above the headline: yellow-orange text with an edge line
+   in the SAME colour (--hero-note: darker in the light theme, lighter in the dark
+   theme). Its bottom margin is the extra space between the note and the headline. */
 .hero__note {
     margin: 0 0 clamp(2rem, 6vh, 3.5rem);
     max-width: 46rem;
@@ -917,15 +921,25 @@ a {
 }
 
 /* ── Comparison matrix ────────────────────────────────────────────────────────
-   "Next to its neighbors" on the homepage: Logos against Rust, Lean 4, Unison,
-   Racket, and Smalltalk. One glyph per cell (has it / partial / no), colored
-   green / yellow / red; the pre-alpha disclaimer lives once in the lead paragraph
-   and the column header, not per cell. The wide table scrolls inside its own
-   container on narrow screens, and the Logos column carries a faint accent wash. */
+   "Next to its neighbors" on the homepage: Logos against eight other languages.
+   One glyph per cell (has it / partial / no), colored green / yellow / red; the
+   not-done-yet disclaimer lives once in the lead paragraph and the column header,
+   not per cell. The section is wide enough that the whole table shows on a
+   desktop; where it can't, it scrolls horizontally and the .compare__shadows
+   overlays (fade + chevron, toggled by initCompare) show WHICH direction holds
+   more columns. The Logos column carries a faint accent wash. */
 .compare {
-    max-width: 62rem;
+    /* The pinned capability column's exact width; the left scroll hint starts
+       where it ends. Referenced by .compare__cap and .compare__shadows::before. */
+    --compare-cap: 15rem;
+    max-width: 71rem;
     margin: clamp(4rem, 10vh, 7rem) auto clamp(4rem, 10vh, 6rem);
     padding-inline: 1.25rem;
+}
+@media (max-width: 40rem) {
+    .compare {
+        --compare-cap: 9.5rem;
+    }
 }
 .compare__title {
     font-family: var(--serif);
@@ -973,8 +987,46 @@ a {
 .compare__legend .is-no > span {
     color: var(--line-exec);
 }
-.compare__scroll {
+/* Wrapper that hosts the direction hints: absolutely-positioned fade + chevron
+   bands over each scrollable edge, shown/hidden by initCompare via .show-left /
+   .show-right. Pointer-events off so they never block scrolling or clicks. The
+   left hint starts AFTER the pinned capability column (which is opaque and would
+   swallow an edge-anchored fade). */
+.compare__shadows {
+    position: relative;
     margin-top: 1.2rem;
+}
+.compare__shadows::before,
+.compare__shadows::after {
+    position: absolute;
+    top: 1px;
+    bottom: 1px;
+    z-index: 2;
+    width: 2.4rem;
+    display: grid;
+    place-items: center;
+    font-size: 0.85rem;
+    color: var(--heading);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+.compare__shadows::before {
+    content: "❮";
+    left: var(--compare-cap);
+    background: linear-gradient(90deg, var(--scroll-hint), transparent);
+}
+.compare__shadows::after {
+    content: "❯";
+    right: 1px;
+    border-radius: 0 12px 12px 0;
+    background: linear-gradient(270deg, var(--scroll-hint), transparent);
+}
+.compare__shadows.show-left::before,
+.compare__shadows.show-right::after {
+    opacity: 1;
+}
+.compare__scroll {
     overflow-x: auto;
     border: 1px solid var(--hairline);
     border-radius: 12px;
@@ -1006,21 +1058,18 @@ a {
     text-align: left;
     font-weight: 600;
     color: var(--heading);
-    min-width: 15rem;
-    max-width: 16rem;
-    /* With nine language columns the table always scrolls; pin the capability
-       column so the row labels stay readable. Opaque background so scrolled
-       cells never show through, hairline seam on the scrolling edge. */
+    width: var(--compare-cap);
+    min-width: var(--compare-cap);
+    max-width: var(--compare-cap);
+    /* When the table scrolls, pin the capability column so the row labels stay
+       readable. Opaque background so scrolled cells never show through, hairline
+       seam on the scrolling edge. Fixed width: the left scroll hint is anchored
+       to this column's right edge. */
     position: sticky;
     left: 0;
     z-index: 1;
     background: var(--surface);
     border-right: 1px solid var(--hairline);
-}
-@media (max-width: 40rem) {
-    .compare__cap {
-        min-width: 9.5rem;
-    }
 }
 .compare__sub {
     display: block;

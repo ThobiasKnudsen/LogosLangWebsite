@@ -230,7 +230,7 @@ function highlightLogos(source: string): string {
 function codePeekHtml(): string {
   return `<section class="code-peek" aria-label="What Logos looks like">
   <h2 class="code-peek__title">What Logos looks like</h2>
-  <p class="code-peek__lead">Target syntax, taken straight from the language design and the <a href="/docs/">docs</a>: everyday systems code and the language's own definition live in the same structure. The compiler that runs it is pre-alpha; the <a href="/roadmap/">roadmap</a> tracks what actually works today.</p>
+  <p class="code-peek__lead">Target syntax, taken straight from the language design and the <a href="/docs/">docs</a>: everyday systems code and the language's own definition live in the same structure. The compiler that runs it is still being built; the <a href="/roadmap/">roadmap</a> tracks what actually works today.</p>
   <figure class="code-card">
     <figcaption class="code-card__bar"><span class="code-card__name">target-syntax.logos</span><span class="code-card__badge">target syntax, not yet runnable</span></figcaption>
     <pre class="code-card__pre"><code>${highlightLogos(HOME_SAMPLE)}</code></pre>
@@ -241,7 +241,7 @@ function codePeekHtml(): string {
 // ── Comparison matrix ─────────────────────────────────────────────────────────
 // Logos next to the languages a PL-literate visitor reaches for first. The Logos
 // column describes the design Logos is built toward (the lead paragraph carries the
-// pre-alpha disclaimer once, rather than per cell), and the table keeps the rows
+// not-done-yet disclaimer once, rather than per cell), and the table keeps the rows
 // where OTHER languages beat Logos (content-addressed code, ecosystem, tooling,
 // being usable at all). Verdicts for the other columns were researched and
 // adversarially fact-checked per language (July 2026); the numbered footnotes carry
@@ -390,7 +390,7 @@ function compareHtml(): string {
   const head = COMPARE_LANGS.map(
     (lang, i) =>
       `<th scope="col" class="compare__lang${i === 0 ? " compare__lang--logos" : ""}">${lang}${
-        i === 0 ? '<span class="compare__pre">pre-alpha</span>' : ""
+        i === 0 ? '<span class="compare__pre">in development</span>' : ""
       }</th>`,
   ).join("");
   const rows = COMPARE_ROWS.map((row) => {
@@ -409,13 +409,15 @@ function compareHtml(): string {
   ).join("");
   return `<section class="compare" aria-label="How Logos compares to other languages">
   <h2 class="compare__title">Next to its neighbors</h2>
-  <p class="compare__lead">The first question a language-literate visitor asks is "why not Rust, Zig, Lean, Unison, Julia, or a Lisp?". Here is the honest answer. <strong>Logos is pre-alpha</strong>: its column is the design it is being built toward, not software you can run today, while every other column is what ships now. Some rows are things other languages do well that Logos does not attempt at all.</p>
+  <p class="compare__lead">The first question a language-literate visitor asks is "why not Rust, Zig, Lean, Unison, Julia, or a Lisp?". Here is the honest answer. <strong>Logos is not done yet</strong>: its column is the design it is being built toward, not software you can run today, while every other column is what ships now. Some rows are things other languages do well that Logos does not attempt at all.</p>
   <ul class="compare__legend"><li class="is-yes"><span aria-hidden="true">✓</span> has it</li><li class="is-partial"><span aria-hidden="true">~</span> partial</li><li class="is-no"><span aria-hidden="true">✗</span> no</li></ul>
-  <div class="compare__scroll">
-    <table class="compare__table">
-      <thead><tr><th scope="col" class="compare__cap">Capability</th>${head}</tr></thead>
-      <tbody>${rows}</tbody>
-    </table>
+  <div class="compare__shadows" data-compare>
+    <div class="compare__scroll">
+      <table class="compare__table">
+        <thead><tr><th scope="col" class="compare__cap">Capability</th>${head}</tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
   </div>
   <ol class="compare__notes">${notes}</ol>
 </section>`;
@@ -534,7 +536,7 @@ export function downloadPage(releases: Release[]): string {
   if (releases.length === 0) {
     return `<section class="download download--empty">
   <h1 class="download__title">Download Logos</h1>
-  <p class="download__lead">Logos is pre-alpha and has no public builds yet. The moment the first version is released, this page lists a one-line install command and a direct download for every OS. Leave your email and you'll hear about it the day it happens.</p>
+  <p class="download__lead">Logos has no public builds yet. The moment the first version is released, this page lists a one-line install command and a direct download for every OS. Leave your email and you'll hear about it the day it happens.</p>
   ${notifyFormHtml("download")}
   <p class="download__notify-note">Emails for the most important builds only; you will not be spammed. Removal any time; see <a href="/privacy/">Privacy</a>.</p>
   <div class="download__empty-actions">
@@ -555,7 +557,7 @@ export function downloadPage(releases: Release[]): string {
 
   return `<section class="download" data-download>
   <h1 class="download__title">Download Logos</h1>
-  <p class="download__lead">Choose a version, then copy the install command for your OS or download the build directly. Logos is pre-alpha, so expect breaking changes between versions.</p>
+  <p class="download__lead">Choose a version, then copy the install command for your OS or download the build directly. Logos is early software, so expect breaking changes between versions.</p>
   <div class="download__bar">
     <label class="download__version">Version
       <select id="dl-version">${options}</select>

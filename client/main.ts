@@ -26,6 +26,7 @@ initWisdom();
 initScrollbars();
 initConsent();
 initNotify();
+initCompare();
 if (document.getElementById('docs-app')) initDocs();
 if (document.getElementById('dl-grid')) initDownload();
 if (document.getElementById('pg-run')) initPlayground();
@@ -220,6 +221,28 @@ function initWisdom(): void {
 		requestAnimationFrame(step);
 	};
 	requestAnimationFrame(step);
+}
+
+// ── Comparison matrix scroll hints ────────────────────────────────────────────
+// The matrix is wider than most viewports. Toggle the edge fade + chevron overlays
+// (.compare__shadows::before/::after) so the visitor can see in which direction
+// more language columns exist; both disappear on screens wide enough to show the
+// whole table. Re-checked on scroll, resize, and after fonts load (which changes
+// column widths).
+function initCompare(): void {
+	const wrap = document.querySelector<HTMLElement>('[data-compare]');
+	const scroll = wrap?.querySelector<HTMLElement>('.compare__scroll');
+	if (!wrap || !scroll) return;
+
+	const update = (): void => {
+		const max = scroll.scrollWidth - scroll.clientWidth;
+		wrap.classList.toggle('show-left', scroll.scrollLeft > 4);
+		wrap.classList.toggle('show-right', scroll.scrollLeft < max - 4);
+	};
+	scroll.addEventListener('scroll', update, { passive: true });
+	window.addEventListener('resize', update);
+	void document.fonts?.ready.then(update);
+	update();
 }
 
 // ── Get-notified form ─────────────────────────────────────────────────────────
