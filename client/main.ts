@@ -299,6 +299,14 @@ function initCompare(): void {
 			th.style.maxWidth = `${w}px`;
 		});
 		floatTable.style.width = `${table.getBoundingClientRect().width}px`;
+		// The pinned Logos column: publish its measured width for the left edge
+		// hint (which must start after BOTH pinned columns), and give the float
+		// clone a concrete --compare-cap (it lives outside .compare, where that
+		// variable is defined) so its own Logos header sticks at the right offset.
+		const capW = src[0]?.getBoundingClientRect().width ?? 0;
+		const logosW = src[1]?.getBoundingClientRect().width ?? 0;
+		wrap.style.setProperty('--logos-w', `${logosW}px`);
+		float.style.setProperty('--compare-cap', `${capW}px`);
 	};
 
 	// Show the clone while the real header is scrolled under the dock but table

@@ -1046,7 +1046,9 @@ a {
 }
 .compare__shadows::before {
     content: "❮";
-    left: var(--compare-cap);
+    /* Starts after BOTH pinned columns: capability plus the Logos column,
+       whose measured width initCompare publishes as --logos-w. */
+    left: calc(var(--compare-cap) + var(--logos-w, 0px));
     background: linear-gradient(90deg, var(--scroll-hint), transparent);
 }
 .compare__shadows::after {
@@ -1129,9 +1131,18 @@ a {
     font-size: 0.75rem;
     color: var(--muted);
 }
+/* The Logos column is pinned beside the capability column while the other
+   languages scroll beneath it. The accent wash is mixed over the surface color
+   (not transparent) so it stays opaque as cells pass under; the float clone
+   gets its --compare-cap set in px by initCompare, since it lives outside
+   .compare where the variable is defined. */
 .compare__lang--logos,
 .compare__cell--logos {
-    background: color-mix(in srgb, var(--accent) 7%, transparent);
+    position: sticky;
+    left: var(--compare-cap);
+    z-index: 1;
+    background: color-mix(in srgb, var(--accent) 7%, var(--surface));
+    border-right: 1px solid var(--hairline);
 }
 .compare__cell {
     text-align: center;
