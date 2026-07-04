@@ -159,27 +159,34 @@ function notifyFormHtml(source: string): string {
 
 // ── Homepage code sample ──────────────────────────────────────────────────────
 // Honest target syntax in the systems meta-language register of the actual sources,
-// not a CAS demo: the declare/reassign lines follow reference/operators verbatim,
-// the fn signature, `error «…»` body, dyad struct, and assign(declare(&mut logos,
-// «:=»), ?, ?) are taken near-verbatim from LogosLang's language_sketch.logos, and
-// `?` (the typed unknown) is DESIGN.md substrate vocabulary. The card labels it all
-// as target syntax so it never overclaims.
-const HOME_SAMPLE = `# Declare with \`:=\`, reassign with \`=\`.
+// showing the headline (everyday code and the language's own definition living in one
+// graph) rather than a CAS demo. The declare/reassign lines follow reference/operators
+// verbatim; the fn signature, `error «…»` body, `dyad` struct, and the `+ := type (…)`
+// operator definition are taken near-verbatim from LogosLang's language_sketch.logos
+// (where `+` is a stub, given a real body here to show operators are ordinary
+// identities defined in the language itself, mirroring how `array` / `mut` are defined
+// there); and `?` (the typed unknown) is DESIGN.md substrate vocabulary. The card
+// labels it all as target syntax so it never overclaims.
+const HOME_SAMPLE = `# Declare with \`:=\`, reassign with \`=\`. \`mut\` is a type modifier.
 count := mut i32 0
 count = count + 1
 
-# Systems code: borrowed references, checked errors.
+# Systems code: borrowed references, checked errors, no GC.
 advance := fn (tokens : &mut array dyad, idx : u64) -> void! (
     if idx+1 >= tokens.size
         error «not enough tokens after idx»
-    # rewrite or evaluate the graph from here
 )
 
-# The language is defined in itself: the node cell, «:=»,
-# and «=» are ordinary declarations in the Logic Graph.
-dyad := struct (type := dyad@ undefined, value := void@ undefined)
-assign(declare(&mut logos, «:=»), ?, ?)
-assign(declare(&mut logos, «=»), ?, ?)`;
+# The language is written in itself. A node is two slots, and even
+# \`+\` is an ordinary identity: a node carrying a precedence and the
+# code for how it reads its operands. There is no separate macro
+# language, so new syntax is just more declarations in the same graph.
+dyad := struct (type := dyad@ ?, value := void@ ?)
++ := type (
+    shared precedence    := f64 6.0
+    shared associativity := u8 left_to_right
+    shared constructor   := fn (tokens : &mut array dyad, idx : u64) -> void! ( ? )
+)`;
 
 const LOGOS_KEYWORDS = new Set([
   "fn",
