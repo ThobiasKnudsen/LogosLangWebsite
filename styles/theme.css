@@ -546,7 +546,7 @@ a {
 	   hero doesn't force a full viewport height, so the frieze below rises into view;
 	   the frieze's own top margin (see .wisdom) sets the gap under the availability
 	   line, rather than leaving it to a grid spacer. */
-    padding-top: clamp(4rem, 10vh, 13rem);
+    padding-top: clamp(2rem, 10vh, 2rem);
     text-align: center;
 }
 .hero__copy {
@@ -555,16 +555,16 @@ a {
     align-items: center;
     padding-inline: 1rem;
 }
-/* "Isn't done yet" notice above the headline: yellow-orange text with an edge line
-   in the SAME colour (--hero-note: darker in the light theme, lighter in the dark
-   theme). Its bottom margin is the extra space between the note and the headline. */
+/* The TL;DR summary above the headline: a brand blue-purple (--logo) outline with
+   ordinary theme-aware text (--heading: near-black in light, near-white in dark). Its
+   bottom margin is the space between the box and the headline. */
 .hero__note {
-    margin: 0 0 clamp(2rem, 6vh, 3.5rem);
+    margin: 0 0 clamp(2rem, 6vh, 2rem);
     max-width: 46rem;
     padding: 0.7rem 1.2rem;
-    border: 1px solid var(--hero-note);
+    border: 1px solid var(--logo);
     border-radius: 12px;
-    color: var(--hero-note);
+    color: var(--heading);
     font-size: 0.9rem;
     line-height: 1.55;
 }
@@ -682,13 +682,6 @@ a {
     max-width: 46ch;
     margin: 2.25rem 0 0;
 }
-.hero__actions {
-    margin-top: 1.6rem;
-    display: flex;
-    gap: 0.75rem;
-    justify-content: center;
-    flex-wrap: wrap;
-}
 .hero__availability {
     font-size: 0.85rem;
     color: var(--muted);
@@ -776,6 +769,34 @@ a {
     font-size: 0.95rem;
     max-width: 56ch;
     margin: 0.9rem auto 0;
+}
+/* "Built from proven parts": the large-but-tractable section under the code card. */
+.buildable {
+    max-width: 46rem;
+    margin: clamp(4rem, 10vh, 7rem) auto 0;
+    padding-inline: 1.25rem;
+    text-align: center;
+}
+.buildable__title {
+    font-family: var(--serif);
+    font-size: clamp(1.5rem, 3vw, 2.2rem);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: var(--heading);
+    margin: 0;
+}
+.buildable__body {
+    max-width: 62ch;
+    margin: 1.2rem auto 0;
+    font-size: 0.95rem;
+    line-height: 1.65;
+    text-align: left;
+}
+.buildable__body p {
+    margin: 0 0 0.9rem;
+}
+.buildable__body p:last-child {
+    margin-bottom: 0;
 }
 .code-card {
     margin: 1.8rem 0 0;
@@ -1016,9 +1037,9 @@ a {
     line-height: 1;
 }
 /* The verdict glyphs carry the whole table; render them at display size
-   (1.6x the 1.35rem base). */
+   (1.28x the 1.35rem base). */
 .compare__cell > span[aria-hidden] {
-    font-size: 2.16rem;
+    font-size: 1.728rem;
 }
 .compare__legend li > span {
     font-size: 1.15rem;
@@ -1319,11 +1340,6 @@ a {
     margin-top: 2.5rem;
     color: var(--heading);
 }
-.about__links {
-    margin-top: 2.5rem;
-    font-size: 0.95rem;
-    color: var(--muted);
-}
 .placeholder h1 {
     font-family: var(--serif);
     font-size: clamp(2rem, 5vw, 3rem);
@@ -1604,20 +1620,26 @@ a {
 /* ── Footer ───────────────────────────────────────────────────────────────── */
 .site-footer {
     display: flex;
+    flex-wrap: wrap;
+    align-items: center;
     justify-content: center;
+    gap: 0.75rem 1.25rem;
     padding: 1.5rem;
     border-top: 1px solid var(--hairline);
 }
-.gh-link {
+/* The personal social + contact icons, shown in the footer on every page. */
+.footer-social {
     display: inline-flex;
     align-items: center;
-    gap: 0.5rem;
-    font-size: 0.9rem;
-    font-weight: 500;
+    gap: 1rem;
+}
+.footer-social a {
+    display: inline-flex;
     color: var(--muted);
     text-decoration: none;
+    transition: color 0.15s ease;
 }
-.gh-link:hover {
+.footer-social a:hover {
     color: var(--logo);
 }
 
@@ -2444,7 +2466,6 @@ mark.search-hit {
     flex-wrap: wrap;
     align-items: center;
     gap: 1rem;
-    margin-left: 1.25rem;
 }
 .footer-link {
     font-family: var(--sans);

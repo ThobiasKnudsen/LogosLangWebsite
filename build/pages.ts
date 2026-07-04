@@ -786,7 +786,7 @@ function compareHtml(): string {
   ).join("");
   return `<section class="compare" aria-label="How Logos compares to other languages">
   <h2 class="compare__title">Next to its neighbors</h2>
-  <p class="compare__lead">The first question a language-literate visitor asks is "why not C++, Rust, Zig, Lean, Julia, Python, TypeScript, or a Lisp?". Here is the honest answer. <strong>Logos is not done yet</strong>: its column is the design it is being built toward, not software you can run today, while every other column is what ships now. Some rows are things other languages do well that Logos does not attempt at all.</p>
+  <p class="compare__lead">The first question a language-literate visitor asks is "why not C++, Rust, Zig, Lean, Julia, Python, TypeScript, or a Lisp?". Here is the honest answer. <strong>Logos is not done yet</strong>: its column is the design it is being built toward, not software you can run today, while every other column is what ships now. But read across the rows: nearly every capability in the Logos column is already a yes somewhere else here, so the hard part is not inventing any one of them, it is uniting them in one structure. Some rows are things other languages do well that Logos does not attempt at all.</p>
   <ul class="compare__legend"><li class="is-yes"><span aria-hidden="true">✓</span> has it</li><li class="is-partial"><span aria-hidden="true">~</span> partial</li><li class="is-no"><span aria-hidden="true">✗</span> no</li></ul>
   <div class="compare__shadows" data-compare>
     <div class="compare__scroll">
@@ -800,26 +800,40 @@ function compareHtml(): string {
 </section>`;
 }
 
+// A short "large but tractable" section between the code card and the matrix: it
+// names the working precedent each part has, the small self-hosting seed the whole
+// thing bootstraps from, and points at the roadmap and vision. It frames the matrix
+// below as the capability-by-capability evidence.
+function buildableHtml(): string {
+  return `<section class="buildable" aria-label="Why Logos can be built">
+  <h2 class="buildable__title">Built from proven parts</h2>
+  <div class="buildable__body">
+    <p>Logos is large, and honest about being large. But none of its parts is without precedent: self-hosting (Lean 4), a layered intermediate representation (MLIR), equality saturation in production (egg and Cranelift), borrow checking without a garbage collector (Rust), a live and malleable system (Smalltalk), machine-checked proofs (Lean). The novel work is uniting them in one structure, not inventing any one of them.</p>
+    <p>The path is a small Rust seed, kept small enough to audit by hand. Everything above it is written in Logos, until the language compiles itself: a tiny trusted core, and then the language builds the rest. The <a href="/roadmap/">roadmap</a> breaks the work into parts and shows what already runs, and the <a href="/vision/">vision</a> shows how each hard part is solved.</p>
+  </div>
+</section>`;
+}
+
 export function homePage(): string {
   return `<section class="hero">
   <div class="hero__copy">
-    <p class="hero__note"><strong>NOTE:</strong> The Logos programming language isn't done yet, so much of what is stated here isn't something you can download today, but rather an attempt to show what Logos aims towards.</p>
+    <p class="hero__note"><strong>TL;DR:</strong> Logos is one programming language for everything, from systems code and GPUs to machine-checked proofs and its own compiler, all held in a single structure where a program, its types, and its proofs are the same thing. It is still being built, but every part already exists in some language, and the <a href="/roadmap/">roadmap</a> tracks what runs today.</p>
     <h1 class="hero__headline">
       <span class="hero__brand" aria-hidden="true">Λόγος</span>
       <span class="hero__lead" aria-hidden="true">One language for everything</span>
       <span class="hero__rot-line" aria-hidden="true"><span class="hero__rot-prefix">instead of a different one for</span> <span class="hero__rotator" data-rotator><span class="hero__rot-item is-current">systems</span><span class="hero__rot-item">speed</span><span class="hero__rot-item">the GPU</span><span class="hero__rot-item">async</span><span class="hero__rot-item">proofs</span><span class="hero__rot-item">true metaprogramming</span><span class="hero__rot-item">new languages</span><span class="hero__rot-item">dedicated hardware</span><span class="hero__rot-item">JIT</span><span class="hero__rot-item">special use cases</span><span class="hero__rot-item">the compiler itself</span></span></span>
       <span class="sr-only">One language for everything: Logos aims to be a single language for systems code, speed, GPUs, async, proofs, metaprogramming, new languages, dedicated hardware, and its own compiler, instead of a different one for every job.</span>
     </h1>
-    <p class="hero__sub">Systems code, GPU kernels, dedicated hardware, and machine-checked proofs in one language instead of a toolbox of them, where the compiler, the types, the borrow checker, and the proofs are the same structure your program is.</p>
+    <p class="hero__sub">The compiler, the parser, the files, the build, the types, the borrow checker, the proofs, all in one structure. The same operations that run your code can read, rewrite, optimize, and prove any of it.</p>
     ${notifyFormHtml("home-hero")}
-    <p class="hero__availability">No public builds yet. You will get an email for the most important builds. You will not be spammed (<a href="/privacy/">privacy</a>).</p>
-    <div class="hero__actions"><a class="logos-btn logos-btn--ghost" href="/vision/">the Vision</a><a class="logos-btn logos-btn--ghost" href="/roadmap/">Roadmap</a></div>
+    <p class="hero__availability">No public builds yet. You will get an email for the most important builds. You will not be spammed</p>
   </div>
 </section>
 <section class="wisdom" aria-label="On the Logos, voices across the ages">
   <div class="wisdom__scroll"><div class="wisdom__track">${wisdomUnits()}</div></div>
 </section>
 ${codePeekHtml()}
+${buildableHtml()}
 ${compareHtml()}`;
 }
 
@@ -881,7 +895,6 @@ export function aboutPage(): string {
   <p>Recently I turned from the math-application to the language itself. Logos is an attempt at one language for everything, built on a single commitment: radical unification. The program, its types, its proofs, the compiler, and the grammar itself all live in one structure. It is a serious systems language, with a borrow checker, native compilation, and no garbage collector, reaching also for machine-checked proofs and self-reflection. It does not run yet. A small Rust bootstrap seed is all there is so far.</p>
   <p class="about__coda">Sometimes I suspect that a complete meta-language, where each word is defined using all other words, is the closest one can get to reflecting on how God works.</p>
   <p class="about__cta">If it interests you, you are welcome to follow along on GitHub: star the <a href="https://github.com/ThobiasKnudsen/LogosLang" target="_blank" rel="noopener noreferrer">seed</a>, watch the language take shape, and word of the first build will come there.</p>
-  <p class="about__links">Find me on <a href="https://github.com/ThobiasKnudsen" target="_blank" rel="noopener noreferrer">GitHub</a>, <a href="https://no.linkedin.com/in/thobias-melfjord-knudsen-510084320" target="_blank" rel="noopener noreferrer">LinkedIn</a>, and <a href="https://x.com/thobknu" target="_blank" rel="noopener noreferrer">X</a>.</p>
 </article>`;
 }
 

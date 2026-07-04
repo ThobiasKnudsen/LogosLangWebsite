@@ -80,6 +80,11 @@ const MENU_SVG = `<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="t
 // footer link. Fills with currentColor so each spot's text colour applies.
 const GITHUB_SVG = `<svg viewBox="0 0 16 16" width="18" height="18" aria-hidden="true" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>`;
 
+// Social marks for the footer, filled with currentColor so the link colour applies.
+const LINKEDIN_SVG = `<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="currentColor"><path d="M20.45 20.45h-3.56v-5.57c0-1.33-.03-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.35V9h3.42v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28zM5.34 7.43a2.07 2.07 0 1 1 0-4.13 2.07 2.07 0 0 1 0 4.13zM7.12 20.45H3.56V9h3.56v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.73v20.54C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.73V1.73C24 .77 23.2 0 22.22 0z"/></svg>`;
+const X_SVG = `<svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24h-6.657l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>`;
+const MAIL_SVG = `<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="currentColor"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4-8 5-8-5V6l8 5 8-5v2z"/></svg>`;
+
 function dockHtml(active: string): string {
 	const links = NAV.map(
 		(n) =>
@@ -109,10 +114,12 @@ function footerHtml(): string {
 		? `<button type="button" class="footer-link" id="consent-manage">Cookie settings</button>`
 		: '';
 	return `<footer class="site-footer">
-  <a class="gh-link" href="${GITHUB}" target="_blank" rel="noopener noreferrer" aria-label="Logos on GitHub">
-    ${GITHUB_SVG}
-    <span>GitHub</span>
-  </a>
+  <div class="footer-social">
+    <a href="https://github.com/ThobiasKnudsen" target="_blank" rel="noopener noreferrer" aria-label="GitHub">${GITHUB_SVG}</a>
+    <a href="https://no.linkedin.com/in/thobias-melfjord-knudsen-510084320" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">${LINKEDIN_SVG}</a>
+    <a href="https://x.com/thobknu" target="_blank" rel="noopener noreferrer" aria-label="X">${X_SVG}</a>
+    <a href="mailto:thobknu@gmail.com" aria-label="Email">${MAIL_SVG}</a>
+  </div>
   <nav class="footer-links" aria-label="Legal">
     <a class="footer-link" href="/privacy/">Privacy &amp; Cookies</a>${cookieLink}
   </nav>
