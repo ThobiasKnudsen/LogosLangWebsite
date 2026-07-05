@@ -252,6 +252,202 @@ function highlightLogos(source: string): string {
     .join("\n");
 }
 
+// ── "The program is the structure" figure ────────────────────────────────────
+// The homepage payoff: the smallest program, `a = a + 1`, drawn as the actual Logic
+// Graph it becomes. The shape is verbatim from LogosLang's language_sketch.logos
+// (the `a = a + 1` expansion) and is V1PLAN's canonical smoke test, so it is the
+// real seed model, not decoration. Two node kinds: a DYAD node has a `type` field
+// and a `value` field; a GENERIC node (what a `value:void@` points at) has whatever
+// fields its type defines, here `lhs` and `rhs`. Every `->` in the source is one
+// edge that leaves a single FIELD (a port on the node's right edge, at that field's
+// row) and points at a whole NODE. So `a = a + 1` unfolds left to right as
+// dyad -> generic -> dyad -> generic -> dyad, bottoming out at the identity nodes
+// `=`, `+`, `rational_number`, the variable `a`, and the literal `"1"`. Laid out as a
+// planar left-to-right tree (leaf rows in reading order, columns by depth), rendered
+// as inline SVG with no client JS.
+const SG_VY = 8; // viewBox top (leaves room for the kind labels above the top nodes)
+const SG_W = 832; // viewBox width (matches the computed left-to-right layout below)
+const SG_VH = 314; // viewBox height
+
+const GNODE_H = 42; // a dyad/generic node: two field rows
+const GLEAF_H = 26; // an un-expanded identity / literal node
+const GROW_Y = [16, 32]; // y of each field row's port, within a node
+
+// Monospace advance widths (~0.6em) for the three font sizes used in the graph, with
+// a little margin so text never touches a node edge. Node widths are derived from
+// these (structW / leafW), so a field like `value:void@` always fits its box.
+const FIELD_CW = 7.9; // .dyad-field, 13px (the field name)
+const SLOT_CW = 6.0; // .dyad-slot, 10px (the `:type` suffix)
+const HEAD_CW = 9.7; // .dyad-head, 16px (a leaf identity name)
+const PAD_L = 10; // text inset from a node's left edge
+const PAD_R = 13; // gap between the text and the right-edge port
+
+const fieldW = (nm: string, ty: string) => nm.length * FIELD_CW + (ty.length + 1) * SLOT_CW;
+const structW = (rows: [string, string][]) =>
+  Math.ceil(PAD_L + Math.max(...rows.map((r) => fieldW(r[0], r[1]))) + PAD_R);
+const leafW = (label: string) => Math.max(30, Math.ceil(label.length * HEAD_CW + 2 * PAD_L + 4));
+
+interface GNode {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  kind: "dyad" | "generic" | "leaf";
+  /** For a structural node: two [name, type] fields, e.g. ["type", "dyad@"]. */
+  rows?: [string, string][];
+  label?: string;
+  /** Kind label drawn above the node. Leaves are dyads too, so they carry one. */
+  tag?: string;
+}
+
+/** A node: a leaf identity/literal (dashed, just its name) or a two-field dyad /
+ *  generic box. Each field prints its name and its `:type` (dyad@ / void@), and
+ *  carries a port on the right edge, exactly where that field's edge leaves. Every
+ *  node shows its kind above it (a leaf's `tag`, a structural node's own kind). */
+function gNode(n: GNode): string {
+  const kindLabel = (tag: string) =>
+    `<text class="dyad-kind" x="${n.x + n.w / 2}" y="${n.y - 5}" text-anchor="middle">${escapeHtml(tag)}</text>`;
+  if (n.kind === "leaf") {
+    const tag = n.tag ? kindLabel(n.tag) : "";
+    return `<g class="dyad-node">${tag}<rect class="dyad-box dyad-box--ref" x="${n.x}" y="${n.y}" width="${n.w}" height="${n.h}" rx="6" /><text class="dyad-head" x="${n.x + n.w / 2}" y="${n.y + n.h / 2 + 5}" text-anchor="middle">${escapeHtml(n.label ?? "")}</text></g>`;
+  }
+  let s = `<rect class="dyad-box dyad-box--${n.kind}" x="${n.x}" y="${n.y}" width="${n.w}" height="${n.h}" rx="6" />`;
+  s += kindLabel(n.kind);
+  n.rows!.forEach(([name, ty], i) => {
+    const py = n.y + GROW_Y[i]!;
+    s += `<text class="dyad-field" x="${n.x + PAD_L}" y="${py + 4}">${escapeHtml(name)}<tspan class="dyad-slot" dx="1">:${escapeHtml(ty)}</tspan></text>`;
+    s += `<circle class="dyad-port" cx="${n.x + n.w}" cy="${py}" r="2.5" />`;
+  });
+  return `<g class="dyad-node">${s}</g>`;
+}
+
+/** The right-edge port of a structural node's field `f`, and a node's left-side
+ *  entry (where an incoming arrow lands on the whole node). */
+function gPort(n: GNode, f: number): [number, number] {
+  return [n.x + n.w, n.y + GROW_Y[f]!];
+}
+function gEntry(n: GNode, dy = 0): [number, number] {
+  return [n.x, n.y + n.h / 2 + dy];
+}
+function gPathEl(pts: [number, number][]): string {
+  const d = pts.map(([x, y], i) => `${i === 0 ? "M" : "L"}${x} ${y}`).join(" ");
+  return `<path class="dyad-edge" d="${d}" marker-end="url(#dyad-arrow)" />`;
+}
+/** A short edge from field `f` of `src` to the left side of `dst` (target up- or
+ *  down-right): out along a per-field lane, then in. `dy` nudges the landing point. */
+function gEdge(src: GNode, f: number, dst: GNode, dy = 0): string {
+  const [sx, sy] = gPort(src, f);
+  const [tx, ty] = gEntry(dst, dy);
+  const mx = sx + (tx - sx) * (0.42 + f * 0.16);
+  return gPathEl([
+    [sx, sy],
+    [mx, sy],
+    [mx, ty],
+    [tx, ty],
+  ]);
+}
+
+// The ten nodes of `a = a + 1`, laid out left to right. Every node is a dyad, so the
+// leaf identities (`=`, `+`, `a`, `rational_number`) are tagged "dyad" too; only the
+// literal `"1"` (a raw void@ value) is untagged. Column x-positions are derived from
+// each column's widest node, so widening a node (for its field text) never overlaps a
+// neighbour. `a` is one shared node two edges point at: `+`'s lhs reaches it up-right
+// (short), and `=`'s lhs reaches it along a lane over the top of the chain (long).
+function structureGraphSvg(): string {
+  const dyadRows: [string, string][] = [["type", "dyad@"], ["value", "void@"]];
+  const genRows: [string, string][] = [["lhs", "dyad@"], ["rhs", "dyad@"]];
+
+  interface Spec {
+    id: string;
+    col: number;
+    y: number;
+    kind: "dyad" | "generic" | "leaf";
+    label?: string;
+    tag?: string;
+  }
+  const specs: Spec[] = [
+    { id: "D1", col: 0, y: 52, kind: "dyad" },
+    { id: "EQ", col: 1, y: 26, kind: "leaf", label: "=", tag: "dyad" },
+    { id: "G1", col: 1, y: 102, kind: "generic" },
+    { id: "D2", col: 2, y: 154, kind: "dyad" },
+    { id: "PLUS", col: 3, y: 128, kind: "leaf", label: "+", tag: "dyad" },
+    { id: "G2", col: 3, y: 206, kind: "generic" },
+    { id: "A", col: 4, y: 162, kind: "leaf", label: "a", tag: "dyad" },
+    { id: "D3", col: 4, y: 258, kind: "dyad" },
+    { id: "RAT", col: 5, y: 240, kind: "leaf", label: "rational_number", tag: "dyad" },
+    { id: "ONE", col: 5, y: 290, kind: "leaf", label: '"1"', tag: "generic" },
+  ];
+  const wOf = (s: Spec): number =>
+    s.kind === "leaf" ? leafW(s.label!) : structW(s.kind === "dyad" ? dyadRows : genRows);
+
+  // Column x from each column's widest node, so nodes never overlap once auto-sized.
+  const NCOL = 6;
+  const GAP = 30;
+  const colW = Array.from({ length: NCOL }, (_, c) =>
+    Math.max(...specs.filter((s) => s.col === c).map(wOf)),
+  );
+  const colX: number[] = [];
+  for (let c = 0, x = 16; c < NCOL; c++) {
+    colX[c] = x;
+    x += colW[c]! + GAP;
+  }
+
+  const N: Record<string, GNode> = {};
+  for (const s of specs) {
+    N[s.id] =
+      s.kind === "leaf"
+        ? { x: colX[s.col]!, y: s.y, w: wOf(s), h: GLEAF_H, kind: "leaf", label: s.label, tag: s.tag }
+        : { x: colX[s.col]!, y: s.y, w: wOf(s), h: GNODE_H, kind: s.kind, rows: s.kind === "dyad" ? dyadRows : genRows };
+  }
+  const nodes = specs.map((s) => gNode(N[s.id]!)).join("");
+
+  // `=`.lhs -> a routed over the top: right stub, up to a lane above the chain,
+  // across, then down into a's left side, landing just above +.lhs's landing. The
+  // lane sits above the "dyad" kind label over the `+` leaf (at ~y116), so raise it.
+  const LANE_Y = 102;
+  const [glx, gly] = gPort(N.G1!, 0);
+  const [aex, aey] = gEntry(N.A!, -5);
+  const eqLhsToA = gPathEl([
+    [glx, gly],
+    [glx + 14, gly],
+    [glx + 14, LANE_Y],
+    [aex - 14, LANE_Y],
+    [aex - 14, aey],
+    [aex, aey],
+  ]);
+
+  const edges = [
+    gEdge(N.D1!, 0, N.EQ!), // =dyad.type  -> =
+    gEdge(N.D1!, 1, N.G1!), // =dyad.value -> generic
+    eqLhsToA, // =generic.lhs -> a (shared, over the top)
+    gEdge(N.G1!, 1, N.D2!), // =generic.rhs -> +dyad
+    gEdge(N.D2!, 0, N.PLUS!), // +dyad.type  -> +
+    gEdge(N.D2!, 1, N.G2!), // +dyad.value -> generic
+    gEdge(N.G2!, 0, N.A!, 5), // +generic.lhs -> a (shared)
+    gEdge(N.G2!, 1, N.D3!), // +generic.rhs -> rational_number dyad
+    gEdge(N.D3!, 0, N.RAT!), // ratdyad.type  -> rational_number
+    gEdge(N.D3!, 1, N.ONE!), // ratdyad.value -> "1"
+  ].join("");
+  return `<svg class="dyad-graph" viewBox="0 ${SG_VY} ${SG_W} ${SG_VH}" width="${SG_W}" height="${SG_VH}" role="img" aria-label="The program a = a + 1 as a Logic Graph: a dyad node whose type field points at =, and whose value field points at a generic node; that generic node's lhs points at the one variable a and its rhs unfolds into a + dyad and then a rational_number dyad whose value is the literal 1. Both lhs fields point at the same a.">
+  <defs><marker id="dyad-arrow" viewBox="0 0 8 8" refX="6.5" refY="4" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L8 4 L0 8 z" /></marker></defs>
+  ${edges}
+  ${nodes}
+</svg>`;
+}
+
+function structureHtml(): string {
+  return `<section class="unify" aria-label="A program is the structure that runs it">
+  <h2 class="unify__title">The program is the structure</h2>
+  <p class="unify__lead">Radical unification is not a metaphor. The smallest program, <code>a = a + 1</code>, is not text a compiler reads once and throws away. It <em>is</em> a graph of two-field nodes, joined through their fields, and that graph is what runs.</p>
+  <figure class="unify__figure">
+    <pre class="unify__source"><code>${highlightLogos("a = a + 1")}</code></pre>
+    <span class="unify__becomes"><span class="unify__becomes-arrow" aria-hidden="true">↓</span> becomes</span>
+    <div class="unify__graph">${structureGraphSvg()}</div>
+    <figcaption class="unify__caption">Read it left to right: every arrow leaves one <em>field</em> of a node (the <code>:dyad@</code> or <code>:void@</code> next to it is that field's type) and points at another whole node. A <strong>dyad</strong> node carries a <code>type</code> and a <code>value</code>; a <code>value:void@</code> points at a <strong>generic</strong> node whose fields (here <code>lhs</code>, <code>rhs</code>) are defined by its type. So <code>a = a + 1</code> unfolds into dyads and operand structs, bottoming out at the identities <code>=</code>, <code>+</code>, <code>rational_number</code>, the variable <code>a</code>, and the literal <code>"1"</code>. Both <code>lhs</code> fields point at the one <code>a</code>, so it is genuinely a graph, not a tree. Because your program already is this structure, the same operations that run it can read it, rewrite it, optimize it, and prove it, so the optimizer, the computer-algebra system, the proof checker, and metaprogramming are one thing over one structure rather than four tools bolted on from outside.</figcaption>
+  </figure>
+</section>`;
+}
+
 function codePeekHtml(): string {
   return `<section class="code-peek" aria-label="What Logos looks like">
   <h2 class="code-peek__title">What Logos looks like</h2>
@@ -833,6 +1029,7 @@ export function homePage(): string {
   <div class="wisdom__scroll"><div class="wisdom__track">${wisdomUnits()}</div></div>
 </section>
 ${codePeekHtml()}
+${structureHtml()}
 ${buildableHtml()}
 ${compareHtml()}`;
 }

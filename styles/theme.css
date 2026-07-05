@@ -861,6 +861,146 @@ a {
     color: var(--tok-comment);
     font-style: italic;
 }
+/* ── "The program is the structure": code -> Logic Graph payoff ────────────────
+   The smallest program, `a = a + 1`, shown as the actual node graph it becomes, so
+   radical unification is concrete rather than asserted. A source chip, a "becomes"
+   cue, then an inline-SVG graph of record-style dyad nodes: a heading (the type
+   slot's target) above a dividing rule, then the value's fields or a literal. The
+   graph is a fixed viewBox; on narrow screens it scrolls rather than shrinking below
+   legibility. Structure is verbatim from language_sketch.logos. */
+.unify {
+    max-width: 46rem;
+    margin: clamp(4rem, 10vh, 7rem) auto 0;
+    padding-inline: 1.25rem;
+    text-align: center;
+}
+.unify__title {
+    font-family: var(--serif);
+    font-size: clamp(1.5rem, 3vw, 2.2rem);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: var(--heading);
+    margin: 0;
+}
+.unify__lead {
+    font-size: 0.95rem;
+    max-width: 58ch;
+    margin: 0.9rem auto 0;
+}
+.unify__lead code,
+.unify__caption code {
+    font-family: var(--mono);
+    font-size: 0.9em;
+    color: var(--heading);
+}
+.unify__figure {
+    margin: 1.6rem 0 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.7rem;
+}
+.unify__source {
+    margin: 0;
+    padding: 0.55rem 1.1rem;
+    border: 1px solid var(--hairline);
+    border-radius: 10px;
+    background: var(--code-bg);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    font-family: var(--mono);
+    font-size: 1rem;
+    color: var(--text);
+}
+.unify__becomes {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.78rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+}
+.unify__becomes-arrow {
+    font-size: 1.1rem;
+    line-height: 1;
+}
+.unify__graph {
+    width: 100%;
+    overflow-x: auto;
+    text-align: center;
+}
+.dyad-graph {
+    width: 100%;
+    max-width: 832px;
+    min-width: 700px;
+    height: auto;
+}
+.unify__caption {
+    margin: 1.3rem auto 0;
+    max-width: 62ch;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    color: var(--muted);
+    text-align: left;
+}
+/* Record-style dyad nodes and their operand edges, styled inside the SVG so both
+   themes track the site's tokens. */
+.dyad-box {
+    fill: var(--surface);
+    stroke: var(--hairline);
+    stroke-width: 1;
+}
+.dyad-box--ref {
+    fill: var(--code-bg);
+    stroke-dasharray: 4 3;
+}
+.dyad-box--generic {
+    fill: var(--code-bg);
+}
+.dyad-kind {
+    fill: var(--muted);
+    font-family: var(--mono);
+    font-size: 9.5px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+.dyad-div {
+    stroke: var(--hairline);
+    stroke-width: 1;
+}
+.dyad-head {
+    fill: var(--heading);
+    font-family: var(--mono);
+    font-size: 16px;
+    font-weight: 600;
+}
+.dyad-field {
+    fill: var(--text);
+    font-family: var(--mono);
+    font-size: 13px;
+}
+.dyad-slot {
+    fill: var(--muted);
+    font-family: var(--mono);
+    font-size: 10px;
+}
+.dyad-lit {
+    fill: var(--tok-num);
+    font-family: var(--mono);
+    font-size: 14px;
+}
+.dyad-edge {
+    fill: none;
+    stroke: var(--muted);
+    stroke-width: 1.5;
+    stroke-linejoin: round;
+}
+.dyad-port {
+    fill: var(--muted);
+}
+#dyad-arrow path {
+    fill: var(--muted);
+}
 /* ── Wisdom frieze ────────────────────────────────────────────────────────────
    A slow right-to-left drift of Greek reflections on the Logos, framed by two
    hairlines like an inscription. Each quote exists exactly ONCE in the track; the
@@ -987,6 +1127,14 @@ a {
        theme toggle), so the table spans the dock's footprint instead of a fixed
        cap. Narrow screens fall back to the ordinary page gutter. */
     max-width: none;
+    /* .compare__scroll clips the wide table for scrolling, but the table's
+       intrinsic min-width (82rem) still counts toward this section's layout
+       width and, through it, the page's. On a phone that widens the layout
+       viewport, which sizes the fixed menu dock, so the dock stops shrinking to
+       fit (desktop just shows a scrollbar and hides the symptom). Clip the
+       section's horizontal overflow so the table can only ever scroll inside
+       its own box, never widen the page. */
+    overflow-x: clip;
     margin: clamp(4rem, 10vh, 7rem) auto clamp(4rem, 10vh, 6rem);
     padding-inline: var(--theme-toggle-reserve);
 }
