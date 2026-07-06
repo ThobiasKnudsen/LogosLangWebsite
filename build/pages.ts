@@ -1104,13 +1104,13 @@ export function visionPage(): string {
 // ── About page ────────────────────────────────────────────────────────────────
 // Who is building Logos, written in Thobias's own voice (first person). The photo
 // ships as /public/thobias.jpg (a web-sized copy of resources/images/
-// ThobiasKnudsen.jpg).
+// ThobiasKnudsen.png).
 export function aboutPage(): string {
   return `<article class="about">
   <h1 class="about__title">Thobias Melfjord Knudsen</h1>
   <p class="about__lead">In my first year of high school I could not put down one question: given a set of data points, why is there no way to find a mathematical formula, over any number of variables, that fits them?</p>
   <figure class="about__portrait">
-    <img src="/thobias.jpg" alt="Thobias Melfjord Knudsen" width="843" height="900" loading="lazy" />
+    <img src="/thobias.jpg" alt="Thobias Melfjord Knudsen" width="640" height="743" loading="lazy" />
     <figcaption>Thobias Melfjord Knudsen</figcaption>
   </figure>
   <p>I am a systems programmer studying infromatics. I started programming in Python in 2020, and by 2022 I was building a math application to chase that question, learning C++ as I went. I had a working version in about six months.</p>
