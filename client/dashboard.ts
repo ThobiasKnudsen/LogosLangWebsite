@@ -40,23 +40,22 @@ interface MapResp {
 	botDots?: BotDot[];
 	empty?: boolean;
 }
-// A Log row is either a human event (from `events`) or a bot request (from `requests`),
-// discriminated by `kind`. Human-only fields are optional so both shapes share one type.
+// A Log row is one server-side request (from `requests`): every origin hit, JS or not.
+// `kind` is derived from the bot flag ('bot' for detected crawlers/fetchers, 'human'
+// for everything else). There is no visitor/session id here, so Log rows don't drill down.
 interface LogRow {
 	kind?: 'human' | 'bot';
 	ts: number;
-	visitor?: string | null;
-	session?: string | null;
-	type?: string | null;
-	name?: string | null;
 	path: string;
+	status?: number | null;
+	bot?: number;
+	bot_name?: string | null;
+	browser?: string | null;
 	city: string | null;
 	country: string | null;
 	asorg: string | null;
 	device: string | null;
 	ref: string | null;
-	bot_name?: string | null;
-	status?: number | null;
 }
 interface LogResp {
 	rows: LogRow[];
@@ -292,6 +291,7 @@ function injectStyles(): void {
 	.adm-tag--bot { color: #c85c39; border-color: #c85c39; }
 	.adm-row--bot { cursor: default; }
 	.adm-row--bot td { background: rgba(200, 92, 57, 0.06); }
+	.adm-table--log tbody tr { cursor: default; }
 	`;
 	const el = document.createElement('style');
 	el.textContent = css;
@@ -552,30 +552,21 @@ async function renderLog(view: HTMLElement): Promise<void> {
 		return;
 	}
 	if (!data.rows.length) {
-		view.innerHTML = `<div class="adm-empty">No activity in this range.</div>`;
+		view.innerHTML = `<div class="adm-empty">No traffic in this range.</div>`;
 		return;
 	}
 	const rows = data.rows
 		.map((r) => {
-			if (r.kind === 'bot') {
-				const status = r.status ? ` ${r.status}` : '';
-				return `<tr class="adm-row--bot">
-					<td>${esc(fmtTime(r.ts))}</td>
-					<td><span class="adm-tag adm-tag--bot">${esc(r.bot_name ?? 'bot')}</span></td>
-					<td><span class="adm-path">${esc(r.path)}</span></td>
-					<td><span class="adm-tag">bot${esc(status)}</span></td>
-					<td>${esc(place(r.city, r.country))}</td>
-					<td class="adm-dim">${esc(r.asorg ?? '')}</td>
-					<td>${esc(r.device ?? '')}</td>
-					<td class="adm-dim">${esc(r.ref ?? 'direct')}</td>
-				</tr>`;
-			}
-			const what = r.type === 'pageview' ? 'view' : esc(r.name ?? 'event');
-			return `<tr data-session="${esc(r.session ?? '')}">
+			const isBot = r.kind === 'bot';
+			const client = isBot
+				? `<span class="adm-tag adm-tag--bot">${esc(r.bot_name ?? 'bot')}</span>`
+				: `<span class="adm-dim">${esc(r.browser ?? 'browser')}</span>`;
+			const kind = `${isBot ? 'bot' : 'view'}${r.status ? ` ${esc(String(r.status))}` : ''}`;
+			return `<tr${isBot ? ' class="adm-row--bot"' : ''}>
 				<td>${esc(fmtTime(r.ts))}</td>
-				<td><button class="adm-idbtn" data-visitor="${esc(r.visitor ?? '')}">${esc(shortId(r.visitor ?? ''))}</button></td>
+				<td>${client}</td>
 				<td><span class="adm-path">${esc(r.path)}</span></td>
-				<td><span class="adm-tag">${what}</span></td>
+				<td><span class="adm-tag">${kind}</span></td>
 				<td>${esc(place(r.city, r.country))}</td>
 				<td class="adm-dim">${esc(r.asorg ?? '')}</td>
 				<td>${esc(r.device ?? '')}</td>
@@ -583,20 +574,10 @@ async function renderLog(view: HTMLElement): Promise<void> {
 			</tr>`;
 		})
 		.join('');
-	view.innerHTML = `<div class="adm-tablewrap"><table class="adm-table">
-		<thead><tr><th>Time</th><th>Visitor</th><th>Page</th><th>Event</th><th>Location</th><th>Network</th><th>Device</th><th>Referrer</th></tr></thead>
+	view.innerHTML = `<p class="adm-hint">Every request that reached the server, JS or not: non-bot clients plus detected crawlers and AI fetchers. Toggle Humans / Bots in Filters.</p>
+		<div class="adm-tablewrap"><table class="adm-table adm-table--log">
+		<thead><tr><th>Time</th><th>Client</th><th>Page</th><th>Kind</th><th>Location</th><th>Network</th><th>Device</th><th>Referrer</th></tr></thead>
 		<tbody>${rows}</tbody></table></div>`;
-	const tbody = view.querySelector('tbody');
-	tbody?.addEventListener('click', (e) => {
-		const target = e.target as HTMLElement;
-		const vbtn = target.closest<HTMLElement>('.adm-idbtn');
-		if (vbtn && vbtn.dataset.visitor) {
-			void openVisitor(vbtn.dataset.visitor);
-			return;
-		}
-		const tr = target.closest<HTMLElement>('tr[data-session]');
-		if (tr && tr.dataset.session) void openSession(tr.dataset.session);
-	});
 }
 
 async function renderUsers(view: HTMLElement): Promise<void> {

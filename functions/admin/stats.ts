@@ -136,34 +136,28 @@ async function respond(db: D1Database, request: Request): Promise<Response> {
     return json({ access: results });
   }
 
-  // ── Log: reverse-chronological activity stream (humans + bots merged) ──────
+  // ── Log: every server-side request (all traffic), split by the bot flag ────
+  // Sourced from `requests`, so it shows literally every hit that reached the origin,
+  // JS or not (no-JS clients, unrecognized fetchers, and detected bots alike). Humans =
+  // non-bot rows, bots = bot rows. Per-visitor drill-down lives on the Map/Users, which
+  // stay sourced from the richer `events` beacon.
   if (view === "log") {
     const limit = intParam(q.get("limit"), 200, 1, 500);
     const offset = intParam(q.get("offset"), 0, 0, 1_000_000);
-    const rows: { ts: number; [k: string]: unknown }[] = [];
-    if (wantHumans) {
-      const { results } = await db
-        .prepare(
-          `SELECT ts, visitor, session, type, name, path, city, country, asorg, device, ref
-             FROM events WHERE ts >= ? AND ts <= ? ORDER BY ts DESC LIMIT ? OFFSET ?`,
-        )
-        .bind(from, to, limit, offset)
-        .all<{ ts: number }>();
-      for (const r of results) rows.push({ kind: "human", ...r });
-    }
-    if (wantBots) {
-      const { results } = await db
-        .prepare(
-          `SELECT ts, bot_name, path, status, city, country, asorg, device, ref
-             FROM requests WHERE bot = 1 AND ts >= ? AND ts <= ? ORDER BY ts DESC LIMIT ? OFFSET ?`,
-        )
-        .bind(from, to, limit, offset)
-        .all<{ ts: number }>();
-      for (const r of results) rows.push({ kind: "bot", ...r });
-    }
-    // Merge the two sources into one reverse-chronological page.
-    rows.sort((a, b) => b.ts - a.ts);
-    return json({ rows: rows.slice(0, limit) });
+    if (!wantHumans && !wantBots) return json({ rows: [] });
+    // Fixed, non-user-controlled fragment.
+    const botClause = wantHumans && wantBots ? "" : wantHumans ? "AND bot = 0" : "AND bot = 1";
+    const { results } = await db
+      .prepare(
+        `SELECT ts, path, status, bot, bot_name, browser, device, city, country, asorg, ref
+           FROM requests
+           WHERE ts >= ? AND ts <= ? ${botClause}
+           ORDER BY ts DESC LIMIT ? OFFSET ?`,
+      )
+      .bind(from, to, limit, offset)
+      .all<{ bot: number }>();
+    const rows = results.map((r) => ({ ...r, kind: r.bot ? "bot" : "human" }));
+    return json({ rows });
   }
 
   // ── Users: one row per visitor in range ────────────────────────────────────

@@ -229,15 +229,19 @@ function sampleStats(url: string): unknown {
 	const view = q.get('view') ?? 'map';
 
 	if (view === 'log') {
+		// All-requests Log: humans are non-bot server hits, bots are detected crawlers.
 		const rows: { ts: number; [k: string]: unknown }[] = [];
 		if (wantHumans) {
-			for (const e of events) {
-				rows.push({ kind: 'human', ts: e.ts, visitor: e.visitor, session: e.session, type: e.type, name: e.name, path: e.path, city: e.city, country: e.country, asorg: e.asorg, device: e.device, ref: e.ref });
+			// One request per human pageview (the server sees the hit; no visitor id here).
+			for (const e of events.filter((e) => e.type === 'pageview')) {
+				rows.push({ kind: 'human', ts: e.ts, path: e.path, status: 200, bot: 0, bot_name: null, browser: e.browser, device: e.device, city: e.city, country: e.country, asorg: e.asorg, ref: e.ref });
 			}
+			// A no-JS hit the beacon would never see, now visible in the all-requests Log.
+			rows.push({ kind: 'human', ts: now - 15 * 60000, path: '/', status: 200, bot: 0, bot_name: null, browser: 'Other', device: 'Desktop', city: 'Warsaw', country: 'PL', asorg: 'Orange', ref: null });
 		}
 		if (wantBots) {
 			for (const b of STUB_BOTS) {
-				rows.push({ kind: 'bot', ts: now - b.agoMin * 60000, bot_name: b.bot_name, path: b.path, status: b.status, city: b.city, country: b.country, asorg: b.asorg, device: b.device, ref: null });
+				rows.push({ kind: 'bot', ts: now - b.agoMin * 60000, path: b.path, status: b.status, bot: 1, bot_name: b.bot_name, browser: 'Other', device: b.device, city: b.city, country: b.country, asorg: b.asorg, ref: null });
 			}
 		}
 		rows.sort((a, b) => b.ts - a.ts);
