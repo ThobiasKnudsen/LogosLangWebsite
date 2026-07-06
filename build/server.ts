@@ -244,8 +244,26 @@ function sampleStats(url: string): unknown {
 				rows.push({ kind: 'bot', ts: now - b.agoMin * 60000, path: b.path, status: b.status, bot: 1, bot_name: b.bot_name, browser: 'Other', os: 'Other', device: b.device, city: b.city, country: b.country, asorg: b.asorg, ref: null });
 			}
 		}
-		rows.sort((a, b) => b.ts - a.ts);
-		return { rows: rows.slice(0, 200) };
+		// Server-side-style column filters (mirror functions/admin/api/stats.ts).
+		const LOG_FILTERS: Record<string, (r: Record<string, unknown>) => string> = {
+			client: (r) => (r.bot ? String(r.bot_name ?? 'bot') : 'human'),
+			page: (r) => String(r.path ?? ''),
+			status: (r) => String(r.status ?? ''),
+			country: (r) => String(r.country ?? ''),
+			city: (r) => String(r.city ?? ''),
+			network: (r) => String(r.asorg ?? ''),
+			device: (r) => String(r.device ?? ''),
+			browser: (r) => String(r.browser ?? ''),
+			os: (r) => String(r.os ?? ''),
+			referrer: (r) => String(r.ref ?? 'direct'),
+		};
+		let filtered = rows;
+		for (const [key, get] of Object.entries(LOG_FILTERS)) {
+			const v = (q.get(`f_${key}`) ?? '').trim().toLowerCase();
+			if (v) filtered = filtered.filter((r) => get(r).toLowerCase().includes(v));
+		}
+		filtered.sort((a, b) => b.ts - a.ts);
+		return { rows: filtered.slice(0, 500) };
 	}
 
 	if (view === 'users') {

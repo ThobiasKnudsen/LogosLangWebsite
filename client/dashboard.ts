@@ -575,7 +575,7 @@ interface LogCol {
 }
 const LOG_COLS: LogCol[] = [
 	{ key: 'time', label: 'Time', get: (r) => fmtTime(r.ts), filter: false },
-	{ key: 'kind', label: 'Kind', get: (r) => (r.kind === 'bot' ? 'bot' : 'human'), filter: true },
+	{ key: 'client', label: 'Client', get: (r) => (r.kind === 'bot' ? (r.bot_name ?? 'bot') : 'human'), filter: true },
 	{ key: 'page', label: 'Page', get: (r) => r.path, filter: true, mono: true },
 	{ key: 'status', label: 'Status', get: (r) => String(r.status ?? ''), filter: true },
 	{ key: 'country', label: 'Country', get: (r) => r.country ?? '', filter: true },
@@ -584,19 +584,12 @@ const LOG_COLS: LogCol[] = [
 	{ key: 'device', label: 'Device', get: (r) => r.device ?? '', filter: true },
 	{ key: 'browser', label: 'Browser', get: (r) => r.browser ?? '', filter: true },
 	{ key: 'os', label: 'OS', get: (r) => r.os ?? '', filter: true },
-	{ key: 'referrer', label: 'Referrer', get: (r) => r.ref ?? '', filter: true, dim: true },
-	{ key: 'bot', label: 'Bot', get: (r) => r.bot_name ?? '', filter: true },
+	{ key: 'referrer', label: 'Referrer', get: (r) => r.ref ?? 'direct', filter: true, dim: true },
 ];
 
-let logRows: LogRow[] = [];
-
-/** tbody HTML for the rows that pass the current per-column filter inputs (client-side). */
-function logBodyHTML(): string {
-	const active = LOG_COLS.filter((c) => c.filter)
-		.map((c) => ({ c, v: ((document.getElementById(`adm-lf-${c.key}`) as HTMLInputElement | null)?.value ?? '').trim().toLowerCase() }))
-		.filter((f) => f.v);
-	const rows = logRows.filter((r) => active.every((f) => f.c.get(r).toLowerCase().includes(f.v)));
-	if (!rows.length) return `<tr><td colspan="${LOG_COLS.length}" class="adm-empty">No rows match the filters.</td></tr>`;
+/** tbody HTML for a set of rows. */
+function logBodyHTML(rows: LogRow[]): string {
+	if (!rows.length) return `<tr><td colspan="${LOG_COLS.length}" class="adm-empty">No rows match.</td></tr>`;
 	return rows
 		.map((r) => {
 			const cells = LOG_COLS.map((c) => {
@@ -609,14 +602,27 @@ function logBodyHTML(): string {
 		.join('');
 }
 
+/** Current filter-input values as `f_<col>` fetch params (only the non-empty ones). */
+function logFilterParams(): Record<string, string | number> {
+	const params: Record<string, string | number> = { view: 'log', limit: 500 };
+	for (const c of LOG_COLS) {
+		if (!c.filter) continue;
+		const v = ((document.getElementById(`adm-lf-${c.key}`) as HTMLInputElement | null)?.value ?? '').trim();
+		if (v) params[`f_${c.key}`] = v;
+	}
+	return params;
+}
+
+let logFilterTimer: number | undefined;
+
 async function renderLog(view: HTMLElement): Promise<void> {
 	const data = await fetchStats<LogResp>({ view: 'log', limit: 500 });
 	if (data.empty) {
 		view.innerHTML = emptyMsg();
 		return;
 	}
-	logRows = data.rows ?? [];
-	if (!logRows.length) {
+	const rows = data.rows ?? [];
+	if (!rows.length) {
 		view.innerHTML = `<div class="adm-empty">No traffic in this range.</div>`;
 		return;
 	}
@@ -626,13 +632,24 @@ async function renderLog(view: HTMLElement): Promise<void> {
 			? `<th><input class="adm-lf" id="adm-lf-${c.key}" type="text" placeholder="filter" aria-label="Filter ${esc(c.label)}" /></th>`
 			: `<th></th>`,
 	).join('');
-	view.innerHTML = `<p class="adm-hint">Every request that reached the server, JS or not. Filter any column; scroll sideways to see them all.</p>
+	view.innerHTML = `<p class="adm-hint">Every request that reached the server, JS or not. Filters query all data in range; scroll sideways to see every column.</p>
 		<div class="adm-tablewrap"><table class="adm-table adm-table--log">
 		<thead><tr>${head}</tr><tr class="adm-filterrow">${filterRow}</tr></thead>
-		<tbody id="adm-log-body">${logBodyHTML()}</tbody></table></div>`;
+		<tbody id="adm-log-body">${logBodyHTML(rows)}</tbody></table></div>`;
 	const body = document.getElementById('adm-log-body');
+	// Filters run server-side across all rows, debounced so typing isn't a query storm.
 	view.querySelector('.adm-filterrow')?.addEventListener('input', () => {
-		if (body) body.innerHTML = logBodyHTML();
+		window.clearTimeout(logFilterTimer);
+		logFilterTimer = window.setTimeout(() => {
+			if (body) body.innerHTML = `<tr><td colspan="${LOG_COLS.length}" class="adm-loading">Loading…</td></tr>`;
+			void fetchStats<LogResp>(logFilterParams())
+				.then((d) => {
+					if (body) body.innerHTML = logBodyHTML(d.rows ?? []);
+				})
+				.catch(() => {
+					if (body) body.innerHTML = `<tr><td colspan="${LOG_COLS.length}" class="adm-empty">Could not load.</td></tr>`;
+				});
+		}, 250);
 	});
 }
 

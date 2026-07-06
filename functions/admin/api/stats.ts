@@ -147,14 +147,40 @@ async function respond(db: D1Database, request: Request): Promise<Response> {
     if (!wantHumans && !wantBots) return json({ rows: [] });
     // Fixed, non-user-controlled fragment.
     const botClause = wantHumans && wantBots ? "" : wantHumans ? "AND bot = 0" : "AND bot = 1";
+
+    // Per-column filters, applied server-side across ALL matching rows (not just a loaded
+    // page). Each `f_<col>` does a case-insensitive substring match. The expressions are a
+    // fixed whitelist and the values are bound, so this is injection-safe.
+    const LOG_FILTERS: Record<string, string> = {
+      client: "CASE WHEN bot = 1 THEN COALESCE(bot_name, 'bot') ELSE 'human' END",
+      page: "path",
+      status: "CAST(status AS TEXT)",
+      country: "COALESCE(country, '')",
+      city: "COALESCE(city, '')",
+      network: "COALESCE(asorg, '')",
+      device: "COALESCE(device, '')",
+      browser: "COALESCE(browser, '')",
+      os: "COALESCE(os, '')",
+      referrer: "COALESCE(ref, 'direct')",
+    };
+    const filterClauses: string[] = [];
+    const filterVals: string[] = [];
+    for (const [key, expr] of Object.entries(LOG_FILTERS)) {
+      const v = (q.get(`f_${key}`) ?? "").trim();
+      if (v) {
+        filterClauses.push(`AND ${expr} LIKE ?`);
+        filterVals.push(`%${v}%`);
+      }
+    }
+
     const { results } = await db
       .prepare(
         `SELECT ts, path, status, bot, bot_name, browser, os, device, city, country, asorg, ref
            FROM requests
-           WHERE ts >= ? AND ts <= ? ${botClause}
+           WHERE ts >= ? AND ts <= ? ${botClause} ${filterClauses.join(" ")}
            ORDER BY ts DESC LIMIT ? OFFSET ?`,
       )
-      .bind(from, to, limit, offset)
+      .bind(from, to, ...filterVals, limit, offset)
       .all<{ bot: number }>();
     const rows = results.map((r) => ({ ...r, kind: r.bot ? "bot" : "human" }));
     return json({ rows });
