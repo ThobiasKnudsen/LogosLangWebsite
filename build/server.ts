@@ -154,10 +154,48 @@ function stubEvents(now: number): StubEvent[] {
 	return out;
 }
 
+// Bot / crawler traffic (server-side `requests` in production). Only visible with the
+// Bots filter on, so local dev exercises the bot dots, the merged Log, and the toggles.
+interface StubBot {
+	bot_name: string;
+	path: string;
+	city: string;
+	region: string;
+	country: string;
+	lat: number;
+	lon: number;
+	asorg: string;
+	device: string;
+	agoMin: number;
+	status: number;
+}
+const STUB_BOTS: StubBot[] = [
+	{ bot_name: 'ClaudeBot', path: '/', city: 'Ashburn', region: 'Virginia', country: 'US', lat: 39.04, lon: -77.49, asorg: 'Amazon', device: 'Desktop', agoMin: 5, status: 200 },
+	{ bot_name: 'Claude-User', path: '/', city: 'London', region: 'England', country: 'GB', lat: 51.51, lon: -0.13, asorg: 'Cloudflare', device: 'Desktop', agoMin: 8, status: 200 },
+	{ bot_name: 'GPTBot', path: '/vision/', city: 'Des Moines', region: 'Iowa', country: 'US', lat: 41.6, lon: -93.6, asorg: 'Microsoft', device: 'Desktop', agoMin: 22, status: 200 },
+	{ bot_name: 'Googlebot', path: '/download/', city: 'Mountain View', region: 'California', country: 'US', lat: 37.42, lon: -122.08, asorg: 'Google', device: 'Desktop', agoMin: 48, status: 200 },
+	{ bot_name: 'PerplexityBot', path: '/about/', city: 'San Francisco', region: 'California', country: 'US', lat: 37.77, lon: -122.42, asorg: 'Cloudflare', device: 'Desktop', agoMin: 70, status: 200 },
+	{ bot_name: 'bingbot', path: '/nope/', city: 'Dublin', region: 'Leinster', country: 'IE', lat: 53.35, lon: -6.26, asorg: 'Microsoft', device: 'Desktop', agoMin: 130, status: 404 },
+];
+
+function stubBotDots(): unknown[] {
+	const by = new Map<string, { lat: number; lon: number; city: string; region: string; country: string; asorg: string; bot_name: string; hits: number }>();
+	for (const b of STUB_BOTS) {
+		const k = `${b.lat},${b.lon}`;
+		const cur = by.get(k);
+		if (cur) cur.hits++;
+		else by.set(k, { lat: b.lat, lon: b.lon, city: b.city, region: b.region, country: b.country, asorg: b.asorg, bot_name: b.bot_name, hits: 1 });
+	}
+	return [...by.values()];
+}
+
 /** Serve the fixture in the same shapes as functions/admin/stats.ts, keyed by ?view / ?session / ?visitor. */
 function sampleStats(url: string): unknown {
 	const q = new URLSearchParams(url.split('?')[1] ?? '');
-	const events = stubEvents(Date.now());
+	const now = Date.now();
+	const events = stubEvents(now);
+	const wantHumans = q.get('humans') !== '0';
+	const wantBots = q.get('bots') === '1';
 
 	const sessionId = q.get('session');
 	if (sessionId) {
@@ -191,13 +229,19 @@ function sampleStats(url: string): unknown {
 	const view = q.get('view') ?? 'map';
 
 	if (view === 'log') {
-		return {
-			rows: events
-				.slice()
-				.sort((a, b) => b.ts - a.ts)
-				.slice(0, 200)
-				.map((e) => ({ ts: e.ts, visitor: e.visitor, session: e.session, type: e.type, name: e.name, path: e.path, city: e.city, country: e.country, asorg: e.asorg, device: e.device, ref: e.ref })),
-		};
+		const rows: { ts: number; [k: string]: unknown }[] = [];
+		if (wantHumans) {
+			for (const e of events) {
+				rows.push({ kind: 'human', ts: e.ts, visitor: e.visitor, session: e.session, type: e.type, name: e.name, path: e.path, city: e.city, country: e.country, asorg: e.asorg, device: e.device, ref: e.ref });
+			}
+		}
+		if (wantBots) {
+			for (const b of STUB_BOTS) {
+				rows.push({ kind: 'bot', ts: now - b.agoMin * 60000, bot_name: b.bot_name, path: b.path, status: b.status, city: b.city, country: b.country, asorg: b.asorg, device: b.device, ref: null });
+			}
+		}
+		rows.sort((a, b) => b.ts - a.ts);
+		return { rows: rows.slice(0, 200) };
 	}
 
 	if (view === 'users') {
@@ -237,23 +281,27 @@ function sampleStats(url: string): unknown {
 		};
 	}
 
-	// map (default): one dot per session, plus range totals.
-	const dots = STUB_SESSIONS.map((s) => {
-		const evs = events.filter((e) => e.session === s.session);
-		return {
-			session: s.session, visitor: s.visitor, lat: s.lat, lon: s.lon, city: s.city,
-			region: s.region, country: s.country,
-			pages: evs.filter((e) => e.type === 'pageview').length,
-			start: Math.min(...evs.map((e) => e.ts)),
-		};
-	});
+	// map (default): human dots from sessions, bot dots aggregated by location.
+	const dots = wantHumans
+		? STUB_SESSIONS.map((s) => {
+				const evs = events.filter((e) => e.session === s.session);
+				return {
+					session: s.session, visitor: s.visitor, lat: s.lat, lon: s.lon, city: s.city,
+					region: s.region, country: s.country,
+					pages: evs.filter((e) => e.type === 'pageview').length,
+					start: Math.min(...evs.map((e) => e.ts)),
+				};
+			})
+		: [];
 	return {
 		totals: {
-			pageviews: events.filter((e) => e.type === 'pageview').length,
-			visits: STUB_SESSIONS.length,
-			visitors: new Set(STUB_SESSIONS.map((s) => s.visitor)).size,
+			pageviews: wantHumans ? events.filter((e) => e.type === 'pageview').length : 0,
+			visits: wantHumans ? STUB_SESSIONS.length : 0,
+			visitors: wantHumans ? new Set(STUB_SESSIONS.map((s) => s.visitor)).size : 0,
+			botHits: wantBots ? STUB_BOTS.length : 0,
 		},
 		dots,
+		botDots: wantBots ? stubBotDots() : [],
 	};
 }
 

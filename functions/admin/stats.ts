@@ -62,6 +62,12 @@ async function respond(db: D1Database, request: Request): Promise<Response> {
   const to = intParam(q.get("to"), now, 0, now + 86_400_000);
   const from = intParam(q.get("from"), to - 7 * 86_400_000, 0, to);
 
+  // Audience filter, shared by every view. Humans come from the `events` beacon, bots from
+  // server-side `requests`. Default: humans on, bots off (a direct API call without params
+  // behaves like before; the dashboard always sends both explicitly).
+  const wantHumans = q.get("humans") !== "0";
+  const wantBots = q.get("bots") === "1";
+
   // ── Drill-down: one session's events in order ──────────────────────────────
   const sessionId = q.get("session");
   if (sessionId) {
@@ -130,18 +136,34 @@ async function respond(db: D1Database, request: Request): Promise<Response> {
     return json({ access: results });
   }
 
-  // ── Log: reverse-chronological activity stream ─────────────────────────────
+  // ── Log: reverse-chronological activity stream (humans + bots merged) ──────
   if (view === "log") {
     const limit = intParam(q.get("limit"), 200, 1, 500);
     const offset = intParam(q.get("offset"), 0, 0, 1_000_000);
-    const { results } = await db
-      .prepare(
-        `SELECT ts, visitor, session, type, name, path, city, country, asorg, device, ref
-           FROM events WHERE ts >= ? AND ts <= ? ORDER BY ts DESC LIMIT ? OFFSET ?`,
-      )
-      .bind(from, to, limit, offset)
-      .all();
-    return json({ rows: results });
+    const rows: { ts: number; [k: string]: unknown }[] = [];
+    if (wantHumans) {
+      const { results } = await db
+        .prepare(
+          `SELECT ts, visitor, session, type, name, path, city, country, asorg, device, ref
+             FROM events WHERE ts >= ? AND ts <= ? ORDER BY ts DESC LIMIT ? OFFSET ?`,
+        )
+        .bind(from, to, limit, offset)
+        .all<{ ts: number }>();
+      for (const r of results) rows.push({ kind: "human", ...r });
+    }
+    if (wantBots) {
+      const { results } = await db
+        .prepare(
+          `SELECT ts, bot_name, path, status, city, country, asorg, device, ref
+             FROM requests WHERE bot = 1 AND ts >= ? AND ts <= ? ORDER BY ts DESC LIMIT ? OFFSET ?`,
+        )
+        .bind(from, to, limit, offset)
+        .all<{ ts: number }>();
+      for (const r of results) rows.push({ kind: "bot", ...r });
+    }
+    // Merge the two sources into one reverse-chronological page.
+    rows.sort((a, b) => b.ts - a.ts);
+    return json({ rows: rows.slice(0, limit) });
   }
 
   // ── Users: one row per visitor in range ────────────────────────────────────
@@ -172,44 +194,78 @@ async function respond(db: D1Database, request: Request): Promise<Response> {
     return json({ users });
   }
 
-  // ── Map (default): one dot per visit, plus range totals ────────────────────
-  const totals = await db
-    .prepare(
-      `SELECT SUM(CASE WHEN type = 'pageview' THEN 1 ELSE 0 END) AS pageviews,
-              COUNT(DISTINCT session) AS visits,
-              COUNT(DISTINCT visitor) AS visitors
-         FROM events WHERE ts >= ? AND ts <= ?`,
-    )
-    .bind(from, to)
-    .first();
+  // ── Map (default): human dots from events, bot dots from requests ──────────
+  const totals = { pageviews: 0, visits: 0, visitors: 0, botHits: 0 };
+  let dots: unknown[] = [];
+  let botDots: unknown[] = [];
 
-  // One dot per (visit, location). Grouping by lat/lon as well as session means a single
-  // visit whose IP changed mid-way (a VPN toggled on/off, a phone hopping networks) shows
-  // a separate, coherent dot for each place, instead of one dot with independently-maxed,
-  // mixed-up coordinates. Within a (session, lat, lon) group the city/region/country and
-  // network are constant, so MAX() picks the right value.
-  const { results: dots } = await db
-    .prepare(
-      `SELECT session,
-              MAX(visitor) AS visitor,
-              MIN(ts)      AS start,
-              lat,
-              lon,
-              MAX(city)    AS city,
-              MAX(region)  AS region,
-              MAX(country) AS country,
-              MAX(asorg)   AS asorg,
-              SUM(CASE WHEN type = 'pageview' THEN 1 ELSE 0 END) AS pages
-         FROM events
-         WHERE ts >= ? AND ts <= ? AND lat IS NOT NULL AND lon IS NOT NULL
-         GROUP BY session, lat, lon
-         ORDER BY start DESC LIMIT 5000`,
-    )
-    .bind(from, to)
-    .all();
+  if (wantHumans) {
+    const t = await db
+      .prepare(
+        `SELECT SUM(CASE WHEN type = 'pageview' THEN 1 ELSE 0 END) AS pageviews,
+                COUNT(DISTINCT session) AS visits,
+                COUNT(DISTINCT visitor) AS visitors
+           FROM events WHERE ts >= ? AND ts <= ?`,
+      )
+      .bind(from, to)
+      .first<{ pageviews: number; visits: number; visitors: number }>();
+    if (t) {
+      totals.pageviews = Number(t.pageviews ?? 0);
+      totals.visits = Number(t.visits ?? 0);
+      totals.visitors = Number(t.visitors ?? 0);
+    }
+    // One dot per (visit, location). Grouping by lat/lon as well as session means a single
+    // visit whose IP changed mid-way (a VPN toggled on/off, a phone hopping networks) shows
+    // a separate, coherent dot for each place, instead of one dot with independently-maxed,
+    // mixed-up coordinates. Within a (session, lat, lon) group the city/region/country and
+    // network are constant, so MAX() picks the right value.
+    const { results } = await db
+      .prepare(
+        `SELECT session,
+                MAX(visitor) AS visitor,
+                MIN(ts)      AS start,
+                lat,
+                lon,
+                MAX(city)    AS city,
+                MAX(region)  AS region,
+                MAX(country) AS country,
+                MAX(asorg)   AS asorg,
+                SUM(CASE WHEN type = 'pageview' THEN 1 ELSE 0 END) AS pages
+           FROM events
+           WHERE ts >= ? AND ts <= ? AND lat IS NOT NULL AND lon IS NOT NULL
+           GROUP BY session, lat, lon
+           ORDER BY start DESC LIMIT 5000`,
+      )
+      .bind(from, to)
+      .all();
+    dots = results;
+  }
 
-  return json({
-    totals: totals ?? { pageviews: 0, visits: 0, visitors: 0 },
-    dots,
-  });
+  if (wantBots) {
+    const bt = await db
+      .prepare(`SELECT COUNT(*) AS hits FROM requests WHERE bot = 1 AND ts >= ? AND ts <= ?`)
+      .bind(from, to)
+      .first<{ hits: number }>();
+    totals.botHits = Number(bt?.hits ?? 0);
+    // One aggregated dot per bot location, sized by hit count on the client.
+    const { results } = await db
+      .prepare(
+        `SELECT lat, lon,
+                MAX(city)     AS city,
+                MAX(region)   AS region,
+                MAX(country)  AS country,
+                MAX(asorg)    AS asorg,
+                MAX(bot_name) AS bot_name,
+                COUNT(*)      AS hits
+           FROM requests
+           WHERE bot = 1 AND ts >= ? AND ts <= ? AND lat IS NOT NULL AND lon IS NOT NULL
+           GROUP BY lat, lon
+           ORDER BY hits DESC LIMIT 5000`,
+      )
+      .bind(from, to)
+      .all();
+    botDots = results;
+  }
+
+  return json({ totals, dots, botDots });
 }

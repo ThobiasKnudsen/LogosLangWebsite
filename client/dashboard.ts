@@ -10,6 +10,18 @@ interface Totals {
 	pageviews: number;
 	visits: number;
 	visitors: number;
+	botHits?: number;
+}
+// One aggregated location for bot traffic (server-side `requests`, grouped by lat/lon).
+interface BotDot {
+	lat: number;
+	lon: number;
+	city: string | null;
+	region: string | null;
+	country: string | null;
+	asorg: string | null;
+	bot_name: string | null;
+	hits: number;
 }
 interface Dot {
 	session: string;
@@ -25,20 +37,26 @@ interface Dot {
 interface MapResp {
 	totals: Totals;
 	dots: Dot[];
+	botDots?: BotDot[];
 	empty?: boolean;
 }
+// A Log row is either a human event (from `events`) or a bot request (from `requests`),
+// discriminated by `kind`. Human-only fields are optional so both shapes share one type.
 interface LogRow {
+	kind?: 'human' | 'bot';
 	ts: number;
-	visitor: string;
-	session: string;
-	type: string;
-	name: string | null;
+	visitor?: string | null;
+	session?: string | null;
+	type?: string | null;
+	name?: string | null;
 	path: string;
 	city: string | null;
 	country: string | null;
 	asorg: string | null;
 	device: string | null;
 	ref: string | null;
+	bot_name?: string | null;
+	status?: number | null;
 }
 interface LogResp {
 	rows: LogRow[];
@@ -155,11 +173,31 @@ function num(n: number): string {
 const app = document.getElementById('admin-app') as HTMLElement | null;
 const worldUrl = app?.dataset.world || '/admin/world.geo.json';
 
-const state: { view: View; rangeMs: number } = { view: 'map', rangeMs: 7 * 86400000 };
-const RANGES: { label: string; ms: number }[] = [
-	{ label: '24h', ms: 86400000 },
-	{ label: '7d', ms: 7 * 86400000 },
-	{ label: '30d', ms: 30 * 86400000 },
+const DAY = 86_400_000;
+// Global filter shared by every view: an explicit [from, to] window (ms since epoch) plus
+// which audiences to include. Humans come from the `events` JS beacon, bots from
+// server-side `requests`; toggling either hides that source everywhere it appears.
+const state: {
+	view: View;
+	from: number;
+	to: number;
+	humans: boolean;
+	bots: boolean;
+	preset: string | null;
+} = {
+	view: 'map',
+	from: Date.now() - 7 * DAY,
+	to: Date.now(),
+	humans: true,
+	bots: true,
+	preset: '7',
+};
+// Quick presets set the window relative to "now" at click time; `all` uses a wide floor.
+const PRESETS: { key: string; label: string; ms: number }[] = [
+	{ key: '1', label: '24h', ms: DAY },
+	{ key: '7', label: '7d', ms: 7 * DAY },
+	{ key: '30', label: '30d', ms: 30 * DAY },
+	{ key: 'all', label: 'All', ms: 3650 * DAY },
 ];
 const TABS: { key: View; label: string }[] = [
 	{ key: 'map', label: 'Map' },
@@ -169,16 +207,12 @@ const TABS: { key: View; label: string }[] = [
 	{ key: 'subscribers', label: 'Subscribers' },
 ];
 
-function currentRange(): { from: number; to: number } {
-	const to = Date.now();
-	return { from: to - state.rangeMs, to };
-}
-
 async function fetchStats<T>(params: Record<string, string | number>): Promise<T> {
 	const u = new URL('/admin/stats', location.origin);
-	const { from, to } = currentRange();
-	u.searchParams.set('from', String(from));
-	u.searchParams.set('to', String(to));
+	u.searchParams.set('from', String(Math.round(state.from)));
+	u.searchParams.set('to', String(Math.round(state.to)));
+	u.searchParams.set('humans', state.humans ? '1' : '0');
+	u.searchParams.set('bots', state.bots ? '1' : '0');
 	for (const [k, v] of Object.entries(params)) u.searchParams.set(k, String(v));
 	const r = await fetch(u.toString(), { credentials: 'include' });
 	if (!r.ok) throw new Error(`stats ${r.status}`);
@@ -239,6 +273,25 @@ function injectStyles(): void {
 	.adm-subcount { font-size: 0.85rem; color: var(--muted); margin-right: auto; }
 	.adm-subs-actions button { border: 1px solid var(--hairline); background: var(--surface); }
 	.adm-subs-actions button.is-active { background: var(--accent); color: #fff; border-color: var(--accent); }
+	.adm-filter { position: relative; display: inline-flex; align-items: center; gap: 0.5rem; }
+	.adm-summary { font-size: 0.8rem; color: var(--muted); white-space: nowrap; }
+	.adm-filter-panel { position: absolute; top: calc(100% + 0.4rem); left: 0; z-index: 30; width: min(24rem, 92vw); background: var(--bg); border: 1px solid var(--hairline); border-radius: 0.7rem; box-shadow: 0 12px 34px rgba(0,0,0,0.16); padding: 0.85rem; display: flex; flex-direction: column; gap: 0.7rem; }
+	.adm-filter-panel[hidden] { display: none; }
+	.adm-fp-row { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+	.adm-fp-label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); width: 3.2rem; }
+	.adm-presets { display: inline-flex; gap: 0.25rem; }
+	.adm-fp-field { display: flex; flex-direction: column; gap: 0.2rem; font-size: 0.72rem; color: var(--muted); flex: 1 1 9rem; }
+	.adm-fp-field input { font: inherit; font-size: 0.82rem; color: var(--text); background: var(--surface); border: 1px solid var(--hairline); border-radius: 0.4rem; padding: 0.3rem 0.4rem; }
+	.adm-switch { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.85rem; color: var(--text); cursor: pointer; }
+	.adm-switch input { accent-color: var(--accent); }
+	.adm-legend { display: flex; gap: 1rem; margin-top: 0.5rem; }
+	.adm-leg { display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.78rem; color: var(--muted); }
+	.adm-leg__dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+	.adm-leg__dot--human { background: var(--accent); }
+	.adm-leg__dot--bot { background: #c85c39; }
+	.adm-tag--bot { color: #c85c39; border-color: #c85c39; }
+	.adm-row--bot { cursor: default; }
+	.adm-row--bot td { background: rgba(200, 92, 57, 0.06); }
 	`;
 	const el = document.createElement('style');
 	el.textContent = css;
@@ -248,9 +301,11 @@ function injectStyles(): void {
 // ── World map (self-contained canvas, equirectangular) ─────────────────────────
 let world: [number, number][][] | null = null;
 let mapDots: Dot[] = [];
+let mapBotDots: BotDot[] = [];
 let dotScreen: { x: number; y: number; d: Dot }[] = [];
 let mapResizeObs: ResizeObserver | null = null;
 const mapView = { zoom: 1, tx: 0, ty: 0 };
+const BOT_COLOR = '#c85c39'; // terracotta, distinct from the indigo accent used for humans
 
 async function ensureWorld(): Promise<void> {
 	if (world) return;
@@ -316,6 +371,25 @@ function drawMap(canvas: HTMLCanvasElement): void {
 		ctx.globalAlpha = 1;
 	}
 
+	// Bot traffic: terracotta dots drawn under the human layer, not interactive (there is
+	// no per-visitor session to open). Radius grows with hit count so hotspots read.
+	ctx.fillStyle = BOT_COLOR;
+	for (const b of mapBotDots) {
+		if (typeof b.lat !== 'number' || typeof b.lon !== 'number') continue;
+		const bx = px(b.lon);
+		const by = py(b.lat);
+		const r = Math.min(9, 3 + Math.log2(1 + (b.hits || 1)));
+		ctx.globalAlpha = 0.16;
+		ctx.beginPath();
+		ctx.arc(bx, by, r + 3, 0, Math.PI * 2);
+		ctx.fill();
+		ctx.globalAlpha = 0.9;
+		ctx.beginPath();
+		ctx.arc(bx, by, r, 0, Math.PI * 2);
+		ctx.fill();
+	}
+	ctx.globalAlpha = 1;
+
 	dotScreen = [];
 	for (const d of mapDots) {
 		if (typeof d.lat !== 'number' || typeof d.lon !== 'number') continue;
@@ -373,8 +447,17 @@ async function renderMap(view: HTMLElement): Promise<void> {
 		return;
 	}
 	const t = data.totals ?? { pageviews: 0, visits: 0, visitors: 0 };
+	const humanDots = data.dots ?? [];
+	const botDots = data.botDots ?? [];
+	const humanTiles = state.humans
+		? `${tile('Pageviews', t.pageviews)}${tile('Visits', t.visits)}${tile('Visitors', t.visitors)}`
+		: '';
+	const botTile = state.bots ? tile('Bot hits', t.botHits ?? 0) : '';
+	const legend = `<div class="adm-legend">${
+		state.humans ? `<span class="adm-leg"><i class="adm-leg__dot adm-leg__dot--human"></i>Humans</span>` : ''
+	}${state.bots ? `<span class="adm-leg"><i class="adm-leg__dot adm-leg__dot--bot"></i>Bots</span>` : ''}</div>`;
 	view.innerHTML = `
-		<div class="adm-tiles">${tile('Pageviews', t.pageviews)}${tile('Visits', t.visits)}${tile('Visitors', t.visitors)}</div>
+		<div class="adm-tiles">${humanTiles}${botTile}</div>
 		<div class="adm-mapwrap">
 			<canvas class="adm-map" id="adm-canvas"></canvas>
 			<div class="adm-zoom">
@@ -383,8 +466,10 @@ async function renderMap(view: HTMLElement): Promise<void> {
 				<button type="button" data-z="reset" aria-label="Reset view">&#8634;</button>
 			</div>
 		</div>
-		<p class="adm-hint">${num(data.dots.length)} located visit(s) in range. Scroll or use the buttons to zoom, drag to pan, click a dot to open the visit.</p>`;
-	mapDots = data.dots;
+		${legend}
+		<p class="adm-hint">${num(humanDots.length)} human &middot; ${num(botDots.length)} bot location(s) in range. Scroll or use the buttons to zoom, drag to pan, click a human dot to open the visit.</p>`;
+	mapDots = humanDots;
+	mapBotDots = botDots;
 	mapView.zoom = 1;
 	mapView.tx = 0;
 	mapView.ty = 0;
@@ -472,10 +557,23 @@ async function renderLog(view: HTMLElement): Promise<void> {
 	}
 	const rows = data.rows
 		.map((r) => {
+			if (r.kind === 'bot') {
+				const status = r.status ? ` ${r.status}` : '';
+				return `<tr class="adm-row--bot">
+					<td>${esc(fmtTime(r.ts))}</td>
+					<td><span class="adm-tag adm-tag--bot">${esc(r.bot_name ?? 'bot')}</span></td>
+					<td><span class="adm-path">${esc(r.path)}</span></td>
+					<td><span class="adm-tag">bot${esc(status)}</span></td>
+					<td>${esc(place(r.city, r.country))}</td>
+					<td class="adm-dim">${esc(r.asorg ?? '')}</td>
+					<td>${esc(r.device ?? '')}</td>
+					<td class="adm-dim">${esc(r.ref ?? 'direct')}</td>
+				</tr>`;
+			}
 			const what = r.type === 'pageview' ? 'view' : esc(r.name ?? 'event');
-			return `<tr data-session="${esc(r.session)}">
+			return `<tr data-session="${esc(r.session ?? '')}">
 				<td>${esc(fmtTime(r.ts))}</td>
-				<td><button class="adm-idbtn" data-visitor="${esc(r.visitor)}">${esc(shortId(r.visitor))}</button></td>
+				<td><button class="adm-idbtn" data-visitor="${esc(r.visitor ?? '')}">${esc(shortId(r.visitor ?? ''))}</button></td>
 				<td><span class="adm-path">${esc(r.path)}</span></td>
 				<td><span class="adm-tag">${what}</span></td>
 				<td>${esc(place(r.city, r.country))}</td>
@@ -502,6 +600,10 @@ async function renderLog(view: HTMLElement): Promise<void> {
 }
 
 async function renderUsers(view: HTMLElement): Promise<void> {
+	if (!state.humans) {
+		view.innerHTML = `<div class="adm-empty">Users are human visitors, identified by the JS beacon. Enable <b>Humans</b> in Filters to see them. Bots have no per-visitor identity, so they never appear here.</div>`;
+		return;
+	}
 	const data = await fetchStats<UsersResp>({ view: 'users', limit: 200 });
 	if (data.empty) {
 		view.innerHTML = emptyMsg();
@@ -718,15 +820,53 @@ function chip(active: boolean, label: string, data: string): string {
 	return `<button class="adm-chip${active ? ' is-active' : ''}" ${data}>${esc(label)}</button>`;
 }
 
-function renderChrome(): void {
-	const range = document.getElementById('adm-range');
-	const tabs = document.getElementById('adm-tabs');
-	if (range) {
-		range.innerHTML = RANGES.map((r) => chip(state.rangeMs === r.ms, r.label, `data-ms="${r.ms}"`)).join('');
+// ── Global filter (time window + audiences), shared by every view ──────────────
+/** epoch ms -> a value a <input type="datetime-local"> accepts (local time, no seconds). */
+function toLocalInput(ms: number): string {
+	const d = new Date(ms);
+	const pad = (n: number): string => String(n).padStart(2, '0');
+	return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+function rangeLabel(): string {
+	const p = state.preset ? PRESETS.find((x) => x.key === state.preset) : null;
+	if (p) return p.label === 'All' ? 'All time' : `Last ${p.label}`;
+	return `${fmtTime(state.from)} to ${fmtTime(state.to)}`;
+}
+function filterSummary(): string {
+	const who = [state.humans ? 'Humans' : null, state.bots ? 'Bots' : null].filter(Boolean).join(' + ') || 'Nobody';
+	return `${esc(rangeLabel())} &middot; ${esc(who)}`;
+}
+function applyPreset(key: string): void {
+	const p = PRESETS.find((x) => x.key === key);
+	if (!p) return;
+	state.to = Date.now();
+	state.from = state.to - p.ms;
+	state.preset = key;
+}
+/** Push the current filter state into the (persistent) filter panel controls + summary. */
+function syncFilterUI(): void {
+	const summary = document.getElementById('adm-summary');
+	if (summary) summary.innerHTML = filterSummary();
+	const presets = document.getElementById('adm-presets');
+	if (presets) {
+		presets.innerHTML = PRESETS.map((p) => chip(state.preset === p.key, p.label, `data-preset="${p.key}"`)).join('');
 	}
+	const from = document.getElementById('adm-from') as HTMLInputElement | null;
+	const to = document.getElementById('adm-to') as HTMLInputElement | null;
+	if (from) from.value = toLocalInput(state.from);
+	if (to) to.value = toLocalInput(state.to);
+	const humans = document.getElementById('adm-humans') as HTMLInputElement | null;
+	const bots = document.getElementById('adm-bots') as HTMLInputElement | null;
+	if (humans) humans.checked = state.humans;
+	if (bots) bots.checked = state.bots;
+}
+
+function renderChrome(): void {
+	const tabs = document.getElementById('adm-tabs');
 	if (tabs) {
 		tabs.innerHTML = TABS.map((t) => chip(state.view === t.key, t.label, `data-view="${t.key}"`)).join('');
 	}
+	syncFilterUI();
 }
 
 async function render(): Promise<void> {
@@ -752,17 +892,72 @@ function init(): void {
 		<div class="adm-top">
 			<div class="adm-title">Λόγος &middot; Analytics</div>
 			<div class="adm-spacer"></div>
-			<div class="adm-range" id="adm-range"></div>
+			<div class="adm-filter">
+				<button class="adm-chip" id="adm-filter-btn" type="button" aria-expanded="false">&#9776; Filters</button>
+				<span class="adm-summary" id="adm-summary"></span>
+				<div class="adm-filter-panel" id="adm-filter-panel" hidden>
+					<div class="adm-fp-row"><span class="adm-fp-label">Range</span><div class="adm-presets" id="adm-presets"></div></div>
+					<div class="adm-fp-row">
+						<label class="adm-fp-field">From<input type="datetime-local" id="adm-from" /></label>
+						<label class="adm-fp-field">To<input type="datetime-local" id="adm-to" /></label>
+					</div>
+					<div class="adm-fp-row"><span class="adm-fp-label">Show</span>
+						<label class="adm-switch"><input type="checkbox" id="adm-humans" /> Humans</label>
+						<label class="adm-switch"><input type="checkbox" id="adm-bots" /> Bots</label>
+					</div>
+				</div>
+			</div>
 			<div class="adm-tabs" id="adm-tabs"></div>
 		</div>
 		<div id="adm-view" class="adm-view"></div>`;
 
-	document.getElementById('adm-range')?.addEventListener('click', (e) => {
-		const b = (e.target as HTMLElement).closest<HTMLElement>('[data-ms]');
-		if (!b) return;
-		state.rangeMs = Number(b.dataset.ms);
+	const fpanel = document.getElementById('adm-filter-panel');
+	const fbtn = document.getElementById('adm-filter-btn');
+	const setOpen = (open: boolean): void => {
+		if (fpanel) fpanel.hidden = !open;
+		fbtn?.setAttribute('aria-expanded', open ? 'true' : 'false');
+		fbtn?.classList.toggle('is-active', open);
+	};
+	fbtn?.addEventListener('click', (e) => {
+		e.stopPropagation();
+		setOpen(fpanel?.hidden ?? false);
+	});
+	// A click anywhere outside the open panel closes it.
+	document.addEventListener('click', (e) => {
+		if (!fpanel || fpanel.hidden) return;
+		const t = e.target as Node;
+		if (fpanel.contains(t) || fbtn?.contains(t)) return;
+		setOpen(false);
+	});
+
+	document.getElementById('adm-presets')?.addEventListener('click', (e) => {
+		const b = (e.target as HTMLElement).closest<HTMLElement>('[data-preset]');
+		if (!b || !b.dataset.preset) return;
+		applyPreset(b.dataset.preset);
 		void render();
 	});
+	const onTime = (): void => {
+		const from = document.getElementById('adm-from') as HTMLInputElement | null;
+		const to = document.getElementById('adm-to') as HTMLInputElement | null;
+		const f = from?.value ? new Date(from.value).getTime() : NaN;
+		const t = to?.value ? new Date(to.value).getTime() : NaN;
+		if (Number.isFinite(f)) state.from = f;
+		if (Number.isFinite(t)) state.to = t;
+		if (state.from > state.to) [state.from, state.to] = [state.to, state.from];
+		state.preset = null;
+		void render();
+	};
+	document.getElementById('adm-from')?.addEventListener('change', onTime);
+	document.getElementById('adm-to')?.addEventListener('change', onTime);
+	document.getElementById('adm-humans')?.addEventListener('change', (e) => {
+		state.humans = (e.target as HTMLInputElement).checked;
+		void render();
+	});
+	document.getElementById('adm-bots')?.addEventListener('change', (e) => {
+		state.bots = (e.target as HTMLInputElement).checked;
+		void render();
+	});
+
 	document.getElementById('adm-tabs')?.addEventListener('click', (e) => {
 		const b = (e.target as HTMLElement).closest<HTMLElement>('[data-view]');
 		if (!b || !b.dataset.view) return;
