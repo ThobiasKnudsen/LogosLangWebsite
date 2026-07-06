@@ -256,9 +256,9 @@ in `sessionStorage` (gone when the tab closes). The `/privacy/` page (`privacyPa
 A self-contained dashboard (`client/dashboard.ts`, shell in `build/build.ts`) renders five
 tabs - **Map / Log / Users / Access / Subscribers** - with a time-range filter and
 click-through to a single visit's page journey or a visitor's history across sessions.
-Analytics data comes from **`/admin/stats`** (`functions/admin/stats.ts`), which queries D1;
+Analytics data comes from **`/admin/api/stats`** (`functions/admin/api/stats.ts`), which queries D1;
 the **Subscribers** tab lists release-notification signups from the `SUBSCRIBERS` KV via
-**`/admin/subscribers`** (`functions/admin/subscribers.ts`), with copy-all and CSV export
+**`/admin/api/subscribers`** (`functions/admin/api/subscribers.ts`), with copy-all and CSV export
 for sending announcements by hand. The world map is a vendored, self-hosted outline
 (`public/admin/world.geo.json`), so nothing loads from a third party.
 
@@ -287,7 +287,7 @@ faces the password, so make `ADMIN_PASSWORD` a long random string.
 2. **Bind it to the Pages project** as **`DB`**: Pages project -> Settings -> Functions ->
    D1 database bindings -> add `DB` = `logos-analytics`, for **Production and Preview**.
    Until this binding exists, `/api/collect` answers `204` (stores nothing) and
-   `/admin/stats` reports empty, so the site works unchanged.
+   `/admin/api/stats` reports empty, so the site works unchanged.
 3. **Set the dashboard password**: on the Pages project, Settings -> Variables and Secrets,
    add a **Secret** `ADMIN_PASSWORD` (a long random string), and optionally `ADMIN_USER`
    (defaults to `admin`), for Production. The middleware fails closed until this is set, so
@@ -303,11 +303,11 @@ faces the password, so make `ADMIN_PASSWORD` a long random string.
 
    Expression, if you use the editor directly: `starts_with(http.request.uri.path, "/admin/")`.
    Pick a threshold above what the dashboard itself fetches when you click around (it fires
-   several `/admin/stats` requests per interaction) but far below what a guesser needs. The
+   several `/admin/api/stats` requests per interaction) but far below what a guesser needs. The
    free plan includes one rate-limiting rule, which is enough for this.
 5. Remove the old `GA4_ID` / `CLARITY_ID` env vars (no longer read), then redeploy.
 
-Locally, `npm run dev` stubs `/api/collect` (logs, `204`) and `/admin/stats` (a fixture),
+Locally, `npm run dev` stubs `/api/collect` (logs, `204`) and `/admin/api/stats` (a fixture),
 so the beacon and the `/admin/` dashboard work without Cloudflare (and without auth, since
 the static dev server does not run middleware). To exercise the real Functions + D1, use
 `wrangler pages dev dist` with a local D1 (`npm run db:schema:local`) and set

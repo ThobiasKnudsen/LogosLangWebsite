@@ -4,7 +4,7 @@
 -- across sessions until the visitor clears site data) and `session` is a random id in
 -- sessionStorage (one visit, gone when the tab closes). No raw IP is ever stored; geo
 -- is Cloudflare's edge geolocation (request.cf), and lat/lon is a city centroid, not a
--- real position. See functions/api/collect.ts (writer) and functions/admin/stats.ts
+-- real position. See functions/api/collect.ts (writer) and functions/admin/api/stats.ts
 -- (reader), plus the /privacy/ page.
 --
 -- Apply to the bound D1 database:

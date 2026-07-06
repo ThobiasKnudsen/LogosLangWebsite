@@ -1,9 +1,9 @@
-// Cloudflare Pages Function: GET /admin/stats
+// Cloudflare Pages Function: GET /admin/api/stats
 //
 // Read side of the cookieless analytics: queries the D1 database bound as DB and backs
-// the three dashboard tabs (Map, Log, Users) plus two drill-downs (one session, one
+// the dashboard tabs (Map, Log, Users, Access) plus two drill-downs (one session, one
 // visitor). Paired with client/dashboard.ts, which renders the JSON, and written by
-// functions/api/collect.ts. See db/schema.sql.
+// functions/api/collect.ts and functions/_middleware.ts. See db/schema.sql.
 //
 // SECURITY: everything under /admin/ is gated by functions/admin/_middleware.ts (HTTP
 // Basic Auth), so this function assumes the caller is already authenticated and adds no
@@ -164,6 +164,10 @@ async function respond(db: D1Database, request: Request): Promise<Response> {
   if (view === "users") {
     const limit = intParam(q.get("limit"), 200, 1, 1000);
     const offset = intParam(q.get("offset"), 0, 0, 1_000_000);
+    // Distinct city|country pairs per visitor. GROUP_CONCAT joins with commas and can't
+    // take a custom separator alongside DISTINCT, so each pair uses '|' internally and any
+    // stray comma in a city name is stripped, keeping the client's comma-split unambiguous.
+    // Pairs where both city and country are null are dropped (GROUP_CONCAT skips NULLs).
     const { results } = await db
       .prepare(
         `SELECT visitor,
@@ -171,7 +175,9 @@ async function respond(db: D1Database, request: Request): Promise<Response> {
                 SUM(CASE WHEN type = 'pageview' THEN 1 ELSE 0 END) AS pageviews,
                 MIN(ts) AS firstSeen,
                 MAX(ts) AS lastSeen,
-                GROUP_CONCAT(DISTINCT country) AS countries
+                GROUP_CONCAT(DISTINCT CASE WHEN city IS NOT NULL OR country IS NOT NULL
+                  THEN REPLACE(COALESCE(city, ''), ',', ' ') || '|' || COALESCE(country, '')
+                END) AS locations
            FROM events WHERE ts >= ? AND ts <= ?
            GROUP BY visitor ORDER BY lastSeen DESC LIMIT ? OFFSET ?`,
       )
@@ -183,7 +189,7 @@ async function respond(db: D1Database, request: Request): Promise<Response> {
       pageviews: r.pageviews,
       firstSeen: r.firstSeen,
       lastSeen: r.lastSeen,
-      countries: typeof r.countries === "string" && r.countries ? r.countries.split(",") : [],
+      locations: typeof r.locations === "string" && r.locations ? r.locations.split(",") : [],
     }));
     return json({ users });
   }

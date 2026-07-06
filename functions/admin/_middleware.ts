@@ -1,7 +1,7 @@
 // Cloudflare Pages Functions middleware for /admin/*
 //
-// Guards the whole dashboard (the static /admin/ page, /admin/world.geo.json, and the
-// /admin/stats function) with HTTP Basic Auth, and logs access to the admin_access D1
+// Guards the whole dashboard (the static /admin/ pages, /admin/world.geo.json, and the
+// /admin/api/* functions) with HTTP Basic Auth, and logs access to the admin_access D1
 // table so the owner can see when and roughly who has reached the endpoint. This runs
 // before anything under /admin/, so no other file needs its own auth check.
 //
@@ -220,8 +220,9 @@ export async function onRequest(context: Context): Promise<Response> {
 
   clearFailures(ip);
 
-  // Log the successful open once (the page request), not every stats/asset subrequest.
-  if (path === '/admin' || path === '/admin/' || path === '/admin/index.html') {
+  // Log the successful open once per page navigation (any tab's HTML shell). The
+  // /admin/api/* and /admin/world.geo.json fetches carry Accept: */*, so they're excluded.
+  if ((request.headers.get('accept') ?? '').includes('text/html')) {
     await logAccess(env, request, 'granted', path);
   }
   return next();

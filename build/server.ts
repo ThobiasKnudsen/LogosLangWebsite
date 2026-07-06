@@ -44,7 +44,7 @@ async function resolveFile(urlPath: string): Promise<string | null> {
 
 // ── Dev-only analytics fixture ────────────────────────────────────────────────
 // A small deterministic dataset so the /admin/ dashboard renders locally without
-// wrangler/D1. The real data comes from D1 via functions/admin/stats.ts; the response
+// wrangler/D1. The real data comes from D1 via functions/admin/api/stats.ts; the response
 // shapes returned here match what that function will return.
 interface StubPage {
 	path: string;
@@ -189,7 +189,7 @@ function stubBotDots(): unknown[] {
 	return [...by.values()];
 }
 
-/** Serve the fixture in the same shapes as functions/admin/stats.ts, keyed by ?view / ?session / ?visitor. */
+/** Serve the fixture in the same shapes as functions/admin/api/stats.ts, keyed by ?view / ?session / ?visitor. */
 function sampleStats(url: string): unknown {
 	const q = new URLSearchParams(url.split('?')[1] ?? '');
 	const now = Date.now();
@@ -264,7 +264,7 @@ function sampleStats(url: string): unknown {
 				pageviews: evs.filter((e) => e.type === 'pageview').length,
 				firstSeen: sorted[0]!.ts,
 				lastSeen: last.ts,
-				countries: [...new Set(evs.map((e) => e.country))],
+				locations: [...new Set(evs.map((e) => `${e.city}|${e.country}`))],
 				lastCity: last.city,
 				lastDevice: last.device,
 			};
@@ -278,7 +278,7 @@ function sampleStats(url: string): unknown {
 		return {
 			access: [
 				{ ts: now - 3 * 60000, outcome: 'granted', path: '/admin/', ip: '84.209.12.34', country: 'NO', region: 'Trøndelag', city: 'Trondheim', asorg: 'Telenor', device: 'Desktop', browser: 'Firefox', os: 'Linux' },
-				{ ts: now - 95 * 60000, outcome: 'denied', path: '/admin/stats', ip: '45.140.17.9', country: 'RU', region: 'Moscow', city: 'Moscow', asorg: 'Chang Way Technologies', device: 'Desktop', browser: 'Other', os: 'Linux' },
+				{ ts: now - 95 * 60000, outcome: 'denied', path: '/admin/api/stats', ip: '45.140.17.9', country: 'RU', region: 'Moscow', city: 'Moscow', asorg: 'Chang Way Technologies', device: 'Desktop', browser: 'Other', os: 'Linux' },
 				{ ts: now - 240 * 60000, outcome: 'denied', path: '/admin/', ip: '103.21.60.2', country: 'IN', region: 'Karnataka', city: 'Bengaluru', asorg: 'Censys Scanner', device: 'Desktop', browser: 'Other', os: 'Other' },
 				{ ts: now - 1500 * 60000, outcome: 'granted', path: '/admin/', ip: '84.209.44.7', country: 'NO', region: 'Oslo', city: 'Oslo', asorg: 'Telenor', device: 'Mobile', browser: 'Chrome', os: 'Android' },
 			],
@@ -346,15 +346,15 @@ const server = http.createServer(async (req, res) => {
 	}
 
 	// Dev-only dashboard data stub: serve the deterministic fixture so /admin/ renders
-	// locally without wrangler/D1 (functions/admin/stats.ts is the real query layer).
-	if (url.split('?')[0] === '/admin/stats' && req.method === 'GET') {
+	// locally without wrangler/D1 (functions/admin/api/stats.ts is the real query layer).
+	if (url.split('?')[0] === '/admin/api/stats' && req.method === 'GET') {
 		res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
 		res.end(JSON.stringify(sampleStats(url)));
 		return;
 	}
 
-	// Dev-only subscribers stub (functions/admin/subscribers.ts reads the real KV).
-	if (url.split('?')[0] === '/admin/subscribers' && req.method === 'GET') {
+	// Dev-only subscribers stub (functions/admin/api/subscribers.ts reads the real KV).
+	if (url.split('?')[0] === '/admin/api/subscribers' && req.method === 'GET') {
 		res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
 		res.end(
 			JSON.stringify({

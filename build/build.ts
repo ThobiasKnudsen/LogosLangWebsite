@@ -567,8 +567,14 @@ export async function build(): Promise<void> {
   );
   // The Basic-Auth-gated analytics dashboard: not linked anywhere, noindex, disallowed in
   // robots, and absent from the sitemap/llms.txt. functions/admin/_middleware.ts guards it
-  // with HTTP Basic Auth; its data comes from the /admin/stats function.
+  // with HTTP Basic Auth; its data comes from the /admin/api/stats function.
   await writePage("admin/index.html", adminShell(assets.cssHref, assets.dashHref));
+  // Each dashboard tab is its own URL under /admin/ (the same shell), so a refresh or a
+  // bookmark lands on that tab instead of resetting to the map. The client reads the path
+  // to pick the view; the map stays at /admin/ itself.
+  for (const v of ["log", "users", "access", "subscribers"]) {
+    await writePage(`admin/${v}/index.html`, adminShell(assets.cssHref, assets.dashHref));
+  }
   // Emitted to dist/404.html; Cloudflare Pages serves it (with a 404 status) for any
   // route that doesn't match a static file, instead of falling back to the home page.
   await writePage(

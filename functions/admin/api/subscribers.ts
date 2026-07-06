@@ -1,4 +1,4 @@
-// Cloudflare Pages Function: GET /admin/subscribers
+// Cloudflare Pages Function: GET /admin/api/subscribers
 //
 // Read-only list of release-notification signups for the admin dashboard's Subscribers
 // tab. Reads the same SUBSCRIBERS KV namespace that functions/api/subscribe.ts writes to

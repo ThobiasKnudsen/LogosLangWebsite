@@ -1,11 +1,11 @@
 // Analytics dashboard (client bundle for /admin/, loaded only by build/build.ts's
-// adminShell). Self-contained: it fetches JSON from /admin/stats (functions/admin/stats.ts)
+// adminShell). Self-contained: it fetches JSON from /admin/api/stats (functions/admin/api/stats.ts)
 // and renders three tabs, Map / Log / Users, plus a drill-down panel for one visit or one
 // visitor. The route is guarded by HTTP Basic Auth (functions/admin/_middleware.ts), so
 // this code assumes an authorized caller. Styling reuses the site's theme tokens
 // (styles/theme.css) for light/dark parity.
 
-// ── Response shapes (mirrors functions/admin/stats.ts and the dev stub) ────────
+// ── Response shapes (mirrors functions/admin/api/stats.ts and the dev stub) ────────
 interface Totals {
 	pageviews: number;
 	visits: number;
@@ -67,7 +67,7 @@ interface UserRow {
 	pageviews: number;
 	firstSeen: number;
 	lastSeen: number;
-	countries: string[];
+	locations: string[]; // each "city|country"; either part may be empty
 }
 interface UsersResp {
 	users: UserRow[];
@@ -207,7 +207,7 @@ const TABS: { key: View; label: string }[] = [
 ];
 
 async function fetchStats<T>(params: Record<string, string | number>): Promise<T> {
-	const u = new URL('/admin/stats', location.origin);
+	const u = new URL('/admin/api/stats', location.origin);
 	u.searchParams.set('from', String(Math.round(state.from)));
 	u.searchParams.set('to', String(Math.round(state.to)));
 	u.searchParams.set('humans', state.humans ? '1' : '0');
@@ -273,7 +273,6 @@ function injectStyles(): void {
 	.adm-subs-actions button { border: 1px solid var(--hairline); background: var(--surface); }
 	.adm-subs-actions button.is-active { background: var(--accent); color: #fff; border-color: var(--accent); }
 	.adm-filter { position: relative; display: inline-flex; align-items: center; gap: 0.5rem; }
-	.adm-summary { font-size: 0.8rem; color: var(--muted); white-space: nowrap; }
 	.adm-filter-panel { position: absolute; top: calc(100% + 0.4rem); left: 0; z-index: 30; width: min(24rem, 92vw); background: var(--bg); border: 1px solid var(--hairline); border-radius: 0.7rem; box-shadow: 0 12px 34px rgba(0,0,0,0.16); padding: 0.85rem; display: flex; flex-direction: column; gap: 0.7rem; }
 	.adm-filter-panel[hidden] { display: none; }
 	.adm-fp-row { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
@@ -595,19 +594,26 @@ async function renderUsers(view: HTMLElement): Promise<void> {
 		return;
 	}
 	const rows = data.users
-		.map(
-			(u) => `<tr data-visitor="${esc(u.visitor)}">
+		.map((u) => {
+			const locs =
+				u.locations
+					.map((l) => {
+						const [city, country] = l.split('|');
+						return place(city || null, country || null);
+					})
+					.join(' · ') || 'Unknown';
+			return `<tr data-visitor="${esc(u.visitor)}">
 			<td><span class="adm-path">${esc(shortId(u.visitor))}</span></td>
 			<td>${num(u.visits)}</td>
 			<td>${num(u.pageviews)}</td>
-			<td>${esc(u.countries.join(', ') || 'Unknown')}</td>
+			<td>${esc(locs)}</td>
 			<td>${esc(fmtTime(u.firstSeen))}</td>
 			<td>${esc(fmtTime(u.lastSeen))}</td>
-		</tr>`,
-		)
+		</tr>`;
+		})
 		.join('');
 	view.innerHTML = `<div class="adm-tablewrap"><table class="adm-table">
-		<thead><tr><th>Visitor</th><th>Visits</th><th>Pageviews</th><th>Countries</th><th>First seen</th><th>Last seen</th></tr></thead>
+		<thead><tr><th>Visitor</th><th>Visits</th><th>Pageviews</th><th>Locations</th><th>First seen</th><th>Last seen</th></tr></thead>
 		<tbody>${rows}</tbody></table></div>`;
 	const tbody = view.querySelector('tbody');
 	tbody?.addEventListener('click', (e) => {
@@ -652,7 +658,7 @@ function csvCell(s: string): string {
 }
 
 async function renderSubscribers(view: HTMLElement): Promise<void> {
-	const r = await fetch('/admin/subscribers', { credentials: 'include' });
+	const r = await fetch('/admin/api/subscribers', { credentials: 'include' });
 	if (!r.ok) throw new Error(`subscribers ${r.status}`);
 	const data = (await r.json()) as SubscribersResp;
 	if (!data.configured) {
@@ -801,21 +807,28 @@ function chip(active: boolean, label: string, data: string): string {
 	return `<button class="adm-chip${active ? ' is-active' : ''}" ${data}>${esc(label)}</button>`;
 }
 
+// ── Routing: each view has its own URL under /admin/, so a refresh (or a bookmark)
+// lands back on the same tab instead of resetting to the map. Map lives at /admin/,
+// the others at /admin/<view> (served by their own static shell, see build/build.ts).
+function viewFromPath(): View {
+	const seg = location.pathname.replace(/\/+$/, '').split('/').pop() || '';
+	return TABS.some((t) => t.key === seg) ? (seg as View) : 'map';
+}
+function pathForView(v: View): string {
+	return v === 'map' ? '/admin/' : `/admin/${v}`;
+}
+function goToView(v: View, push: boolean): void {
+	state.view = v;
+	if (push) history.pushState({ view: v }, '', pathForView(v));
+	void render();
+}
+
 // ── Global filter (time window + audiences), shared by every view ──────────────
 /** epoch ms -> a value a <input type="datetime-local"> accepts (local time, no seconds). */
 function toLocalInput(ms: number): string {
 	const d = new Date(ms);
 	const pad = (n: number): string => String(n).padStart(2, '0');
 	return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-}
-function rangeLabel(): string {
-	const p = state.preset ? PRESETS.find((x) => x.key === state.preset) : null;
-	if (p) return p.label === 'All' ? 'All time' : `Last ${p.label}`;
-	return `${fmtTime(state.from)} to ${fmtTime(state.to)}`;
-}
-function filterSummary(): string {
-	const who = [state.humans ? 'Humans' : null, state.bots ? 'Bots' : null].filter(Boolean).join(' + ') || 'Nobody';
-	return `${esc(rangeLabel())} &middot; ${esc(who)}`;
 }
 function applyPreset(key: string): void {
 	const p = PRESETS.find((x) => x.key === key);
@@ -826,8 +839,6 @@ function applyPreset(key: string): void {
 }
 /** Push the current filter state into the (persistent) filter panel controls + summary. */
 function syncFilterUI(): void {
-	const summary = document.getElementById('adm-summary');
-	if (summary) summary.innerHTML = filterSummary();
 	const presets = document.getElementById('adm-presets');
 	if (presets) {
 		presets.innerHTML = PRESETS.map((p) => chip(state.preset === p.key, p.label, `data-preset="${p.key}"`)).join('');
@@ -868,6 +879,7 @@ async function render(): Promise<void> {
 
 function init(): void {
 	if (!app) return;
+	state.view = viewFromPath();
 	injectStyles();
 	app.innerHTML = `
 		<div class="adm-top">
@@ -875,7 +887,6 @@ function init(): void {
 			<div class="adm-spacer"></div>
 			<div class="adm-filter">
 				<button class="adm-chip" id="adm-filter-btn" type="button" aria-expanded="false">&#9776; Filters</button>
-				<span class="adm-summary" id="adm-summary"></span>
 				<div class="adm-filter-panel" id="adm-filter-panel" hidden>
 					<div class="adm-fp-row"><span class="adm-fp-label">Range</span><div class="adm-presets" id="adm-presets"></div></div>
 					<div class="adm-fp-row">
@@ -942,9 +953,12 @@ function init(): void {
 	document.getElementById('adm-tabs')?.addEventListener('click', (e) => {
 		const b = (e.target as HTMLElement).closest<HTMLElement>('[data-view]');
 		if (!b || !b.dataset.view) return;
-		state.view = b.dataset.view as View;
-		void render();
+		const v = b.dataset.view as View;
+		if (v !== state.view) goToView(v, true);
 	});
+
+	// Back/forward between the per-tab URLs without a full reload.
+	window.addEventListener('popstate', () => goToView(viewFromPath(), false));
 	document.addEventListener('keydown', (e) => {
 		if (e.key === 'Escape') closePanel();
 	});
