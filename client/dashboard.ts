@@ -73,6 +73,16 @@ interface AccessResp {
 	access: AccessRow[];
 	empty?: boolean;
 }
+interface Subscriber {
+	email: string;
+	subscribedAt: string | null;
+	source: string | null;
+}
+interface SubscribersResp {
+	configured: boolean;
+	count?: number;
+	subscribers: Subscriber[];
+}
 interface TimelineEvent {
 	ts: number;
 	type: string;
@@ -108,7 +118,7 @@ interface VisitorResp {
 	sessions: VisitorSession[];
 }
 
-type View = 'map' | 'log' | 'users' | 'access';
+type View = 'map' | 'log' | 'users' | 'access' | 'subscribers';
 
 // ── Small helpers ──────────────────────────────────────────────────────────────
 const ESC: Record<string, string> = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' };
@@ -156,6 +166,7 @@ const TABS: { key: View; label: string }[] = [
 	{ key: 'log', label: 'Log' },
 	{ key: 'users', label: 'Users' },
 	{ key: 'access', label: 'Access' },
+	{ key: 'subscribers', label: 'Subscribers' },
 ];
 
 function currentRange(): { from: number; to: number } {
@@ -224,6 +235,10 @@ function injectStyles(): void {
 	.adm-tag--ok { color: var(--ok-text, #2b6b34); border-color: var(--ok-text, #2b6b34); }
 	.adm-tag--bad { color: var(--line-exec, #c0392b); border-color: var(--line-exec, #c0392b); }
 	tr.is-denied td { background: rgba(192, 57, 43, 0.07); }
+	.adm-subs-actions { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.9rem; flex-wrap: wrap; }
+	.adm-subcount { font-size: 0.85rem; color: var(--muted); margin-right: auto; }
+	.adm-subs-actions button { border: 1px solid var(--hairline); background: var(--surface); }
+	.adm-subs-actions button.is-active { background: var(--accent); color: #fff; border-color: var(--accent); }
 	`;
 	const el = document.createElement('style');
 	el.textContent = css;
@@ -549,6 +564,67 @@ async function renderAccess(view: HTMLElement): Promise<void> {
 		<tbody>${rows}</tbody></table></div>`;
 }
 
+function csvCell(s: string): string {
+	return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+}
+
+async function renderSubscribers(view: HTMLElement): Promise<void> {
+	const r = await fetch('/admin/subscribers', { credentials: 'include' });
+	if (!r.ok) throw new Error(`subscribers ${r.status}`);
+	const data = (await r.json()) as SubscribersResp;
+	if (!data.configured) {
+		view.innerHTML = `<div class="adm-empty">The <code>SUBSCRIBERS</code> KV namespace is not bound yet, so no signups are being stored. Bind it on the Pages project (Settings &rarr; Bindings) to start collecting.</div>`;
+		return;
+	}
+	if (!data.subscribers.length) {
+		view.innerHTML = `<div class="adm-empty">No release-notification signups yet.</div>`;
+		return;
+	}
+	const rows = data.subscribers
+		.map(
+			(s) => `<tr>
+			<td><span class="adm-path">${esc(s.email)}</span></td>
+			<td>${esc(s.subscribedAt ? fmtTime(Date.parse(s.subscribedAt)) : '')}</td>
+			<td class="adm-dim">${esc(s.source ?? '')}</td>
+		</tr>`,
+		)
+		.join('');
+	view.innerHTML = `
+		<div class="adm-subs-actions">
+			<span class="adm-subcount">${num(data.subscribers.length)} subscriber(s)</span>
+			<button class="adm-chip is-active" id="subs-copy" type="button">Copy all emails</button>
+			<button class="adm-chip" id="subs-csv" type="button">Download CSV</button>
+		</div>
+		<div class="adm-tablewrap"><table class="adm-table">
+		<thead><tr><th>Email</th><th>Signed up</th><th>Source</th></tr></thead>
+		<tbody>${rows}</tbody></table></div>`;
+
+	const emails = data.subscribers.map((s) => s.email);
+	document.getElementById('subs-copy')?.addEventListener('click', (e) => {
+		const b = e.currentTarget as HTMLElement;
+		void navigator.clipboard.writeText(emails.join(', ')).then(() => {
+			const prev = b.textContent;
+			b.textContent = 'Copied';
+			setTimeout(() => {
+				b.textContent = prev;
+			}, 1200);
+		});
+	});
+	document.getElementById('subs-csv')?.addEventListener('click', () => {
+		const csv =
+			'email,subscribed_at,source\n' +
+			data.subscribers
+				.map((s) => `${csvCell(s.email)},${csvCell(s.subscribedAt ?? '')},${csvCell(s.source ?? '')}`)
+				.join('\n');
+		const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+		const a = document.createElement('a');
+		a.href = url;
+		a.download = 'logos-subscribers.csv';
+		a.click();
+		URL.revokeObjectURL(url);
+	});
+}
+
 // ── Drill-down panel ─────────────────────────────────────────────────────────
 function labelFor(ev: TimelineEvent): string {
 	if (ev.type === 'pageview') {
@@ -662,7 +738,8 @@ async function render(): Promise<void> {
 		if (state.view === 'map') await renderMap(view);
 		else if (state.view === 'log') await renderLog(view);
 		else if (state.view === 'users') await renderUsers(view);
-		else await renderAccess(view);
+		else if (state.view === 'access') await renderAccess(view);
+		else await renderSubscribers(view);
 	} catch (e) {
 		view.innerHTML = `<div class="adm-empty">Could not load analytics: ${esc((e as Error).message)}.</div>`;
 	}

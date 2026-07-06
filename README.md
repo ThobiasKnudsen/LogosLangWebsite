@@ -253,12 +253,14 @@ in `sessionStorage` (gone when the tab closes). The `/privacy/` page (`privacyPa
 
 ### Dashboard (`/admin/`)
 
-A self-contained dashboard (`client/dashboard.ts`, shell in `build/build.ts`) renders four
-tabs - **Map / Log / Users / Access** - with a time-range filter and click-through to a
-single visit's page journey or a visitor's history across sessions. Data comes from
-**`/admin/stats`** (`functions/admin/stats.ts`), which queries D1. The world map is a
-vendored, self-hosted outline (`public/admin/world.geo.json`), so nothing loads from a
-third party.
+A self-contained dashboard (`client/dashboard.ts`, shell in `build/build.ts`) renders five
+tabs - **Map / Log / Users / Access / Subscribers** - with a time-range filter and
+click-through to a single visit's page journey or a visitor's history across sessions.
+Analytics data comes from **`/admin/stats`** (`functions/admin/stats.ts`), which queries D1;
+the **Subscribers** tab lists release-notification signups from the `SUBSCRIBERS` KV via
+**`/admin/subscribers`** (`functions/admin/subscribers.ts`), with copy-all and CSV export
+for sending announcements by hand. The world map is a vendored, self-hosted outline
+(`public/admin/world.geo.json`), so nothing loads from a third party.
 
 **Access control is HTTP Basic Auth** in `functions/admin/_middleware.ts`, which guards
 everything under `/admin/` (the page, the data API, the map asset) and **fails closed** if

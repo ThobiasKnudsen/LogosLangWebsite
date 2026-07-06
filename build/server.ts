@@ -301,6 +301,23 @@ const server = http.createServer(async (req, res) => {
 		return;
 	}
 
+	// Dev-only subscribers stub (functions/admin/subscribers.ts reads the real KV).
+	if (url.split('?')[0] === '/admin/subscribers' && req.method === 'GET') {
+		res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+		res.end(
+			JSON.stringify({
+				configured: true,
+				count: 3,
+				subscribers: [
+					{ email: 'ada@example.com', subscribedAt: '2026-07-05T10:12:00.000Z', source: 'home' },
+					{ email: 'linus@example.org', subscribedAt: '2026-07-04T22:03:00.000Z', source: 'download' },
+					{ email: 'grace@example.net', subscribedAt: '2026-07-01T08:30:00.000Z', source: 'home' },
+				],
+			}),
+		);
+		return;
+	}
+
 	if (url.startsWith('/__reload')) {
 		res.writeHead(200, {
 			'Content-Type': 'text/event-stream',
