@@ -45,13 +45,22 @@ export async function onRequestGet(context: { request: Request; env: Env }): Pro
   // "no data" instead of erroring.
   if (!env.DB) return json({ empty: true });
 
+  // Any D1 error (most often a table db/schema.sql hasn't created yet, e.g. admin_access
+  // or requests before the schema is re-applied) degrades to an empty result instead of a
+  // 500, so the dashboard shows "no data" and stays usable rather than breaking the tab.
+  try {
+    return await respond(env.DB, request);
+  } catch {
+    return json({ empty: true });
+  }
+}
+
+async function respond(db: D1Database, request: Request): Promise<Response> {
   const url = new URL(request.url);
   const q = url.searchParams;
   const now = Date.now();
   const to = intParam(q.get("to"), now, 0, now + 86_400_000);
   const from = intParam(q.get("from"), to - 7 * 86_400_000, 0, to);
-
-  const db = env.DB;
 
   // ── Drill-down: one session's events in order ──────────────────────────────
   const sessionId = q.get("session");

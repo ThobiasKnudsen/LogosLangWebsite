@@ -65,3 +65,36 @@ CREATE TABLE IF NOT EXISTS admin_access (
   ua       TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_admin_access_ts ON admin_access(ts);
+
+-- Server-side traffic log, written by the root middleware (functions/_middleware.ts) on
+-- every HTML page response. Unlike `events` (a client JS beacon that only sees real
+-- browsers), this sees ALL traffic, including bots, crawlers, and AI fetchers that never
+-- run JavaScript, so the dashboard can show absolutely everything with a bot filter.
+-- `bot` is 1 for a detected non-human client and `bot_name` is the matched label
+-- (e.g. 'GPTBot', 'ClaudeBot', 'Googlebot'). Same privacy stance as `events`: no raw IP
+-- and no raw User-Agent are stored; geo is Cloudflare's edge data and the UA is reduced to
+-- coarse device/browser/os. There is no visitor/session id here (a server request can't
+-- read the browser's localStorage), so per-visitor views stay sourced from `events`.
+CREATE TABLE IF NOT EXISTS requests (
+  id       INTEGER PRIMARY KEY AUTOINCREMENT,
+  ts       INTEGER NOT NULL,          -- epoch ms, server-stamped
+  method   TEXT,                      -- HTTP method (practically always GET)
+  path     TEXT NOT NULL,             -- page path
+  status   INTEGER,                   -- response status (200, 404, ...)
+  bot      INTEGER NOT NULL DEFAULT 0,-- 1 = detected bot / crawler / non-browser
+  bot_name TEXT,                      -- matched bot label, null for humans
+  ref      TEXT,                      -- external referrer host (null for direct / same-site)
+  country  TEXT,
+  region   TEXT,
+  city     TEXT,
+  lat      REAL,                      -- city centroid from Cloudflare (not GPS)
+  lon      REAL,
+  asn      INTEGER,
+  asorg    TEXT,
+  device   TEXT,
+  browser  TEXT,
+  os       TEXT,
+  lang     TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_requests_ts  ON requests(ts);
+CREATE INDEX IF NOT EXISTS idx_requests_bot ON requests(bot);
