@@ -236,20 +236,63 @@ to exercise the real function locally use `wrangler pages dev dist`.
 
 ## Analytics & privacy
 
-Analytics is **consent-gated and off by default**. The build reads three optional env
-vars; with the ids unset, there is no banner, no scripts, and no cookies at all:
+Analytics is **first-party, cookieless, and self-hosted on Cloudflare** - no third
+parties (no Google, no Clarity), no advertising cookies, no raw IP stored. A small beacon
+(`initAnalytics` in `client/main.ts`) posts page views and a few events (scroll depth,
+dwell time, downloads, outbound clicks, version picks, notify submits, playground runs)
+to the **`/api/collect`** Pages Function (`functions/api/collect.ts`), which enriches each
+with Cloudflare's edge geolocation (`request.cf`: country, region, city, a city-centroid
+lat/long, and network/ASN) and a coarse device/browser/OS label, then appends one row to
+a **Cloudflare D1** database (`db/schema.sql`).
 
-- `GA4_ID`: Google Analytics 4 measurement id (`G-XXXXXXXXXX`).
-- `CLARITY_ID`: Microsoft Clarity project id (heatmaps, session replays).
-- `PRIVACY_CONTACT`: optional email shown on `/privacy/` (else it points at GitHub).
+Identity is two random ids in the browser, not cookies: a persistent **`visitor`** id in
+`localStorage` (counts returning visits across sessions) and a per-visit **`session`** id
+in `sessionStorage` (gone when the tab closes). The `/privacy/` page (`privacyPage` in
+`build/pages.ts`) documents exactly what is stored; keep it in sync with `collect.ts`.
+`PRIVACY_CONTACT` (build env) sets the contact email shown there.
 
-When either id is set, every page gets a cookie consent banner (`templates.ts` +
-`initConsent` in `client/main.ts`). **Nothing tracking loads until the visitor clicks
-Accept**; only then are the GA4 and Clarity scripts injected and their cookies set.
-Reject loads nothing; the choice lives in a strictly-necessary `consent` cookie, and
-"Cookie settings" in the footer reopens the banner to change it. The `/privacy/` page
-(`privacyPage` in `build/pages.ts`) documents what's collected; review/adjust it.
+### Dashboard (`/admin/`)
 
-To turn it on: create the GA4 + Clarity projects, then add `GA4_ID`, `CLARITY_ID`
-(and optionally `PRIVACY_CONTACT`) as **Production environment variables** in the
-Cloudflare Pages project and redeploy.
+A self-contained dashboard (`client/dashboard.ts`, shell in `build/build.ts`) renders four
+tabs - **Map / Log / Users / Access** - with a time-range filter and click-through to a
+single visit's page journey or a visitor's history across sessions. Data comes from
+**`/admin/stats`** (`functions/admin/stats.ts`), which queries D1. The world map is a
+vendored, self-hosted outline (`public/admin/world.geo.json`), so nothing loads from a
+third party.
+
+**Access control is HTTP Basic Auth** in `functions/admin/_middleware.ts`, which guards
+everything under `/admin/` (the page, the data API, the map asset) and **fails closed** if
+no password is set. It also appends a security row to the `admin_access` table on every
+successful sign-in and every wrong-password attempt (time, IP, geo, network, device),
+shown in the dashboard's **Access** tab. The page is also `noindex`, disallowed in
+`robots.txt`, and absent from the sitemap, but that is discovery hygiene, not the gate.
+
+### One-time setup (Cloudflare)
+
+1. **Create the D1 database and load the schema** (run `wrangler login` first):
+   ```sh
+   npm run db:create      # wrangler d1 create logos-analytics -> prints a database_id
+   npm run db:schema      # applies db/schema.sql to the remote database
+   ```
+2. **Bind it to the Pages project** as **`DB`**: Pages project -> Settings -> Functions ->
+   D1 database bindings -> add `DB` = `logos-analytics`, for **Production and Preview**.
+   Until this binding exists, `/api/collect` answers `204` (stores nothing) and
+   `/admin/stats` reports empty, so the site works unchanged.
+3. **Set the dashboard password**: on the Pages project, Settings -> Variables and Secrets,
+   add a **Secret** `ADMIN_PASSWORD` (a long random string), and optionally `ADMIN_USER`
+   (defaults to `admin`), for Production. The middleware fails closed until this is set, so
+   `/admin/` is never accidentally public. No Cloudflare Access / Zero Trust needed.
+4. Remove the old `GA4_ID` / `CLARITY_ID` env vars (no longer read), then redeploy.
+
+Locally, `npm run dev` stubs `/api/collect` (logs, `204`) and `/admin/stats` (a fixture),
+so the beacon and the `/admin/` dashboard work without Cloudflare (and without auth, since
+the static dev server does not run middleware). To exercise the real Functions + D1, use
+`wrangler pages dev dist` with a local D1 (`npm run db:schema:local`) and set
+`ADMIN_PASSWORD` in `.dev.vars`. Only the real Cloudflare edge populates `request.cf`
+geolocation.
+
+Export the raw events any time:
+
+```sh
+wrangler d1 execute logos-analytics --remote --command "SELECT * FROM events" --json
+```

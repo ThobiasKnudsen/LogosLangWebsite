@@ -25,7 +25,7 @@ initDockHide();
 initHeroRotator();
 initWisdom();
 initScrollbars();
-initConsent();
+initAnalytics();
 initNotify();
 initCompare();
 if (document.getElementById('docs-app')) initDocs();
@@ -533,94 +533,180 @@ function initDownload(): void {
 	});
 }
 
-// ── Cookie consent + analytics ────────────────────────────────────────────────
-// Analytics (Microsoft Clarity + Google Analytics 4) is cookie-based, so nothing
-// loads until the visitor accepts. The choice is stored in a strictly-necessary
-// `consent` cookie; "Cookie settings" in the footer reopens the banner to change it.
-// If the build didn't bake in any ids (window.__ANALYTICS__ absent), this is a no-op.
-interface AnalyticsConfig {
-	ga4: string;
-	clarity: string;
-}
-
-function loadGa4(id: string): void {
-	const w = window as unknown as { dataLayer?: unknown[]; gtag?: (...a: unknown[]) => void };
-	const s = document.createElement('script');
-	s.async = true;
-	s.src = `https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(id)}`;
-	document.head.appendChild(s);
-	w.dataLayer = w.dataLayer || [];
-	function gtag(...args: unknown[]) {
-		// Each gtag() call is pushed as one array-like entry, as GA expects.
-		w.dataLayer!.push(args);
+// ── Cookieless analytics beacon ───────────────────────────────────────────────
+// First-party, no cookies: a persistent random `visitor` id in localStorage (survives
+// across sessions until the visitor clears site data) and a per-visit `session` id in
+// sessionStorage identify traffic without any third party. Events post to /api/collect
+// via sendBeacon; the Cloudflare Function there adds Cloudflare's edge geolocation and
+// stores them in D1. Nothing tracking loads from another origin, and no script runs
+// before this one. See functions/api/collect.ts and the /privacy/ page.
+function randomId(): string {
+	try {
+		return crypto.randomUUID();
+	} catch {
+		return 'x' + Math.random().toString(36).slice(2) + Date.now().toString(36);
 	}
-	w.gtag = gtag;
-	gtag('js', new Date());
-	gtag('config', id);
 }
 
-function loadClarity(id: string): void {
-	const w = window as unknown as { clarity?: { (...a: unknown[]): void; q?: unknown[] } };
-	w.clarity =
-		w.clarity ||
-		function (...args: unknown[]) {
-			(w.clarity!.q = w.clarity!.q || []).push(args);
-		};
-	const t = document.createElement('script');
-	t.async = true;
-	t.src = 'https://www.clarity.ms/tag/' + encodeURIComponent(id);
-	const first = document.getElementsByTagName('script')[0];
-	first?.parentNode?.insertBefore(t, first);
-}
-
-function initConsent(): void {
-	const cfg = (window as unknown as { __ANALYTICS__?: AnalyticsConfig }).__ANALYTICS__;
-	if (!cfg) return; // analytics not configured in this build
-	const banner = document.getElementById('consent-banner');
-
-	const readConsent = (): string | null => {
-		const m = document.cookie.match('(?:^|; )consent=([^;]*)');
-		return m ? decodeURIComponent(m[1]!) : null;
-	};
-	const setConsent = (v: string): void => {
-		// ~180 days; strictly necessary (remembers the choice), so no consent needed.
-		document.cookie = `consent=${v}; path=/; max-age=15552000; samesite=lax`;
-	};
-	const show = (): void => {
-		if (banner) banner.hidden = false;
-	};
-	const hide = (): void => {
-		if (banner) banner.hidden = true;
-	};
-
-	let loaded = false;
-	const loadAnalytics = (): void => {
-		if (loaded) return;
-		loaded = true;
-		if (cfg.ga4) loadGa4(cfg.ga4);
-		if (cfg.clarity) loadClarity(cfg.clarity);
-	};
-
-	const consent = readConsent();
-	if (consent === 'granted') loadAnalytics();
-	else if (consent !== 'denied') show(); // no stored choice -> ask
-
-	document.getElementById('consent-accept')?.addEventListener('click', () => {
-		setConsent('granted');
-		hide();
-		loadAnalytics();
-	});
-	document.getElementById('consent-reject')?.addEventListener('click', () => {
-		setConsent('denied');
-		hide();
-	});
-	// Footer "Cookie settings" reopens the banner (delegated, present on most pages).
-	document.addEventListener('click', (e) => {
-		if ((e.target as Element | null)?.id === 'consent-manage') {
-			e.preventDefault();
-			show();
+/** A stable id in the given Storage, minting one on first use. Ephemeral if storage is blocked. */
+function storedId(store: Storage, key: string): string {
+	try {
+		let id = store.getItem(key);
+		if (!id) {
+			id = randomId();
+			store.setItem(key, id);
 		}
+		return id;
+	} catch {
+		// Private mode or storage disabled: fall back to a per-load in-memory id.
+		return randomId();
+	}
+}
+
+function initAnalytics(): void {
+	let vid: string;
+	let sid: string;
+	try {
+		vid = storedId(localStorage, 'logos_vid');
+		sid = storedId(sessionStorage, 'logos_sid');
+	} catch {
+		return; // no storage at all: skip analytics rather than break the page
+	}
+
+	const endpoint = '/api/collect';
+	const path = location.pathname;
+	const send = (payload: Record<string, unknown>): void => {
+		const body = JSON.stringify({ vid, sid, ...payload });
+		try {
+			if (navigator.sendBeacon) {
+				navigator.sendBeacon(endpoint, new Blob([body], { type: 'application/json' }));
+				return;
+			}
+		} catch {
+			/* fall through to fetch */
+		}
+		try {
+			void fetch(endpoint, {
+				method: 'POST',
+				headers: { 'content-type': 'application/json' },
+				body,
+				keepalive: true,
+			});
+		} catch {
+			/* analytics must never break the page */
+		}
+	};
+
+	// Pageview.
+	send({
+		type: 'pageview',
+		path,
+		title: document.title,
+		ref: document.referrer || '',
+		lang: navigator.language || '',
 	});
+
+	// Scroll depth: remember the deepest 25/50/75/100 bucket reached, flushed once on exit.
+	let maxScroll = 0;
+	const onScroll = (): void => {
+		const doc = document.documentElement;
+		const scrollable = doc.scrollHeight - doc.clientHeight;
+		if (scrollable <= 0) {
+			maxScroll = Math.max(maxScroll, 100);
+			return;
+		}
+		const pct = (doc.scrollTop / scrollable) * 100;
+		const bucket = pct >= 100 ? 100 : pct >= 75 ? 75 : pct >= 50 ? 50 : pct >= 25 ? 25 : 0;
+		if (bucket > maxScroll) maxScroll = bucket;
+	};
+	window.addEventListener('scroll', onScroll, { passive: true });
+	onScroll();
+
+	// Dwell: count only foreground time, so a backgrounded tab doesn't inflate it.
+	let visibleSince = document.visibilityState === 'visible' ? Date.now() : 0;
+	let dwell = 0;
+	const accumulate = (): void => {
+		if (visibleSince) {
+			dwell += Date.now() - visibleSince;
+			visibleSince = 0;
+		}
+	};
+	document.addEventListener('visibilitychange', () => {
+		if (document.visibilityState === 'visible') visibleSince = Date.now();
+		else accumulate();
+	});
+
+	// Flush scroll + dwell exactly once as the visitor leaves. pagehide is the reliable
+	// "leaving" signal on desktop and mobile alike.
+	let flushed = false;
+	const flush = (): void => {
+		if (flushed) return;
+		flushed = true;
+		accumulate();
+		if (maxScroll > 0) send({ type: 'event', name: 'scroll', value: String(maxScroll), path });
+		send({ type: 'event', name: 'dwell', path, dur: dwell });
+	};
+	window.addEventListener('pagehide', flush);
+
+	// Meaningful interactions, captured at the document so they survive client re-renders
+	// and can't be swallowed by a handler that stops propagation.
+	document.addEventListener(
+		'click',
+		(e) => {
+			const el = e.target as Element | null;
+			if (!el) return;
+
+			const dl = el.closest<HTMLElement>('.dl-row__dl');
+			if (dl) {
+				const os = dl.closest<HTMLElement>('.dl-card')?.dataset.os ?? '';
+				const arch = dl.closest<HTMLElement>('.dl-row')?.dataset.arch ?? '';
+				send({ type: 'event', name: 'download', value: `${os}-${arch}`, path });
+				return;
+			}
+
+			if (el.closest('#pg-run')) {
+				send({ type: 'event', name: 'playground', path });
+				return;
+			}
+
+			const link = el.closest<HTMLAnchorElement>('a[href^="http"]');
+			if (link) {
+				try {
+					const host = new URL(link.href).host;
+					if (host && host !== location.host) {
+						send({ type: 'event', name: 'outbound', value: host, path });
+					}
+				} catch {
+					/* ignore a malformed href */
+				}
+			}
+		},
+		true,
+	);
+
+	// Version pickers (download + playground).
+	document.addEventListener(
+		'change',
+		(e) => {
+			const t = e.target as HTMLElement | null;
+			if (t && (t.id === 'dl-version' || t.id === 'pg-version')) {
+				send({ type: 'event', name: 'version', value: (t as HTMLSelectElement).value, path });
+			}
+		},
+		true,
+	);
+
+	// Release-notification form submissions.
+	document.addEventListener(
+		'submit',
+		(e) => {
+			const form = e.target as HTMLElement | null;
+			if (form && form.matches('form[data-notify]')) {
+				send({ type: 'event', name: 'notify', path });
+			}
+		},
+		true,
+	);
 }
 
 // ── Playground ────────────────────────────────────────────────────────────────

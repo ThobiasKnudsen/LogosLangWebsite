@@ -8,7 +8,10 @@
     "build": "tsx build/build.ts",
     "test:docs-model": "tsx build/version.test.ts",
     "test:releases": "tsx build/releases.test.ts",
-    "test:roadmap": "tsx build/roadmap.test.ts"
+    "test:roadmap": "tsx build/roadmap.test.ts",
+    "db:create": "wrangler d1 create logos-analytics",
+    "db:schema": "wrangler d1 execute logos-analytics --file db/schema.sql --remote",
+    "db:schema:local": "wrangler d1 execute logos-analytics --file db/schema.sql --local"
   },
   "devDependencies": {
     "@fontsource-variable/eb-garamond": "^5.2.7",
@@ -22,6 +25,7 @@
     "markdown-it": "^14.1.0",
     "shiki": "^1.24.0",
     "tsx": "^4.19.2",
-    "typescript": "^5.7.2"
+    "typescript": "^5.7.2",
+    "wrangler": "^4.107.0"
   }
 }

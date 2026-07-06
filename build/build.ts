@@ -349,19 +349,30 @@ async function renderDocs(docsDir: string): Promise<{
  * so a fresh deploy never collides with a stale copy cached at a fixed URL. Returns
  * the hashed asset paths for the page shell to link.
  */
-async function bundleAssets(): Promise<{ cssHref: string; jsHref: string }> {
+async function bundleAssets(): Promise<{
+  cssHref: string;
+  jsHref: string;
+  dashHref: string;
+}> {
   const assetsDir = path.join(DIST, "assets");
   const hrefOf = (
     meta: { outputs: Record<string, unknown> },
-    ext: string,
+    match: (base: string) => boolean,
+    what: string,
   ): string => {
-    const key = Object.keys(meta.outputs).find((k) => k.endsWith(ext));
-    if (!key) throw new Error(`bundleAssets: no ${ext} output emitted`);
+    const key = Object.keys(meta.outputs).find((k) => match(path.basename(k)));
+    if (!key) throw new Error(`bundleAssets: no ${what} output emitted`);
     return `/assets/${path.basename(key)}`;
   };
 
+  // Two JS entry points, each emitted as <name>-<hash>.js: the site runtime (loaded on
+  // every page) and the analytics dashboard (loaded only by /admin/). No code splitting,
+  // so each is a standalone bundle.
   const js = await esbuild.build({
-    entryPoints: [path.join(ROOT, "client/main.ts")],
+    entryPoints: [
+      path.join(ROOT, "client/main.ts"),
+      path.join(ROOT, "client/dashboard.ts"),
+    ],
     bundle: true,
     format: "esm",
     target: ["es2020"],
@@ -383,9 +394,37 @@ async function bundleAssets(): Promise<{ cssHref: string; jsHref: string }> {
     logLevel: "silent",
   });
   return {
-    jsHref: hrefOf(js.metafile, ".js"),
-    cssHref: hrefOf(css.metafile, ".css"),
+    jsHref: hrefOf(js.metafile, (b) => b.startsWith("main-") && b.endsWith(".js"), "main.js"),
+    dashHref: hrefOf(js.metafile, (b) => b.startsWith("dashboard-") && b.endsWith(".js"), "dashboard.js"),
+    cssHref: hrefOf(css.metafile, (b) => b.endsWith(".css"), "theme.css"),
   };
+}
+
+/**
+ * Minimal standalone shell for the Access-gated analytics dashboard: it loads the theme
+ * stylesheet (for tokens + fonts) and the dashboard bundle only, with no dock or footer,
+ * and is noindex. Rendered to dist/admin/index.html; Cloudflare Access guards the route.
+ */
+function adminShell(cssHref: string, dashHref: string): string {
+  const themeInit = `<script>(function(){try{var m=document.cookie.match('(?:^|; )theme=([^;]*)');document.documentElement.dataset.theme=(m&&decodeURIComponent(m[1])==='dark')?'dark':'light';}catch(e){document.documentElement.dataset.theme='light';}})();</script>`;
+  return `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Analytics · Λόγος</title>
+<meta name="robots" content="noindex, nofollow" />
+<link rel="icon" href="/favicon.svg" />
+<link rel="stylesheet" href="${cssHref}" />
+${themeInit}
+</head>
+<body class="admin">
+<div id="admin-app" data-world="/admin/world.geo.json">
+<noscript>The analytics dashboard needs JavaScript enabled.</noscript>
+</div>
+<script type="module" src="${dashHref}"></script>
+</body>
+</html>`;
 }
 
 export async function build(): Promise<void> {
@@ -521,10 +560,14 @@ export async function build(): Promise<void> {
       active: "",
       path: "/privacy/",
       description:
-        "How logoslang.dev handles data and cookies: consent-gated analytics (Microsoft Clarity, Google Analytics), what is collected, and your choices.",
+        "How logoslang.dev handles data: first-party, cookieless analytics with no third parties, what is collected, and your choices.",
       main: privacyPage(),
     }),
   );
+  // The Access-gated analytics dashboard: not linked anywhere, noindex, disallowed in
+  // robots, and absent from the sitemap/llms.txt. Cloudflare Access guards it at the
+  // edge; its data comes from the /admin/stats function.
+  await writePage("admin/index.html", adminShell(assets.cssHref, assets.dashHref));
   // Emitted to dist/404.html; Cloudflare Pages serves it (with a 404 status) for any
   // route that doesn't match a static file, instead of falling back to the home page.
   await writePage(

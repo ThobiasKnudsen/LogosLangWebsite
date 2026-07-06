@@ -282,10 +282,12 @@ const HEAD_CW = 9.7; // .dyad-head, 16px (a leaf identity name)
 const PAD_L = 10; // text inset from a node's left edge
 const PAD_R = 13; // gap between the text and the right-edge port
 
-const fieldW = (nm: string, ty: string) => nm.length * FIELD_CW + (ty.length + 1) * SLOT_CW;
+const fieldW = (nm: string, ty: string) =>
+  nm.length * FIELD_CW + (ty.length + 1) * SLOT_CW;
 const structW = (rows: [string, string][]) =>
   Math.ceil(PAD_L + Math.max(...rows.map((r) => fieldW(r[0], r[1]))) + PAD_R);
-const leafW = (label: string) => Math.max(30, Math.ceil(label.length * HEAD_CW + 2 * PAD_L + 4));
+const leafW = (label: string) =>
+  Math.max(30, Math.ceil(label.length * HEAD_CW + 2 * PAD_L + 4));
 
 interface GNode {
   x: number;
@@ -354,8 +356,14 @@ function gEdge(src: GNode, f: number, dst: GNode, dy = 0): string {
 // neighbour. `a` is one shared node two edges point at: `+`'s lhs reaches it up-right
 // (short), and `=`'s lhs reaches it along a lane over the top of the chain (long).
 function structureGraphSvg(): string {
-  const dyadRows: [string, string][] = [["type", "dyad@"], ["value", "void@"]];
-  const genRows: [string, string][] = [["lhs", "dyad@"], ["rhs", "dyad@"]];
+  const dyadRows: [string, string][] = [
+    ["type", "dyad@"],
+    ["value", "void@"],
+  ];
+  const genRows: [string, string][] = [
+    ["lhs", "dyad@"],
+    ["rhs", "dyad@"],
+  ];
 
   interface Spec {
     id: string;
@@ -374,11 +382,20 @@ function structureGraphSvg(): string {
     { id: "G2", col: 3, y: 206, kind: "generic" },
     { id: "A", col: 4, y: 162, kind: "leaf", label: "a", tag: "dyad" },
     { id: "D3", col: 4, y: 258, kind: "dyad" },
-    { id: "RAT", col: 5, y: 240, kind: "leaf", label: "rational_number", tag: "dyad" },
+    {
+      id: "RAT",
+      col: 5,
+      y: 240,
+      kind: "leaf",
+      label: "rational_number",
+      tag: "dyad",
+    },
     { id: "ONE", col: 5, y: 290, kind: "leaf", label: '"1"', tag: "generic" },
   ];
   const wOf = (s: Spec): number =>
-    s.kind === "leaf" ? leafW(s.label!) : structW(s.kind === "dyad" ? dyadRows : genRows);
+    s.kind === "leaf"
+      ? leafW(s.label!)
+      : structW(s.kind === "dyad" ? dyadRows : genRows);
 
   // Column x from each column's widest node, so nodes never overlap once auto-sized.
   const NCOL = 6;
@@ -396,8 +413,23 @@ function structureGraphSvg(): string {
   for (const s of specs) {
     N[s.id] =
       s.kind === "leaf"
-        ? { x: colX[s.col]!, y: s.y, w: wOf(s), h: GLEAF_H, kind: "leaf", label: s.label, tag: s.tag }
-        : { x: colX[s.col]!, y: s.y, w: wOf(s), h: GNODE_H, kind: s.kind, rows: s.kind === "dyad" ? dyadRows : genRows };
+        ? {
+            x: colX[s.col]!,
+            y: s.y,
+            w: wOf(s),
+            h: GLEAF_H,
+            kind: "leaf",
+            label: s.label,
+            tag: s.tag,
+          }
+        : {
+            x: colX[s.col]!,
+            y: s.y,
+            w: wOf(s),
+            h: GNODE_H,
+            kind: s.kind,
+            rows: s.kind === "dyad" ? dyadRows : genRows,
+          };
   }
   const nodes = specs.map((s) => gNode(N[s.id]!)).join("");
 
@@ -438,7 +470,7 @@ function structureGraphSvg(): string {
 function structureHtml(): string {
   return `<section class="unify" aria-label="A program is the structure that runs it">
   <h2 class="unify__title">The program is the structure</h2>
-  <p class="unify__lead">Radical unification is not a metaphor. The smallest program, <code>a = a + 1</code>, is not text a compiler reads once and throws away. It <em>is</em> a graph of two-field nodes, joined through their fields, and that graph is what runs.</p>
+  <p class="unify__lead">Radical unification is not a metaphor. The smallest program, <code>a = a + 1</code>, is not text a compiler reads once and throws away. It <em>is</em> a graph called Logic Graph (LG). This name is chosen because the graph should be able to explain any logic immaginable. And since its a graph structure the graph itself can reflect on the graph, intepret it or compile and run it. </p>
   <figure class="unify__figure">
     <pre class="unify__source"><code>${highlightLogos("a = a + 1")}</code></pre>
     <span class="unify__becomes"><span class="unify__becomes-arrow" aria-hidden="true">↓</span> becomes</span>
@@ -1047,7 +1079,7 @@ export function visionPage(): string {
   <p>A small Rust bootstrap seed starts the system. Everything beyond, the full type system, the borrow checker, the rewriting engine, the optimization passes, the standard library, is written in Logos and processed by the seed until the system compiles itself. The seed stays small enough to audit by hand, and eventually to verify.</p>
 
   <h2>Interpret by default, compile on demand</h2>
-  <p>Logic Graph code is interpreted by default. Freeze a region and it can be JIT-compiled with Cranelift, staying fully reflectable through the Logic Graph it was compiled from. The interpret-versus-compile choice is a matter of profitability, not semantics.</p>
+  <p>Logic Graph code is interpreted by default. Freeze a region and it can be JIT-compiled with Cranelift, staying fully reflectable through the Logic Graph it was compiled from. Because interpreting and compiling produce the same result, the choice is only ever about whether the speedup is worth the cost of compiling, never about what the code means.</p>
 
   <h2>Memory safety without a garbage collector</h2>
   <p>Logos is a serious systems language. Memory is managed by a borrow checker with lexical lifetimes, explicit ownership, and moves, with no garbage collector and no runtime cost. One rule covers every case: among references that are live at the same time and overlap, there may be many readers or a single writer, never both. That same reader-writer rule is also what governs visibility, borrowing, and reflection, so they are one mechanism rather than three separate features.</p>
@@ -1218,8 +1250,9 @@ export function playgroundPage(releases: Release[]): string {
 }
 
 // ── Privacy & Cookies page ────────────────────────────────────────────────────
-// A reviewable template describing the consent-gated analytics. Set PRIVACY_CONTACT
-// in the build env to surface a contact email; otherwise it points at GitHub issues.
+// A reviewable template describing the first-party, cookieless analytics. Set
+// PRIVACY_CONTACT in the build env to surface a contact email; otherwise it points at
+// GitHub issues. Keep this in sync with functions/api/collect.ts (what is stored).
 export function privacyPage(): string {
   const contact = process.env.PRIVACY_CONTACT || "";
   const contactLine = contact
@@ -1229,32 +1262,41 @@ export function privacyPage(): string {
   <h1 class="legal__title">Privacy &amp; Cookies</h1>
   <p class="legal__updated">Applies to logoslang.dev.</p>
 
-  <p>This is the documentation and marketing site for the Logos language. We keep data collection to a minimum and never sell it. Analytics run <strong>only if you accept</strong> in the cookie banner.</p>
+  <p>This is the documentation and marketing site for the Logos language. We keep data collection to a minimum, run our own analytics rather than handing anything to a third party, and never sell your data. There are <strong>no advertising or tracking cookies</strong>, and nothing loads from another company's servers to watch you.</p>
 
-  <h2>What we collect (only with your consent)</h2>
-  <p>If you accept analytics cookies, two third-party tools help us understand how the site is used:</p>
+  <h2>Analytics we collect</h2>
+  <p>To understand how the site is used, a small first-party script records a page view and a few interactions and sends them to our own server (a Cloudflare function), which stores them in our own database. What is recorded:</p>
   <ul>
-    <li><strong>Microsoft Clarity</strong>: aggregated usage, heatmaps, and session replays (clicks, scrolling, navigation), with text input masked.</li>
-    <li><strong>Google Analytics 4</strong>: aggregated traffic such as pages viewed, referrer / traffic source, approximate (city-level) location derived from your IP, and device, browser, and operating system.</li>
+    <li>the page you viewed and its title, the site or link that referred you, and your language;</li>
+    <li>approximate location derived from your IP address by Cloudflare (country, region, city, and a city-level latitude/longitude that points at the city, not at you) and your network provider;</li>
+    <li>your device type, browser, and operating system;</li>
+    <li>how long the page was in view, how far you scrolled, and clicks on a few elements (downloads, outbound links, the version picker, the notify form, the playground).</li>
   </ul>
-  <p>We do <strong>not</strong> collect your name, email, or other identifying details from ordinary browsing, and we do not attempt to identify individual visitors.</p>
+  <p>We do <strong>not</strong> store your IP address, and we do <strong>not</strong> record your name, email, or anything you type. We do not try to work out who you are, and this data is never sold or shared.</p>
+
+  <h2>How visits are counted (no cookies)</h2>
+  <p>Instead of cookies we keep two random, meaningless ids in your browser:</p>
+  <ul>
+    <li>a <strong>visitor id</strong> in <code>localStorage</code>, so returning visits can be counted. It stays until you clear your browser's site data, holds no personal information, and can be removed any time via your browser's "clear site data" for logoslang.dev.</li>
+    <li>a <strong>session id</strong> in <code>sessionStorage</code>, which groups the pages of one visit and disappears when you close the tab.</li>
+  </ul>
+  <p>Neither is a cookie, neither is shared with anyone, and neither identifies you personally.</p>
 
   <h2>Release notifications (only if you sign up)</h2>
   <p>The home and download pages have an optional "get notified" form. If you submit it, we store the email address you entered, the time you signed up, and which page's form you used, in Cloudflare Workers KV, and use it for exactly one purpose: emailing you when the most important Logos builds are released. It is a low-volume announcement list; you will not be spammed. It is never sold, shared, or used for analytics, and it sets no cookies. The legal basis is your consent, given by submitting the form.</p>
   <p>To be removed from the list at any time, contact ${contactLine} and the address is deleted.</p>
 
-  <h2>Cookies we use</h2>
+  <h2>Cookies and local storage we use</h2>
   <ul>
-    <li><code>consent</code>: remembers your accept/reject choice (strictly necessary). ~180 days.</li>
-    <li><strong>Microsoft Clarity:</strong> <code>_clck</code>, <code>_clsk</code> and related: set only after you accept.</li>
-    <li><strong>Google Analytics:</strong> <code>_ga</code>, <code>_ga_*</code>: set only after you accept.</li>
+    <li><code>theme</code> cookie: remembers your light/dark choice (strictly necessary). ~180 days.</li>
+    <li><code>localStorage</code> visitor id and <code>sessionStorage</code> session id: the anonymous analytics ids described above. No advertising or third-party cookies are set.</li>
   </ul>
 
   <h2>Legal basis and your choices</h2>
-  <p>Analytics cookies are used on the basis of your <strong>consent</strong>. You can reject them (the site works fully without them), and change your mind at any time via <strong>“Cookie settings”</strong> in the footer. Rejecting or withdrawing stops new analytics cookies; you can clear existing ones in your browser.</p>
+  <p>The analytics are first-party, anonymous, and low-impact, used on the basis of our legitimate interest in understanding and improving the site. You can opt out at any time by clearing site data for logoslang.dev or using your browser's private mode or storage controls; the site works fully either way. If you would prefer we did not, contact ${contactLine}.</p>
 
   <h2>Where your data goes</h2>
-  <p>If you sign up for release notifications, the address is stored with Cloudflare, which hosts this site. When enabled, analytics data is processed by Microsoft (Clarity) and Google (Google Analytics) as our processors, which may involve transfer outside your country. See the <a href="https://privacy.microsoft.com/privacystatement" target="_blank" rel="noopener noreferrer">Microsoft Privacy Statement</a> and the <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">Google Privacy Policy</a>.</p>
+  <p>The site, the analytics database, and any notification signups are all hosted on <strong>Cloudflare</strong>, which processes them on our behalf. No analytics data is sent to Google, Microsoft, or any other third party. See Cloudflare's <a href="https://www.cloudflare.com/privacypolicy/" target="_blank" rel="noopener noreferrer">privacy policy</a>.</p>
 
   <h2>Your rights</h2>
   <p>Depending on where you live (for example, the EEA or UK under the GDPR), you may have the right to access, correct, or erase your data, to object to or restrict processing, and to withdraw consent. To exercise these rights, contact ${contactLine}.</p>
