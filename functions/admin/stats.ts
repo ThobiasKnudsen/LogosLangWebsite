@@ -127,7 +127,7 @@ export async function onRequestGet(context: { request: Request; env: Env }): Pro
     const offset = intParam(q.get("offset"), 0, 0, 1_000_000);
     const { results } = await db
       .prepare(
-        `SELECT ts, visitor, session, type, name, path, city, country, device, ref
+        `SELECT ts, visitor, session, type, name, path, city, country, asorg, device, ref
            FROM events WHERE ts >= ? AND ts <= ? ORDER BY ts DESC LIMIT ? OFFSET ?`,
       )
       .bind(from, to, limit, offset)
@@ -174,20 +174,26 @@ export async function onRequestGet(context: { request: Request; env: Env }): Pro
     .bind(from, to)
     .first();
 
+  // One dot per (visit, location). Grouping by lat/lon as well as session means a single
+  // visit whose IP changed mid-way (a VPN toggled on/off, a phone hopping networks) shows
+  // a separate, coherent dot for each place, instead of one dot with independently-maxed,
+  // mixed-up coordinates. Within a (session, lat, lon) group the city/region/country and
+  // network are constant, so MAX() picks the right value.
   const { results: dots } = await db
     .prepare(
       `SELECT session,
               MAX(visitor) AS visitor,
               MIN(ts)      AS start,
-              MAX(lat)     AS lat,
-              MAX(lon)     AS lon,
+              lat,
+              lon,
               MAX(city)    AS city,
               MAX(region)  AS region,
               MAX(country) AS country,
+              MAX(asorg)   AS asorg,
               SUM(CASE WHEN type = 'pageview' THEN 1 ELSE 0 END) AS pages
-         FROM events WHERE ts >= ? AND ts <= ?
-         GROUP BY session
-         HAVING lat IS NOT NULL AND lon IS NOT NULL
+         FROM events
+         WHERE ts >= ? AND ts <= ? AND lat IS NOT NULL AND lon IS NOT NULL
+         GROUP BY session, lat, lon
          ORDER BY start DESC LIMIT 5000`,
     )
     .bind(from, to)

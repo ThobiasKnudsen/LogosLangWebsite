@@ -1,8 +1,9 @@
 // Analytics dashboard (client bundle for /admin/, loaded only by build/build.ts's
 // adminShell). Self-contained: it fetches JSON from /admin/stats (functions/admin/stats.ts)
 // and renders three tabs, Map / Log / Users, plus a drill-down panel for one visit or one
-// visitor. The route is guarded by Cloudflare Access, so this code assumes an authorized
-// caller. Styling reuses the site's theme tokens (styles/theme.css) for light/dark parity.
+// visitor. The route is guarded by HTTP Basic Auth (functions/admin/_middleware.ts), so
+// this code assumes an authorized caller. Styling reuses the site's theme tokens
+// (styles/theme.css) for light/dark parity.
 
 // ── Response shapes (mirrors functions/admin/stats.ts and the dev stub) ────────
 interface Totals {
@@ -35,6 +36,7 @@ interface LogRow {
 	path: string;
 	city: string | null;
 	country: string | null;
+	asorg: string | null;
 	device: string | null;
 	ref: string | null;
 }
@@ -381,13 +383,14 @@ async function renderLog(view: HTMLElement): Promise<void> {
 				<td><span class="adm-path">${esc(r.path)}</span></td>
 				<td><span class="adm-tag">${what}</span></td>
 				<td>${esc(place(r.city, r.country))}</td>
+				<td class="adm-dim">${esc(r.asorg ?? '')}</td>
 				<td>${esc(r.device ?? '')}</td>
 				<td class="adm-dim">${esc(r.ref ?? 'direct')}</td>
 			</tr>`;
 		})
 		.join('');
 	view.innerHTML = `<div class="adm-tablewrap"><table class="adm-table">
-		<thead><tr><th>Time</th><th>Visitor</th><th>Page</th><th>Event</th><th>Location</th><th>Device</th><th>Referrer</th></tr></thead>
+		<thead><tr><th>Time</th><th>Visitor</th><th>Page</th><th>Event</th><th>Location</th><th>Network</th><th>Device</th><th>Referrer</th></tr></thead>
 		<tbody>${rows}</tbody></table></div>`;
 	const tbody = view.querySelector('tbody');
 	tbody?.addEventListener('click', (e) => {

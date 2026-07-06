@@ -131,10 +131,12 @@ interface StubEvent {
 	browser: string;
 	os: string;
 	ref: string | null;
+	asorg: string;
 }
 
 /** Expand the fixture sessions into a flat, time-stamped event stream. */
 function stubEvents(now: number): StubEvent[] {
+	const NET: Record<string, string> = { NO: 'Telenor', DE: 'Vodafone', JP: 'NTT', US: 'Comcast' };
 	const out: StubEvent[] = [];
 	for (const s of STUB_SESSIONS) {
 		let t = now - s.agoMin * 60000;
@@ -142,6 +144,7 @@ function stubEvents(now: number): StubEvent[] {
 			const base = {
 				visitor: s.visitor, session: s.session, city: s.city, region: s.region,
 				country: s.country, device: s.device, browser: s.browser, os: s.os, ref: s.ref,
+				asorg: NET[s.country] ?? 'Unknown',
 			};
 			out.push({ ...base, ts: t, type: 'pageview', name: null, value: null, path: p.path, title: p.title, dur: null });
 			out.push({ ...base, ts: t + p.dwell * 1000, type: 'event', name: 'dwell', value: null, path: p.path, title: p.title, dur: p.dwell * 1000 });
@@ -193,7 +196,7 @@ function sampleStats(url: string): unknown {
 				.slice()
 				.sort((a, b) => b.ts - a.ts)
 				.slice(0, 200)
-				.map((e) => ({ ts: e.ts, visitor: e.visitor, session: e.session, type: e.type, name: e.name, path: e.path, city: e.city, country: e.country, device: e.device, ref: e.ref })),
+				.map((e) => ({ ts: e.ts, visitor: e.visitor, session: e.session, type: e.type, name: e.name, path: e.path, city: e.city, country: e.country, asorg: e.asorg, device: e.device, ref: e.ref })),
 		};
 	}
 
