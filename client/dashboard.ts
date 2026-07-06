@@ -190,8 +190,12 @@ function injectStyles(): void {
 	.adm-tile { flex: 1 1 8rem; background: var(--surface); border: 1px solid var(--hairline); border-radius: 0.8rem; padding: 0.9rem 1rem; }
 	.adm-tile b { display: block; font-size: 1.6rem; color: var(--heading); font-weight: 600; line-height: 1.1; }
 	.adm-tile span { font-size: 0.8rem; color: var(--muted); }
-	.adm-mapwrap { background: var(--surface); border: 1px solid var(--hairline); border-radius: 0.8rem; padding: 0.5rem; overflow: hidden; }
-	.adm-map { display: block; width: 100%; cursor: crosshair; }
+	.adm-mapwrap { position: relative; background: var(--surface); border: 1px solid var(--hairline); border-radius: 0.8rem; padding: 0.5rem; overflow: hidden; }
+	.adm-map { display: block; width: 100%; cursor: grab; touch-action: none; }
+	.adm-map:active { cursor: grabbing; }
+	.adm-zoom { position: absolute; top: 0.8rem; right: 0.8rem; display: flex; flex-direction: column; gap: 0.25rem; }
+	.adm-zoom button { width: 1.9rem; height: 1.9rem; border: 1px solid var(--hairline); background: var(--bg); color: var(--text); border-radius: 0.4rem; font-size: 1rem; line-height: 1; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+	.adm-zoom button:hover { border-color: var(--accent); color: var(--accent); }
 	.adm-hint { margin-top: 0.6rem; font-size: 0.8rem; color: var(--muted); }
 	.adm-tablewrap { overflow-x: auto; border: 1px solid var(--hairline); border-radius: 0.8rem; }
 	table.adm-table { border-collapse: collapse; width: 100%; font-size: 0.85rem; }
@@ -231,6 +235,7 @@ let world: [number, number][][] | null = null;
 let mapDots: Dot[] = [];
 let dotScreen: { x: number; y: number; d: Dot }[] = [];
 let mapResizeObs: ResizeObserver | null = null;
+const mapView = { zoom: 1, tx: 0, ty: 0 };
 
 async function ensureWorld(): Promise<void> {
 	if (world) return;
@@ -256,6 +261,12 @@ function drawMap(canvas: HTMLCanvasElement): void {
 	ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 	ctx.clearRect(0, 0, W, H);
 
+	// Clamp the pan/zoom to the current canvas size (zoom 1 = the whole world, fit to width).
+	mapView.zoom = Math.min(40, Math.max(1, mapView.zoom));
+	mapView.tx = Math.min(0, Math.max(W * (1 - mapView.zoom), mapView.tx));
+	mapView.ty = Math.min(0, Math.max(H * (1 - mapView.zoom), mapView.ty));
+	const { zoom, tx, ty } = mapView;
+
 	const cs = getComputedStyle(document.body);
 	const tok = (name: string, fallback: string): string => cs.getPropertyValue(name).trim() || fallback;
 	const land = tok('--hairline', '#e7e1d6');
@@ -263,8 +274,10 @@ function drawMap(canvas: HTMLCanvasElement): void {
 	const accent = tok('--accent', '#4f46e5');
 	const bg = tok('--bg', '#ffffff');
 
-	const px = (lon: number): number => ((lon + 180) / 360) * W;
-	const py = (lat: number): number => ((90 - lat) / 180) * H;
+	// Equirectangular world -> screen, with pan/zoom folded into the coordinates by hand so
+	// dot sizes and line widths stay constant instead of scaling with the zoom.
+	const px = (lon: number): number => ((lon + 180) / 360) * W * zoom + tx;
+	const py = (lat: number): number => ((90 - lat) / 180) * H * zoom + ty;
 
 	if (world && world.length) {
 		ctx.beginPath();
@@ -347,9 +360,19 @@ async function renderMap(view: HTMLElement): Promise<void> {
 	const t = data.totals ?? { pageviews: 0, visits: 0, visitors: 0 };
 	view.innerHTML = `
 		<div class="adm-tiles">${tile('Pageviews', t.pageviews)}${tile('Visits', t.visits)}${tile('Visitors', t.visitors)}</div>
-		<div class="adm-mapwrap"><canvas class="adm-map" id="adm-canvas"></canvas></div>
-		<p class="adm-hint">${num(data.dots.length)} located visit(s) in range. Click a dot to open the visit.</p>`;
+		<div class="adm-mapwrap">
+			<canvas class="adm-map" id="adm-canvas"></canvas>
+			<div class="adm-zoom">
+				<button type="button" data-z="in" aria-label="Zoom in">+</button>
+				<button type="button" data-z="out" aria-label="Zoom out">&minus;</button>
+				<button type="button" data-z="reset" aria-label="Reset view">&#8634;</button>
+			</div>
+		</div>
+		<p class="adm-hint">${num(data.dots.length)} located visit(s) in range. Scroll or use the buttons to zoom, drag to pan, click a dot to open the visit.</p>`;
 	mapDots = data.dots;
+	mapView.zoom = 1;
+	mapView.tx = 0;
+	mapView.ty = 0;
 	await ensureWorld();
 	const canvas = document.getElementById('adm-canvas') as HTMLCanvasElement | null;
 	if (!canvas) return;
@@ -358,9 +381,67 @@ async function renderMap(view: HTMLElement): Promise<void> {
 	if (mapResizeObs) mapResizeObs.disconnect();
 	mapResizeObs = new ResizeObserver(() => redraw());
 	if (canvas.parentElement) mapResizeObs.observe(canvas.parentElement);
-	canvas.addEventListener('click', (e) => {
-		const d = hitDot(canvas, e);
-		if (d) void openSession(d.session);
+
+	// Zoom toward a canvas point, keeping that point fixed under the cursor.
+	const zoomAt = (cx: number, cy: number, factor: number): void => {
+		const next = Math.min(40, Math.max(1, mapView.zoom * factor));
+		mapView.tx = cx - ((cx - mapView.tx) / mapView.zoom) * next;
+		mapView.ty = cy - ((cy - mapView.ty) / mapView.zoom) * next;
+		mapView.zoom = next;
+		redraw();
+	};
+
+	canvas.addEventListener(
+		'wheel',
+		(e) => {
+			e.preventDefault();
+			const rect = canvas.getBoundingClientRect();
+			zoomAt(e.clientX - rect.left, e.clientY - rect.top, e.deltaY < 0 ? 1.2 : 1 / 1.2);
+		},
+		{ passive: false },
+	);
+
+	// Drag to pan; a press that barely moves is treated as a click on a dot.
+	let down: { x: number; y: number; tx: number; ty: number } | null = null;
+	let moved = false;
+	canvas.addEventListener('pointerdown', (e) => {
+		down = { x: e.clientX, y: e.clientY, tx: mapView.tx, ty: mapView.ty };
+		moved = false;
+		canvas.setPointerCapture(e.pointerId);
+	});
+	canvas.addEventListener('pointermove', (e) => {
+		if (!down) return;
+		const dx = e.clientX - down.x;
+		const dy = e.clientY - down.y;
+		if (Math.abs(dx) + Math.abs(dy) > 4) moved = true;
+		mapView.tx = down.tx + dx;
+		mapView.ty = down.ty + dy;
+		redraw();
+	});
+	canvas.addEventListener('pointerup', (e) => {
+		if (down && !moved) {
+			const d = hitDot(canvas, e);
+			if (d) void openSession(d.session);
+		}
+		down = null;
+	});
+	canvas.addEventListener('pointercancel', () => {
+		down = null;
+	});
+
+	view.querySelector('.adm-zoom')?.addEventListener('click', (e) => {
+		const b = (e.target as HTMLElement).closest<HTMLElement>('[data-z]');
+		if (!b) return;
+		const cx = canvas.clientWidth / 2;
+		const cy = canvas.clientHeight / 2;
+		if (b.dataset.z === 'in') zoomAt(cx, cy, 1.5);
+		else if (b.dataset.z === 'out') zoomAt(cx, cy, 1 / 1.5);
+		else {
+			mapView.zoom = 1;
+			mapView.tx = 0;
+			mapView.ty = 0;
+			redraw();
+		}
 	});
 }
 
