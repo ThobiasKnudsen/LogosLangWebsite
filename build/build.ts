@@ -401,9 +401,10 @@ async function bundleAssets(): Promise<{
 }
 
 /**
- * Minimal standalone shell for the Access-gated analytics dashboard: it loads the theme
- * stylesheet (for tokens + fonts) and the dashboard bundle only, with no dock or footer,
- * and is noindex. Rendered to dist/admin/index.html; Cloudflare Access guards the route.
+ * Minimal standalone shell for the Basic-Auth-gated analytics dashboard: it loads the
+ * theme stylesheet (for tokens + fonts) and the dashboard bundle only, with no dock or
+ * footer, and is noindex. Rendered to dist/admin/index.html; functions/admin/_middleware.ts
+ * guards the route with HTTP Basic Auth.
  */
 function adminShell(cssHref: string, dashHref: string): string {
   const themeInit = `<script>(function(){try{var m=document.cookie.match('(?:^|; )theme=([^;]*)');document.documentElement.dataset.theme=(m&&decodeURIComponent(m[1])==='dark')?'dark':'light';}catch(e){document.documentElement.dataset.theme='light';}})();</script>`;
@@ -564,9 +565,9 @@ export async function build(): Promise<void> {
       main: privacyPage(),
     }),
   );
-  // The Access-gated analytics dashboard: not linked anywhere, noindex, disallowed in
-  // robots, and absent from the sitemap/llms.txt. Cloudflare Access guards it at the
-  // edge; its data comes from the /admin/stats function.
+  // The Basic-Auth-gated analytics dashboard: not linked anywhere, noindex, disallowed in
+  // robots, and absent from the sitemap/llms.txt. functions/admin/_middleware.ts guards it
+  // with HTTP Basic Auth; its data comes from the /admin/stats function.
   await writePage("admin/index.html", adminShell(assets.cssHref, assets.dashHref));
   // Emitted to dist/404.html; Cloudflare Pages serves it (with a 404 status) for any
   // route that doesn't match a static file, instead of falling back to the home page.

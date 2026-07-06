@@ -267,6 +267,14 @@ successful sign-in and every wrong-password attempt (time, IP, geo, network, dev
 shown in the dashboard's **Access** tab. The page is also `noindex`, disallowed in
 `robots.txt`, and absent from the sitemap, but that is discovery hygiene, not the gate.
 
+**Brute-force protection** is two layers. In code, the middleware keeps a per-IP,
+in-memory failure counter and returns `429` once an IP exceeds `RL_MAX` failed attempts
+per `RL_WINDOW_MS` (default 5 per minute) - before checking the password or writing to
+D1, so it throttles guessing and can't be used to flood the audit log. That limiter is
+per-isolate and best-effort, so the **authoritative** control is an **edge WAF
+rate-limiting rule** on `/admin/*` (step 4 below); set both. Whatever survives those still
+faces the password, so make `ADMIN_PASSWORD` a long random string.
+
 ### One-time setup (Cloudflare)
 
 1. **Create the D1 database and load the schema** (run `wrangler login` first):
@@ -281,8 +289,21 @@ shown in the dashboard's **Access** tab. The page is also `noindex`, disallowed 
 3. **Set the dashboard password**: on the Pages project, Settings -> Variables and Secrets,
    add a **Secret** `ADMIN_PASSWORD` (a long random string), and optionally `ADMIN_USER`
    (defaults to `admin`), for Production. The middleware fails closed until this is set, so
-   `/admin/` is never accidentally public. No Cloudflare Access / Zero Trust needed.
-4. Remove the old `GA4_ID` / `CLARITY_ID` env vars (no longer read), then redeploy.
+   `/admin/` is never accidentally public. Full Cloudflare Access / Zero Trust is optional
+   (the Basic Auth gate does not need it), but the WAF rule below is not optional.
+4. **Add an edge rate-limiting rule** (the authoritative brute-force control; the in-code
+   limiter is only a per-isolate backstop). In the Cloudflare dashboard for the domain:
+   **Security -> WAF -> Rate limiting rules -> Create rule**:
+   - **Field / match**: `URI Path` `starts with` `/admin/`
+   - **Counting characteristic**: IP (`ip.src`)
+   - **Rate**: e.g. `20` requests per `1 minute`
+   - **Action**: `Block` for `Mitigation timeout` `10 minutes` (or `Managed Challenge`)
+
+   Expression, if you use the editor directly: `starts_with(http.request.uri.path, "/admin/")`.
+   Pick a threshold above what the dashboard itself fetches when you click around (it fires
+   several `/admin/stats` requests per interaction) but far below what a guesser needs. The
+   free plan includes one rate-limiting rule, which is enough for this.
+5. Remove the old `GA4_ID` / `CLARITY_ID` env vars (no longer read), then redeploy.
 
 Locally, `npm run dev` stubs `/api/collect` (logs, `204`) and `/admin/stats` (a fixture),
 so the beacon and the `/admin/` dashboard work without Cloudflare (and without auth, since
