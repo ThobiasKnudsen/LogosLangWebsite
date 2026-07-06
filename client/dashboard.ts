@@ -51,6 +51,7 @@ interface LogRow {
 	bot?: number;
 	bot_name?: string | null;
 	browser?: string | null;
+	os?: string | null;
 	city: string | null;
 	country: string | null;
 	asorg: string | null;
@@ -192,17 +193,21 @@ const state: {
 	preset: '7',
 };
 // Quick presets set the window relative to "now" at click time; `all` uses a wide floor.
+// The slider spans the widest preset (90d) back from now, so a preset just moves the
+// two handles to a fixed window ending "now".
 const PRESETS: { key: string; label: string; ms: number }[] = [
 	{ key: '1', label: '24h', ms: DAY },
 	{ key: '7', label: '7d', ms: 7 * DAY },
 	{ key: '30', label: '30d', ms: 30 * DAY },
-	{ key: 'all', label: 'All', ms: 3650 * DAY },
+	{ key: '90', label: '90d', ms: 90 * DAY },
 ];
+const SLIDER_STEP = 60_000; // 1 minute
+const SLIDER_SPAN = 90 * DAY; // full extent of the time slider
 const TABS: { key: View; label: string }[] = [
 	{ key: 'map', label: 'Map' },
 	{ key: 'log', label: 'Log' },
 	{ key: 'users', label: 'Users' },
-	{ key: 'access', label: 'Access' },
+	{ key: 'access', label: 'Admin Access' },
 	{ key: 'subscribers', label: 'Subscribers' },
 ];
 
@@ -278,8 +283,16 @@ function injectStyles(): void {
 	.adm-fp-row { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
 	.adm-fp-label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); width: 3.2rem; }
 	.adm-presets { display: inline-flex; gap: 0.25rem; }
-	.adm-fp-field { display: flex; flex-direction: column; gap: 0.2rem; font-size: 0.72rem; color: var(--muted); flex: 1 1 9rem; }
-	.adm-fp-field input { font: inherit; font-size: 0.82rem; color: var(--text); background: var(--surface); border: 1px solid var(--hairline); border-radius: 0.4rem; padding: 0.3rem 0.4rem; }
+	.adm-fp-row--slider { padding: 0.35rem 0.3rem 0; }
+	.adm-slider { position: relative; flex: 1 1 100%; height: 1.5rem; }
+	.adm-slider__track { position: absolute; left: 0; right: 0; top: 50%; height: 4px; transform: translateY(-50%); background: var(--hairline); border-radius: 2px; }
+	.adm-slider__fill { position: absolute; top: 50%; height: 4px; transform: translateY(-50%); background: var(--accent); border-radius: 2px; }
+	.adm-slider input[type='range'] { position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 100%; height: 15px; margin: 0; background: none; pointer-events: none; -webkit-appearance: none; appearance: none; }
+	.adm-slider input[type='range']::-webkit-slider-runnable-track { background: none; border: 0; }
+	.adm-slider input[type='range']::-moz-range-track { background: none; border: 0; }
+	.adm-slider input[type='range']::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; pointer-events: auto; width: 15px; height: 15px; border-radius: 50%; background: var(--accent); border: 2px solid var(--bg); box-shadow: 0 1px 3px rgba(0,0,0,0.3); cursor: pointer; }
+	.adm-slider input[type='range']::-moz-range-thumb { pointer-events: auto; width: 15px; height: 15px; border-radius: 50%; background: var(--accent); border: 2px solid var(--bg); box-shadow: 0 1px 3px rgba(0,0,0,0.3); cursor: pointer; }
+	.adm-slider__labels { justify-content: space-between; font-size: 0.72rem; color: var(--muted); }
 	.adm-switch { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.85rem; color: var(--text); cursor: pointer; }
 	.adm-switch input { accent-color: var(--accent); }
 	.adm-legend { display: flex; gap: 1rem; margin-top: 0.5rem; }
@@ -291,6 +304,12 @@ function injectStyles(): void {
 	.adm-row--bot { cursor: default; }
 	.adm-row--bot td { background: rgba(200, 92, 57, 0.06); }
 	.adm-table--log tbody tr { cursor: default; }
+	/* Content-width columns so they hug their text (no big gaps); the wrap scrolls sideways. */
+	.adm-table.adm-table--log { width: max-content; min-width: 100%; }
+	.adm-table--log th, .adm-table--log td { padding: 0.4rem 0.6rem; }
+	.adm-filterrow th { padding: 0.25rem 0.4rem; }
+	.adm-lf { width: 100%; min-width: 4.5rem; font: inherit; font-size: 0.72rem; color: var(--text); background: var(--bg); border: 1px solid var(--hairline); border-radius: 0.3rem; padding: 0.15rem 0.35rem; }
+	.adm-lf:focus { outline: none; border-color: var(--accent); }
 	`;
 	const el = document.createElement('style');
 	el.textContent = css;
@@ -544,39 +563,77 @@ async function renderMap(view: HTMLElement): Promise<void> {
 	});
 }
 
+// One column of the Log grid: how to read its value off a row, whether it's filterable,
+// and how to style the cell. Every field lives in its own column so filtering is uniform.
+interface LogCol {
+	key: string;
+	label: string;
+	get: (r: LogRow) => string;
+	filter: boolean;
+	mono?: boolean;
+	dim?: boolean;
+}
+const LOG_COLS: LogCol[] = [
+	{ key: 'time', label: 'Time', get: (r) => fmtTime(r.ts), filter: false },
+	{ key: 'kind', label: 'Kind', get: (r) => (r.kind === 'bot' ? 'bot' : 'human'), filter: true },
+	{ key: 'page', label: 'Page', get: (r) => r.path, filter: true, mono: true },
+	{ key: 'status', label: 'Status', get: (r) => String(r.status ?? ''), filter: true },
+	{ key: 'country', label: 'Country', get: (r) => r.country ?? '', filter: true },
+	{ key: 'city', label: 'City', get: (r) => r.city ?? '', filter: true },
+	{ key: 'network', label: 'Network', get: (r) => r.asorg ?? '', filter: true, dim: true },
+	{ key: 'device', label: 'Device', get: (r) => r.device ?? '', filter: true },
+	{ key: 'browser', label: 'Browser', get: (r) => r.browser ?? '', filter: true },
+	{ key: 'os', label: 'OS', get: (r) => r.os ?? '', filter: true },
+	{ key: 'referrer', label: 'Referrer', get: (r) => r.ref ?? '', filter: true, dim: true },
+	{ key: 'bot', label: 'Bot', get: (r) => r.bot_name ?? '', filter: true },
+];
+
+let logRows: LogRow[] = [];
+
+/** tbody HTML for the rows that pass the current per-column filter inputs (client-side). */
+function logBodyHTML(): string {
+	const active = LOG_COLS.filter((c) => c.filter)
+		.map((c) => ({ c, v: ((document.getElementById(`adm-lf-${c.key}`) as HTMLInputElement | null)?.value ?? '').trim().toLowerCase() }))
+		.filter((f) => f.v);
+	const rows = logRows.filter((r) => active.every((f) => f.c.get(r).toLowerCase().includes(f.v)));
+	if (!rows.length) return `<tr><td colspan="${LOG_COLS.length}" class="adm-empty">No rows match the filters.</td></tr>`;
+	return rows
+		.map((r) => {
+			const cells = LOG_COLS.map((c) => {
+				const cls = [c.mono ? 'adm-path' : '', c.dim ? 'adm-dim' : ''].filter(Boolean).join(' ');
+				const v = esc(c.get(r));
+				return `<td>${cls ? `<span class="${cls}">${v}</span>` : v}</td>`;
+			}).join('');
+			return `<tr${r.kind === 'bot' ? ' class="adm-row--bot"' : ''}>${cells}</tr>`;
+		})
+		.join('');
+}
+
 async function renderLog(view: HTMLElement): Promise<void> {
-	const data = await fetchStats<LogResp>({ view: 'log', limit: 200 });
+	const data = await fetchStats<LogResp>({ view: 'log', limit: 500 });
 	if (data.empty) {
 		view.innerHTML = emptyMsg();
 		return;
 	}
-	if (!data.rows.length) {
+	logRows = data.rows ?? [];
+	if (!logRows.length) {
 		view.innerHTML = `<div class="adm-empty">No traffic in this range.</div>`;
 		return;
 	}
-	const rows = data.rows
-		.map((r) => {
-			const isBot = r.kind === 'bot';
-			const client = isBot
-				? `<span class="adm-tag adm-tag--bot">${esc(r.bot_name ?? 'bot')}</span>`
-				: `<span class="adm-dim">${esc(r.browser ?? 'browser')}</span>`;
-			const kind = `${isBot ? 'bot' : 'view'}${r.status ? ` ${esc(String(r.status))}` : ''}`;
-			return `<tr${isBot ? ' class="adm-row--bot"' : ''}>
-				<td>${esc(fmtTime(r.ts))}</td>
-				<td>${client}</td>
-				<td><span class="adm-path">${esc(r.path)}</span></td>
-				<td><span class="adm-tag">${kind}</span></td>
-				<td>${esc(place(r.city, r.country))}</td>
-				<td class="adm-dim">${esc(r.asorg ?? '')}</td>
-				<td>${esc(r.device ?? '')}</td>
-				<td class="adm-dim">${esc(r.ref ?? 'direct')}</td>
-			</tr>`;
-		})
-		.join('');
-	view.innerHTML = `<p class="adm-hint">Every request that reached the server, JS or not: non-bot clients plus detected crawlers and AI fetchers. Toggle Humans / Bots in Filters.</p>
+	const head = LOG_COLS.map((c) => `<th>${esc(c.label)}</th>`).join('');
+	const filterRow = LOG_COLS.map((c) =>
+		c.filter
+			? `<th><input class="adm-lf" id="adm-lf-${c.key}" type="text" placeholder="filter" aria-label="Filter ${esc(c.label)}" /></th>`
+			: `<th></th>`,
+	).join('');
+	view.innerHTML = `<p class="adm-hint">Every request that reached the server, JS or not. Filter any column; scroll sideways to see them all.</p>
 		<div class="adm-tablewrap"><table class="adm-table adm-table--log">
-		<thead><tr><th>Time</th><th>Client</th><th>Page</th><th>Kind</th><th>Location</th><th>Network</th><th>Device</th><th>Referrer</th></tr></thead>
-		<tbody>${rows}</tbody></table></div>`;
+		<thead><tr>${head}</tr><tr class="adm-filterrow">${filterRow}</tr></thead>
+		<tbody id="adm-log-body">${logBodyHTML()}</tbody></table></div>`;
+	const body = document.getElementById('adm-log-body');
+	view.querySelector('.adm-filterrow')?.addEventListener('input', () => {
+		if (body) body.innerHTML = logBodyHTML();
+	});
 }
 
 async function renderUsers(view: HTMLElement): Promise<void> {
@@ -824,11 +881,18 @@ function goToView(v: View, push: boolean): void {
 }
 
 // ── Global filter (time window + audiences), shared by every view ──────────────
-/** epoch ms -> a value a <input type="datetime-local"> accepts (local time, no seconds). */
-function toLocalInput(ms: number): string {
-	const d = new Date(ms);
-	const pad = (n: number): string => String(n).padStart(2, '0');
-	return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+/** Position the fill bar and update the from/to labels for the time slider. */
+function setSliderVisual(lo: number, hi: number, min: number, max: number): void {
+	const span = max - min || 1;
+	const fill = document.getElementById('adm-slider-fill') as HTMLElement | null;
+	if (fill) {
+		fill.style.left = `${((lo - min) / span) * 100}%`;
+		fill.style.right = `${100 - ((hi - min) / span) * 100}%`;
+	}
+	const fl = document.getElementById('adm-slider-fromlabel');
+	const tl = document.getElementById('adm-slider-tolabel');
+	if (fl) fl.textContent = fmtTime(lo);
+	if (tl) tl.textContent = fmtTime(hi);
 }
 function applyPreset(key: string): void {
 	const p = PRESETS.find((x) => x.key === key);
@@ -843,10 +907,20 @@ function syncFilterUI(): void {
 	if (presets) {
 		presets.innerHTML = PRESETS.map((p) => chip(state.preset === p.key, p.label, `data-preset="${p.key}"`)).join('');
 	}
-	const from = document.getElementById('adm-from') as HTMLInputElement | null;
-	const to = document.getElementById('adm-to') as HTMLInputElement | null;
-	if (from) from.value = toLocalInput(state.from);
-	if (to) to.value = toLocalInput(state.to);
+	// Time slider bounds are [now - 90d, now], widened if the window falls outside that.
+	const sMax = Math.max(Date.now(), state.to);
+	const sMin = Math.min(sMax - SLIDER_SPAN, state.from);
+	const sFrom = document.getElementById('adm-slider-from') as HTMLInputElement | null;
+	const sTo = document.getElementById('adm-slider-to') as HTMLInputElement | null;
+	for (const el of [sFrom, sTo]) {
+		if (!el) continue;
+		el.min = String(sMin);
+		el.max = String(sMax);
+		el.step = String(SLIDER_STEP);
+	}
+	if (sFrom) sFrom.value = String(state.from);
+	if (sTo) sTo.value = String(state.to);
+	setSliderVisual(state.from, state.to, sMin, sMax);
 	const humans = document.getElementById('adm-humans') as HTMLInputElement | null;
 	const bots = document.getElementById('adm-bots') as HTMLInputElement | null;
 	if (humans) humans.checked = state.humans;
@@ -889,10 +963,15 @@ function init(): void {
 				<button class="adm-chip" id="adm-filter-btn" type="button" aria-expanded="false">&#9776; Filters</button>
 				<div class="adm-filter-panel" id="adm-filter-panel" hidden>
 					<div class="adm-fp-row"><span class="adm-fp-label">Range</span><div class="adm-presets" id="adm-presets"></div></div>
-					<div class="adm-fp-row">
-						<label class="adm-fp-field">From<input type="datetime-local" id="adm-from" /></label>
-						<label class="adm-fp-field">To<input type="datetime-local" id="adm-to" /></label>
+					<div class="adm-fp-row adm-fp-row--slider">
+						<div class="adm-slider" id="adm-slider">
+							<div class="adm-slider__track"></div>
+							<div class="adm-slider__fill" id="adm-slider-fill"></div>
+							<input type="range" id="adm-slider-from" aria-label="Start of range" />
+							<input type="range" id="adm-slider-to" aria-label="End of range" />
+						</div>
 					</div>
+					<div class="adm-fp-row adm-slider__labels"><span id="adm-slider-fromlabel"></span><span id="adm-slider-tolabel"></span></div>
 					<div class="adm-fp-row"><span class="adm-fp-label">Show</span>
 						<label class="adm-switch"><input type="checkbox" id="adm-humans" /> Humans</label>
 						<label class="adm-switch"><input type="checkbox" id="adm-bots" /> Bots</label>
@@ -928,19 +1007,29 @@ function init(): void {
 		applyPreset(b.dataset.preset);
 		void render();
 	});
-	const onTime = (): void => {
-		const from = document.getElementById('adm-from') as HTMLInputElement | null;
-		const to = document.getElementById('adm-to') as HTMLInputElement | null;
-		const f = from?.value ? new Date(from.value).getTime() : NaN;
-		const t = to?.value ? new Date(to.value).getTime() : NaN;
-		if (Number.isFinite(f)) state.from = f;
-		if (Number.isFinite(t)) state.to = t;
-		if (state.from > state.to) [state.from, state.to] = [state.to, state.from];
+	// Time slider: two handles on one track. Update the labels/fill live while dragging
+	// (no fetch), then reload the views once on release (change).
+	const sFrom = document.getElementById('adm-slider-from') as HTMLInputElement | null;
+	const sTo = document.getElementById('adm-slider-to') as HTMLInputElement | null;
+	const sliderLive = (): void => {
+		const a = Number(sFrom?.value);
+		const b = Number(sTo?.value);
+		if (!Number.isFinite(a) || !Number.isFinite(b)) return;
+		setSliderVisual(Math.min(a, b), Math.max(a, b), Number(sFrom?.min), Number(sFrom?.max));
+	};
+	const sliderCommit = (): void => {
+		const a = Number(sFrom?.value);
+		const b = Number(sTo?.value);
+		if (!Number.isFinite(a) || !Number.isFinite(b)) return;
+		state.from = Math.min(a, b);
+		state.to = Math.max(a, b);
 		state.preset = null;
 		void render();
 	};
-	document.getElementById('adm-from')?.addEventListener('change', onTime);
-	document.getElementById('adm-to')?.addEventListener('change', onTime);
+	sFrom?.addEventListener('input', sliderLive);
+	sTo?.addEventListener('input', sliderLive);
+	sFrom?.addEventListener('change', sliderCommit);
+	sTo?.addEventListener('change', sliderCommit);
 	document.getElementById('adm-humans')?.addEventListener('change', (e) => {
 		state.humans = (e.target as HTMLInputElement).checked;
 		void render();

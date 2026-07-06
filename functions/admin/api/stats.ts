@@ -149,7 +149,7 @@ async function respond(db: D1Database, request: Request): Promise<Response> {
     const botClause = wantHumans && wantBots ? "" : wantHumans ? "AND bot = 0" : "AND bot = 1";
     const { results } = await db
       .prepare(
-        `SELECT ts, path, status, bot, bot_name, browser, device, city, country, asorg, ref
+        `SELECT ts, path, status, bot, bot_name, browser, os, device, city, country, asorg, ref
            FROM requests
            WHERE ts >= ? AND ts <= ? ${botClause}
            ORDER BY ts DESC LIMIT ? OFFSET ?`,
