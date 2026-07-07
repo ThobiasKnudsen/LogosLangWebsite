@@ -64,6 +64,7 @@ interface LogResp {
 }
 interface UserRow {
 	visitor: string;
+	bot?: number; // 1 = zero-dwell visitor (never a pagehide), treated as a bot
 	visits: number;
 	pageviews: number;
 	firstSeen: number;
@@ -303,6 +304,8 @@ function injectStyles(): void {
 	.adm-tag--bot { color: #c85c39; border-color: #c85c39; }
 	.adm-row--bot { cursor: default; }
 	.adm-row--bot td { background: rgba(200, 92, 57, 0.06); }
+	/* Users rows flagged bot: same terracotta tint, but still clickable to inspect. */
+	.adm-table tbody tr.is-bot td { background: rgba(200, 92, 57, 0.06); }
 	.adm-table--log tbody tr { cursor: default; }
 	/* Content-width columns so they hug their text (no big gaps); the wrap scrolls sideways. */
 	.adm-table.adm-table--log { width: max-content; min-width: 100%; }
@@ -654,8 +657,8 @@ async function renderLog(view: HTMLElement): Promise<void> {
 }
 
 async function renderUsers(view: HTMLElement): Promise<void> {
-	if (!state.humans) {
-		view.innerHTML = `<div class="adm-empty">Users are human visitors, identified by the JS beacon. Enable <b>Humans</b> in Filters to see them. Bots have no per-visitor identity, so they never appear here.</div>`;
+	if (!state.humans && !state.bots) {
+		view.innerHTML = `<div class="adm-empty">Enable <b>Humans</b> or <b>Bots</b> in Filters to list visitors. Humans are visitors who spent measurable time on a page; bots ran the page but never recorded any dwell.</div>`;
 		return;
 	}
 	const data = await fetchStats<UsersResp>({ view: 'users', limit: 200 });
@@ -676,8 +679,11 @@ async function renderUsers(view: HTMLElement): Promise<void> {
 						return place(city || null, country || null);
 					})
 					.join(' · ') || 'Unknown';
-			return `<tr data-visitor="${esc(u.visitor)}">
-			<td><span class="adm-path">${esc(shortId(u.visitor))}</span></td>
+			// A visitor with no dwell ever (never a pagehide) is flagged bot: tint the row and
+			// tag the id, so bots stand out even when Humans and Bots are shown together.
+			const botTag = u.bot ? ` <span class="adm-tag adm-tag--bot">bot</span>` : '';
+			return `<tr data-visitor="${esc(u.visitor)}"${u.bot ? ' class="is-bot"' : ''}>
+			<td><span class="adm-path">${esc(shortId(u.visitor))}</span>${botTag}</td>
 			<td>${num(u.visits)}</td>
 			<td>${num(u.pageviews)}</td>
 			<td>${esc(locs)}</td>

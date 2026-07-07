@@ -65,6 +65,7 @@ interface StubSession {
 	os: string;
 	ref: string | null;
 	agoMin: number; // how long ago the visit started
+	bot?: boolean; // ran the beacon (pageviews) but never a dwell -> treated as a bot
 	pages: StubPage[];
 }
 
@@ -112,6 +113,20 @@ const STUB_SESSIONS: StubSession[] = [
 			{ path: '/vision/', title: 'Vision', dwell: 70, scroll: 75 },
 		],
 	},
+	// A JS-running research crawler (browser UA, so the requests bot flag misses it): it fires
+	// the opening pageview on each page but is torn down without a pagehide, so no dwell is ever
+	// sent. Zero dwell across the whole visit -> the dashboard treats it as a bot.
+	{
+		visitor: 'v-grok', session: 's-grok-1', city: 'Ashburn', region: 'Virginia',
+		country: 'US', lat: 39.04, lon: -77.49, device: 'Desktop', browser: 'Chrome', os: 'Linux',
+		ref: null, agoMin: 18, bot: true,
+		pages: [
+			{ path: '/', title: 'Λόγος', dwell: 0, scroll: 0 },
+			{ path: '/vision/', title: 'Vision', dwell: 0, scroll: 0 },
+			{ path: '/roadmap/', title: 'Roadmap', dwell: 0, scroll: 0 },
+			{ path: '/download/', title: 'Download', dwell: 0, scroll: 0 },
+		],
+	},
 ];
 
 interface StubEvent {
@@ -147,7 +162,10 @@ function stubEvents(now: number): StubEvent[] {
 				asorg: NET[s.country] ?? 'Unknown',
 			};
 			out.push({ ...base, ts: t, type: 'pageview', name: null, value: null, path: p.path, title: p.title, dur: null });
-			out.push({ ...base, ts: t + p.dwell * 1000, type: 'event', name: 'dwell', value: null, path: p.path, title: p.title, dur: p.dwell * 1000 });
+			// Bots never fire a pagehide, so they emit no dwell event -> zero time tracked.
+			if (!s.bot) {
+				out.push({ ...base, ts: t + p.dwell * 1000, type: 'event', name: 'dwell', value: null, path: p.path, title: p.title, dur: p.dwell * 1000 });
+			}
 			t += (p.dwell + 5) * 1000;
 		}
 	}
@@ -267,17 +285,21 @@ function sampleStats(url: string): unknown {
 	}
 
 	if (view === 'users') {
+		if (!wantHumans && !wantBots) return { users: [] };
+		// A visitor is human once they've ever emitted a dwell; zero-dwell visitors are bots.
+		const humanVisitors = new Set(events.filter((e) => e.name === 'dwell').map((e) => e.visitor));
 		const byVisitor = new Map<string, StubEvent[]>();
 		for (const e of events) {
 			const arr = byVisitor.get(e.visitor) ?? [];
 			arr.push(e);
 			byVisitor.set(e.visitor, arr);
 		}
-		const users = [...byVisitor.entries()].map(([visitor, evs]) => {
+		let users = [...byVisitor.entries()].map(([visitor, evs]) => {
 			const sorted = evs.slice().sort((a, b) => a.ts - b.ts);
 			const last = sorted[sorted.length - 1]!;
 			return {
 				visitor,
+				bot: humanVisitors.has(visitor) ? 0 : 1,
 				visits: new Set(evs.map((e) => e.session)).size,
 				pageviews: evs.filter((e) => e.type === 'pageview').length,
 				firstSeen: sorted[0]!.ts,
@@ -287,6 +309,8 @@ function sampleStats(url: string): unknown {
 				lastDevice: last.device,
 			};
 		});
+		if (!wantHumans) users = users.filter((u) => u.bot);
+		if (!wantBots) users = users.filter((u) => !u.bot);
 		users.sort((a, b) => b.lastSeen - a.lastSeen);
 		return { users };
 	}
@@ -303,9 +327,11 @@ function sampleStats(url: string): unknown {
 		};
 	}
 
-	// map (default): human dots from sessions, bot dots aggregated by location.
+	// map (default): human dots from dwell-having sessions, bot dots aggregated by location.
+	const humanVisitors = new Set(events.filter((e) => e.name === 'dwell').map((e) => e.visitor));
+	const humanSessions = STUB_SESSIONS.filter((s) => humanVisitors.has(s.visitor));
 	const dots = wantHumans
-		? STUB_SESSIONS.map((s) => {
+		? humanSessions.map((s) => {
 				const evs = events.filter((e) => e.session === s.session);
 				return {
 					session: s.session, visitor: s.visitor, lat: s.lat, lon: s.lon, city: s.city,
@@ -315,15 +341,28 @@ function sampleStats(url: string): unknown {
 				};
 			})
 		: [];
+	// Zero-dwell (bot) sessions fold into the Bots bucket, matching functions/admin/api/stats.ts.
+	const botSessions = STUB_SESSIONS.filter((s) => !humanVisitors.has(s.visitor));
+	const botEventPvs = events.filter((e) => e.type === 'pageview' && !humanVisitors.has(e.visitor));
+	const botDots = wantBots
+		? [
+				...stubBotDots(),
+				...botSessions.map((s) => ({
+					lat: s.lat, lon: s.lon, city: s.city, region: s.region, country: s.country,
+					asorg: null, bot_name: null,
+					hits: events.filter((e) => e.session === s.session && e.type === 'pageview').length,
+				})),
+			]
+		: [];
 	return {
 		totals: {
-			pageviews: wantHumans ? events.filter((e) => e.type === 'pageview').length : 0,
-			visits: wantHumans ? STUB_SESSIONS.length : 0,
-			visitors: wantHumans ? new Set(STUB_SESSIONS.map((s) => s.visitor)).size : 0,
-			botHits: wantBots ? STUB_BOTS.length : 0,
+			pageviews: wantHumans ? events.filter((e) => e.type === 'pageview' && humanVisitors.has(e.visitor)).length : 0,
+			visits: wantHumans ? humanSessions.length : 0,
+			visitors: wantHumans ? new Set(humanSessions.map((s) => s.visitor)).size : 0,
+			botHits: wantBots ? STUB_BOTS.length + botEventPvs.length : 0,
 		},
 		dots,
-		botDots: wantBots ? stubBotDots() : [],
+		botDots,
 	};
 }
 

@@ -38,6 +38,17 @@ function intParam(v: string | null, def: number, min: number, max: number): numb
   return Math.min(max, Math.max(min, n));
 }
 
+// The set of visitors treated as human. A visitor is human once they have EVER emitted a
+// `dwell` event: the beacon fires it on `pagehide` when a real browser leaves a page (see
+// client/main.ts and functions/api/collect.ts). A visitor that only ever logged pageviews
+// and never one dwell never ran that unload path, which is the fingerprint of an automated
+// client (e.g. an AI research crawler that executes the beacon's opening pageview but is
+// torn down without a pagehide). It's a strong signal, not a certainty, so it only sorts a
+// visitor between the Humans and Bots buckets rather than deleting anything. Used as a fixed
+// (non-user-controlled) subquery fragment; `events.visitor` is NOT NULL, so `NOT IN` against
+// it can never be swallowed by a NULL row.
+const HUMAN_VISITORS = "SELECT visitor FROM events WHERE name = 'dwell'";
+
 export async function onRequestGet(context: { request: Request; env: Env }): Promise<Response> {
   const { request, env } = context;
 
@@ -190,6 +201,15 @@ async function respond(db: D1Database, request: Request): Promise<Response> {
   if (view === "users") {
     const limit = intParam(q.get("limit"), 200, 1, 1000);
     const offset = intParam(q.get("offset"), 0, 0, 1_000_000);
+    // Honour the shared audience filter here too: humans are dwell-having visitors, bots are
+    // zero-dwell ones (see HUMAN_VISITORS). Neither selected -> nothing to list.
+    if (!wantHumans && !wantBots) return json({ users: [] });
+    const audience =
+      wantHumans && wantBots
+        ? ""
+        : wantHumans
+          ? `AND visitor IN (${HUMAN_VISITORS})`
+          : `AND visitor NOT IN (${HUMAN_VISITORS})`;
     // Distinct city|country pairs per visitor. GROUP_CONCAT joins with commas and can't
     // take a custom separator alongside DISTINCT, so each pair uses '|' internally and any
     // stray comma in a city name is stripped, keeping the client's comma-split unambiguous.
@@ -197,6 +217,7 @@ async function respond(db: D1Database, request: Request): Promise<Response> {
     const { results } = await db
       .prepare(
         `SELECT visitor,
+                CASE WHEN visitor IN (${HUMAN_VISITORS}) THEN 0 ELSE 1 END AS bot,
                 COUNT(DISTINCT session) AS visits,
                 SUM(CASE WHEN type = 'pageview' THEN 1 ELSE 0 END) AS pageviews,
                 MIN(ts) AS firstSeen,
@@ -204,13 +225,14 @@ async function respond(db: D1Database, request: Request): Promise<Response> {
                 GROUP_CONCAT(DISTINCT CASE WHEN city IS NOT NULL OR country IS NOT NULL
                   THEN REPLACE(COALESCE(city, ''), ',', ' ') || '|' || COALESCE(country, '')
                 END) AS locations
-           FROM events WHERE ts >= ? AND ts <= ?
+           FROM events WHERE ts >= ? AND ts <= ? ${audience}
            GROUP BY visitor ORDER BY lastSeen DESC LIMIT ? OFFSET ?`,
       )
       .bind(from, to, limit, offset)
       .all();
     const users = results.map((r) => ({
       visitor: r.visitor,
+      bot: Number(r.bot),
       visits: r.visits,
       pageviews: r.pageviews,
       firstSeen: r.firstSeen,
@@ -231,7 +253,7 @@ async function respond(db: D1Database, request: Request): Promise<Response> {
         `SELECT SUM(CASE WHEN type = 'pageview' THEN 1 ELSE 0 END) AS pageviews,
                 COUNT(DISTINCT session) AS visits,
                 COUNT(DISTINCT visitor) AS visitors
-           FROM events WHERE ts >= ? AND ts <= ?`,
+           FROM events WHERE ts >= ? AND ts <= ? AND visitor IN (${HUMAN_VISITORS})`,
       )
       .bind(from, to)
       .first<{ pageviews: number; visits: number; visitors: number }>();
@@ -259,6 +281,7 @@ async function respond(db: D1Database, request: Request): Promise<Response> {
                 SUM(CASE WHEN type = 'pageview' THEN 1 ELSE 0 END) AS pages
            FROM events
            WHERE ts >= ? AND ts <= ? AND lat IS NOT NULL AND lon IS NOT NULL
+             AND visitor IN (${HUMAN_VISITORS})
            GROUP BY session, lat, lon
            ORDER BY start DESC LIMIT 5000`,
       )
@@ -291,6 +314,39 @@ async function respond(db: D1Database, request: Request): Promise<Response> {
       .bind(from, to)
       .all();
     botDots = results;
+
+    // Events-side bots: visitors that ran the JS beacon (so they land in `events`) but never
+    // emitted a dwell, i.e. never a real pagehide. The UA-based `requests.bot` flag can't
+    // catch these (they carry an ordinary browser UA), so fold them into the same Bots
+    // bucket here: their pageviews add to the hit count and their locations to the bot dots.
+    const eb = await db
+      .prepare(
+        `SELECT COUNT(*) AS hits FROM events
+           WHERE type = 'pageview' AND ts >= ? AND ts <= ?
+             AND visitor NOT IN (${HUMAN_VISITORS})`,
+      )
+      .bind(from, to)
+      .first<{ hits: number }>();
+    totals.botHits += Number(eb?.hits ?? 0);
+    const ebd = await db
+      .prepare(
+        `SELECT lat, lon,
+                MAX(city)    AS city,
+                MAX(region)  AS region,
+                MAX(country) AS country,
+                MAX(asorg)   AS asorg,
+                NULL         AS bot_name,
+                COUNT(*)     AS hits
+           FROM events
+           WHERE type = 'pageview' AND ts >= ? AND ts <= ?
+             AND lat IS NOT NULL AND lon IS NOT NULL
+             AND visitor NOT IN (${HUMAN_VISITORS})
+           GROUP BY lat, lon
+           ORDER BY hits DESC LIMIT 5000`,
+      )
+      .bind(from, to)
+      .all();
+    botDots = botDots.concat(ebd.results);
   }
 
   return json({ totals, dots, botDots });
