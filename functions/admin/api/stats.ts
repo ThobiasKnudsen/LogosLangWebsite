@@ -413,6 +413,63 @@ async function respond(db: D1Database, request: Request): Promise<Response> {
     return json({ users });
   }
 
+  // ── Daily: humans vs bots per calendar day, for the Graph tab ──────────────
+  // Counts the same two populations the Users tab lists, bucketed by day, so the numbers
+  // reconcile between the tabs. Both measures are returned in one pass:
+  //   clients -- distinct visitors/fingerprints active that day ("how many came")
+  //   hits    -- pageviews / requests that day ("how much traffic")
+  // Both audiences are always returned; the dashboard draws whichever the Filters enable,
+  // so toggling one off can't silently rescale the other.
+  if (view === "daily") {
+    // Days are the viewer's local days, not UTC ones, so "today" lines up with their clock.
+    // The client sends its current UTC offset in minutes (Date.getTimezoneOffset), which is
+    // shifted out before bucketing. A range spanning a DST change buckets those days by the
+    // current offset, an hour's drift at one boundary and not worth a per-row zone lookup.
+    const tzOffMs = intParam(q.get("tzoff"), 0, -14 * 60, 14 * 60) * 60_000;
+    // Ids are namespaced per source: a random visitor id could otherwise collide with a
+    // fingerprint key inside COUNT(DISTINCT ...), merging two different clients into one.
+    const { results } = await db
+      .prepare(
+        `WITH day_rows AS (
+           SELECT strftime('%Y-%m-%d', (ts - ?) / 1000, 'unixepoch') AS day,
+                  CASE WHEN visitor IN (${HUMAN_VISITORS}) THEN 'human' ELSE 'bot' END AS audience,
+                  'v:' || visitor AS id,
+                  CASE WHEN type = 'pageview' THEN 1 ELSE 0 END AS hit
+             FROM events
+            WHERE ts >= ? AND ts <= ?
+           UNION ALL
+           SELECT strftime('%Y-%m-%d', (ts - ?) / 1000, 'unixepoch'),
+                  CASE WHEN bot = 1 THEN 'bot' ELSE 'human' END,
+                  'c:' || ${CLIENT_KEY},
+                  1
+             FROM requests
+            WHERE ts >= ? AND ts <= ? AND ${NOT_ALREADY_A_VISITOR}
+         )
+         SELECT day, audience, COUNT(DISTINCT id) AS clients, SUM(hit) AS hits
+           FROM day_rows GROUP BY day, audience ORDER BY day ASC`,
+      )
+      .bind(tzOffMs, from, to, tzOffMs, from, to, from, to)
+      .all<{ day: string; audience: string; clients: number; hits: number }>();
+
+    // Fold the two audience rows per day into one record the chart can read directly.
+    const byDay = new Map<string, { day: string; humans: number; humanHits: number; bots: number; botHits: number }>();
+    for (const r of results) {
+      let d = byDay.get(r.day);
+      if (!d) {
+        d = { day: r.day, humans: 0, humanHits: 0, bots: 0, botHits: 0 };
+        byDay.set(r.day, d);
+      }
+      if (r.audience === "bot") {
+        d.bots = Number(r.clients ?? 0);
+        d.botHits = Number(r.hits ?? 0);
+      } else {
+        d.humans = Number(r.clients ?? 0);
+        d.humanHits = Number(r.hits ?? 0);
+      }
+    }
+    return json({ days: [...byDay.values()] });
+  }
+
   // ── Map (default): human dots from events, bot dots from requests ──────────
   const totals = { pageviews: 0, visits: 0, visitors: 0, botHits: 0 };
   let dots: unknown[] = [];

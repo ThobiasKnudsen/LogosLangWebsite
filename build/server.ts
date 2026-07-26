@@ -398,6 +398,49 @@ function sampleStats(url: string): unknown {
 		return { users };
 	}
 
+	// Humans vs bots per local day, mirroring the `daily` view in stats.ts: beacon visitors
+	// split by dwell, plus server-side clients split by the bot flag.
+	if (view === 'daily') {
+		const tzOffMs = Number(q.get('tzoff') ?? 0) * 60000;
+		const dayOf = (ts: number): string => new Date(ts - tzOffMs).toISOString().slice(0, 10);
+		const humanVisitors = new Set(events.filter((e) => e.name === 'dwell').map((e) => e.visitor));
+		const byDay = new Map<string, { day: string; humans: Set<string>; humanHits: number; bots: Set<string>; botHits: number }>();
+		const bucket = (day: string) => {
+			let d = byDay.get(day);
+			if (!d) {
+				d = { day, humans: new Set(), humanHits: 0, bots: new Set(), botHits: 0 };
+				byDay.set(day, d);
+			}
+			return d;
+		};
+		for (const e of events) {
+			const d = bucket(dayOf(e.ts));
+			const human = humanVisitors.has(e.visitor);
+			(human ? d.humans : d.bots).add(`v:${e.visitor}`);
+			if (e.type === 'pageview') {
+				if (human) d.humanHits++;
+				else d.botHits++;
+			}
+		}
+		for (const c of stubClients(now)) {
+			for (const h of c.hits) {
+				const d = bucket(dayOf(h.ts));
+				if (c.bot) {
+					d.bots.add(`c:${stubClientKey(c)}`);
+					d.botHits++;
+				} else {
+					d.humans.add(`c:${stubClientKey(c)}`);
+					d.humanHits++;
+				}
+			}
+		}
+		return {
+			days: [...byDay.values()]
+				.sort((a, b) => a.day.localeCompare(b.day))
+				.map((d) => ({ day: d.day, humans: d.humans.size, humanHits: d.humanHits, bots: d.bots.size, botHits: d.botHits })),
+		};
+	}
+
 	if (view === 'access') {
 		const now = Date.now();
 		return {

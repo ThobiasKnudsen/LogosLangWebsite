@@ -108,6 +108,19 @@ interface ClientResp {
 	bot_name: string | null;
 	visits: ClientVisit[];
 }
+// One calendar day (viewer-local) of the Graph tab. `humans`/`bots` are distinct clients
+// seen that day; `humanHits`/`botHits` are pageviews and server requests.
+interface DayRow {
+	day: string; // YYYY-MM-DD, viewer-local
+	humans: number;
+	humanHits: number;
+	bots: number;
+	botHits: number;
+}
+interface DailyResp {
+	days: DayRow[];
+	empty?: boolean;
+}
 interface AccessRow {
 	ts: number;
 	outcome: string;
@@ -170,7 +183,7 @@ interface VisitorResp {
 	sessions: VisitorSession[];
 }
 
-type View = 'map' | 'log' | 'users' | 'access' | 'subscribers';
+type View = 'map' | 'graph' | 'log' | 'users' | 'access' | 'subscribers';
 
 // ── Small helpers ──────────────────────────────────────────────────────────────
 const ESC: Record<string, string> = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' };
@@ -239,6 +252,7 @@ const SLIDER_STEP = 60_000; // 1 minute
 const SLIDER_SPAN = 90 * DAY; // full extent of the time slider
 const TABS: { key: View; label: string }[] = [
 	{ key: 'map', label: 'Map' },
+	{ key: 'graph', label: 'Graph' },
 	{ key: 'log', label: 'Log' },
 	{ key: 'users', label: 'Users' },
 	{ key: 'access', label: 'Admin Access' },
@@ -337,6 +351,32 @@ function injectStyles(): void {
 	.adm-tag--bot { color: #c85c39; border-color: #c85c39; }
 	/* Marks a Users row identified by fingerprint rather than by its own browser id. */
 	.adm-tag--nojs { color: var(--muted); border-color: var(--hairline); }
+	/* ── Daily chart: grouped columns, humans vs bots, one linear axis ──────────
+	   Two series only, so the map's colours carry identity here unchanged (indigo
+	   humans, terracotta bots) and the legend never has to invent a hue. Bars are
+	   laid out with flex rather than drawn, so the chart reflows with the window
+	   and needs no resize handling or canvas DPI juggling. */
+	.adm-chart { position: relative; margin: 0.25rem 0 1.25rem; }
+	.adm-chart__body { position: relative; padding-left: 2.75rem; }
+	.adm-chart__plot { position: relative; z-index: 1; display: flex; align-items: flex-end; gap: 2px; height: 16rem; border-bottom: 1px solid var(--hairline); }
+	.adm-chart__grid { position: absolute; left: 2.75rem; right: 0; top: 0; height: 16rem; pointer-events: none; }
+	/* Solid hairlines one shade off the surface: a grid should recede, never dash. */
+	.adm-gridline { position: absolute; left: 0; right: 0; border-top: 1px solid var(--hairline); }
+	.adm-gridline b { position: absolute; right: calc(100% + 0.45rem); top: -0.62em; font-size: 0.7rem; font-weight: 400; color: var(--muted); }
+	.adm-daygroup { position: relative; flex: 1 1 0; min-width: 0; height: 100%; display: flex; align-items: flex-end; justify-content: center; gap: 2px; }
+	.adm-daygroup:hover { background: color-mix(in srgb, var(--accent) 6%, transparent); border-radius: 0.3rem 0.3rem 0 0; }
+	/* The 2px flex gap is the separator between the pair; no borders on the marks.
+	   --barw is set per render from the day count, so a week reads as solid columns and a
+	   90-day range degrades to thin ticks instead of overflowing. */
+	.adm-bar { width: 100%; max-width: var(--barw, 0.85rem); border-radius: 3px 3px 0 0; }
+	.adm-bar--human { background: var(--accent); }
+	.adm-bar--bot { background: #c85c39; }
+	.adm-chart__xaxis { position: relative; margin-left: 2.75rem; height: 1rem; margin-top: 0.4rem; }
+	.adm-chart__xaxis span { position: absolute; transform: translateX(-50%); font-size: 0.7rem; color: var(--muted); white-space: nowrap; }
+	.adm-charttip { position: absolute; z-index: 5; pointer-events: none; background: var(--bg); border: 1px solid var(--hairline); border-radius: 0.5rem; padding: 0.4rem 0.6rem; font-size: 0.75rem; line-height: 1.5; white-space: nowrap; box-shadow: 0 8px 20px rgba(0,0,0,0.16); }
+	.adm-charttip[hidden] { display: none; }
+	.adm-charttip i { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 0.35rem; }
+	.adm-metric { display: inline-flex; gap: 0.25rem; margin-bottom: 0.75rem; }
 	.adm-row--bot { cursor: default; }
 	.adm-row--bot td { background: rgba(200, 92, 57, 0.06); }
 	/* Users rows flagged bot: same terracotta tint, but still clickable to inspect. */
@@ -598,6 +638,206 @@ async function renderMap(view: HTMLElement): Promise<void> {
 			mapView.ty = 0;
 			redraw();
 		}
+	});
+}
+
+// ── Graph: humans vs bots per day ──────────────────────────────────────────────
+// Which measure the columns show. Kept at module scope so switching tabs and coming back
+// doesn't silently reset the reader's choice.
+let graphMetric: 'clients' | 'hits' = 'clients';
+
+const DAY_MS = 86_400_000;
+
+/** Local YYYY-MM-DD, matching the day buckets functions/admin/api/stats.ts builds. */
+function dayKey(ts: number): string {
+	const d = new Date(ts);
+	const p = (n: number): string => String(n).padStart(2, '0');
+	return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+}
+/** A YYYY-MM-DD bucket back to a local Date (not Date.parse, which reads it as UTC). */
+function dayDate(day: string): Date {
+	const [y, m, d] = day.split('-').map(Number);
+	return new Date(y ?? 1970, (m ?? 1) - 1, d ?? 1);
+}
+function fmtDay(day: string): string {
+	return dayDate(day).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+}
+
+/**
+ * Every day in the window, including the ones with no traffic. A day with no rows has to
+ * appear as a zero rather than be skipped: dropping it would compress the axis and turn a
+ * quiet stretch into a false-looking plateau.
+ */
+function fillDays(rows: DayRow[], from: number, to: number): DayRow[] {
+	const byDay = new Map(rows.map((r) => [r.day, r]));
+	const out: DayRow[] = [];
+	// Step by noon so a DST change inside the range can't skip or repeat a day.
+	const start = new Date(from);
+	start.setHours(12, 0, 0, 0);
+	const end = new Date(to);
+	end.setHours(12, 0, 0, 0);
+	for (let t = start.getTime(); t <= end.getTime(); t += DAY_MS) {
+		const key = dayKey(t);
+		out.push(byDay.get(key) ?? { day: key, humans: 0, humanHits: 0, bots: 0, botHits: 0 });
+	}
+	return out;
+}
+
+/** Round a max up to a clean axis top, so gridline labels read 20/40/60 rather than 17/34/51. */
+function axisTop(max: number): number {
+	if (max <= 4) return 4;
+	const pow = 10 ** Math.floor(Math.log10(max));
+	for (const step of [1, 2, 2.5, 5, 10]) {
+		const unit = step * pow;
+		if (Math.ceil(max / unit) * unit >= max && Math.ceil(max / unit) <= 5) return Math.ceil(max / unit) * unit;
+	}
+	return max;
+}
+
+async function renderGraph(view: HTMLElement): Promise<void> {
+	if (!state.humans && !state.bots) {
+		view.innerHTML = `<div class="adm-empty">Enable <b>Humans</b> or <b>Bots</b> in Filters to chart traffic.</div>`;
+		return;
+	}
+	const data = await fetchStats<DailyResp>({ view: 'daily', tzoff: new Date().getTimezoneOffset() });
+	if (data.empty) {
+		view.innerHTML = emptyMsg();
+		return;
+	}
+	const days = fillDays(data.days ?? [], state.from, state.to);
+	if (!days.length) {
+		view.innerHTML = `<div class="adm-empty">No traffic in this range.</div>`;
+		return;
+	}
+
+	// Totals are always hit counts, which sum honestly. Distinct-clients-per-day would not:
+	// a crawler seen on five days is five client-days, not five crawlers, so it is only ever
+	// charted per day and never added up into a headline number.
+	const humanHits = days.reduce((n, d) => n + d.humanHits, 0);
+	const botHits = days.reduce((n, d) => n + d.botHits, 0);
+	const share = humanHits + botHits > 0 ? Math.round((botHits / (humanHits + botHits)) * 100) : 0;
+
+	const pick = (d: DayRow, who: 'human' | 'bot'): number =>
+		graphMetric === 'clients' ? (who === 'human' ? d.humans : d.bots) : who === 'human' ? d.humanHits : d.botHits;
+	// One axis for both series: they are the same measure, so a second scale would invent a
+	// relationship that isn't in the data. When bots dwarf humans, short human bars are the
+	// finding, not a defect.
+	const top = axisTop(
+		Math.max(
+			1,
+			...days.map((d) => Math.max(state.humans ? pick(d, 'human') : 0, state.bots ? pick(d, 'bot') : 0)),
+		),
+	);
+
+	const bars = days
+		.map((d, i) => {
+			const h = pick(d, 'human');
+			const b = pick(d, 'bot');
+			// A non-zero value always keeps a visible sliver, so "one visitor" never renders
+			// identically to "none".
+			const px = (v: number): string => (v <= 0 ? '0' : `max(2px, ${(v / top) * 100}%)`);
+			const hb = state.humans ? `<div class="adm-bar adm-bar--human" style="height:${px(h)}"></div>` : '';
+			const bb = state.bots ? `<div class="adm-bar adm-bar--bot" style="height:${px(b)}"></div>` : '';
+			return `<div class="adm-daygroup" data-i="${i}">${hb}${bb}</div>`;
+		})
+		.join('');
+
+	// Bar width scales with how many days are on screen: wide columns for a week, thin ticks
+	// for a quarter. Roughly half a group each, since a group holds two bars plus their gap.
+	const barWidth = Math.max(3, Math.min(22, Math.floor(760 / days.length / 2)));
+
+	// Four gridlines plus the baseline the plot's own bottom border draws.
+	const grid = [1, 0.75, 0.5, 0.25]
+		.map((f) => `<div class="adm-gridline" style="top:${(1 - f) * 100}%"><b>${num(Math.round(top * f))}</b></div>`)
+		.join('');
+
+	// Roughly a dozen date labels at most, else they collide at 90 days. Stepping backwards
+	// from the newest day keeps the most useful label ("today") while leaving the spacing
+	// even -- labelling both every Nth day and the last one lands two labels on top of each
+	// other whenever the range isn't an exact multiple of the step.
+	const step = Math.max(1, Math.ceil(days.length / 12));
+	const labelled = new Set<number>();
+	for (let i = days.length - 1; i >= 0; i -= step) labelled.add(i);
+	const xLabels = days
+		.map((d, i) =>
+			labelled.has(i)
+				? `<span style="left:${((i + 0.5) / days.length) * 100}%">${esc(fmtDay(d.day))}</span>`
+				: '',
+		)
+		.join('');
+
+	const legend = `<div class="adm-legend">
+		${state.humans ? `<span class="adm-leg"><i class="adm-leg__dot adm-leg__dot--human"></i>Humans</span>` : ''}
+		${state.bots ? `<span class="adm-leg"><i class="adm-leg__dot adm-leg__dot--bot"></i>Bots</span>` : ''}
+	</div>`;
+
+	const metricChip = (key: 'clients' | 'hits', label: string): string =>
+		`<button class="adm-chip${graphMetric === key ? ' is-active' : ''}" data-metric="${key}" type="button">${esc(label)}</button>`;
+
+	// The same numbers as a table: the chart is for shape, this is for exact values, and it
+	// keeps the data readable without relying on colour or hover.
+	const tableRows = days
+		.slice()
+		.reverse()
+		.map(
+			(d) => `<tr>
+			<td>${esc(fmtDay(d.day))}</td>
+			<td>${num(d.humans)}</td>
+			<td>${num(d.humanHits)}</td>
+			<td>${num(d.bots)}</td>
+			<td>${num(d.botHits)}</td>
+		</tr>`,
+		)
+		.join('');
+
+	view.innerHTML = `
+		<div class="adm-tiles">${tile('Human pageviews', humanHits)}${tile('Bot hits', botHits)}<div class="adm-tile"><b>${share}%</b><span>Bot share of traffic</span></div></div>
+		<div class="adm-metric">${metricChip('clients', 'Visitors per day')}${metricChip('hits', 'Pageviews per day')}</div>
+		${legend}
+		<div class="adm-chart">
+			<div class="adm-chart__body">
+				<div class="adm-chart__grid">${grid}</div>
+				<div class="adm-chart__plot" style="--barw:${barWidth}px">${bars}</div>
+			</div>
+			<div class="adm-chart__xaxis">${xLabels}</div>
+			<div class="adm-charttip" id="adm-charttip" hidden></div>
+		</div>
+		<div class="adm-tablewrap"><table class="adm-table">
+		<thead><tr><th>Day</th><th>Humans</th><th>Human pageviews</th><th>Bots</th><th>Bot hits</th></tr></thead>
+		<tbody>${tableRows}</tbody></table></div>`;
+
+	view.querySelector('.adm-metric')?.addEventListener('click', (e) => {
+		const b = (e.target as HTMLElement).closest<HTMLElement>('[data-metric]');
+		if (!b?.dataset.metric) return;
+		graphMetric = b.dataset.metric as 'clients' | 'hits';
+		void render();
+	});
+
+	// Hover layer: one tooltip reused across groups, positioned against the chart box.
+	const chart = view.querySelector<HTMLElement>('.adm-chart');
+	const tip = view.querySelector<HTMLElement>('#adm-charttip');
+	const plot = view.querySelector<HTMLElement>('.adm-chart__plot');
+	plot?.addEventListener('pointermove', (e) => {
+		const g = (e.target as HTMLElement).closest<HTMLElement>('.adm-daygroup');
+		if (!g || !tip || !chart) return;
+		const d = days[Number(g.dataset.i)];
+		if (!d) return;
+		const rows = [
+			state.humans
+				? `<div><i style="background:var(--accent)"></i>${num(pick(d, 'human'))} human${pick(d, 'human') === 1 ? '' : 's'}</div>`
+				: '',
+			state.bots ? `<div><i style="background:${BOT_COLOR}"></i>${num(pick(d, 'bot'))} bot${pick(d, 'bot') === 1 ? '' : 's'}</div>` : '',
+		].join('');
+		tip.innerHTML = `<b>${esc(fmtDay(d.day))}</b>${rows}`;
+		tip.hidden = false;
+		const box = chart.getBoundingClientRect();
+		const x = e.clientX - box.left;
+		// Flip the tooltip to the left of the cursor near the right edge so it never clips.
+		tip.style.left = `${x > box.width - tip.offsetWidth - 16 ? x - tip.offsetWidth - 12 : x + 12}px`;
+		tip.style.top = `${Math.max(0, e.clientY - box.top - tip.offsetHeight - 10)}px`;
+	});
+	plot?.addEventListener('pointerleave', () => {
+		if (tip) tip.hidden = true;
 	});
 }
 
@@ -1052,6 +1292,7 @@ async function render(): Promise<void> {
 	view.innerHTML = `<div class="adm-loading">Loading…</div>`;
 	try {
 		if (state.view === 'map') await renderMap(view);
+		else if (state.view === 'graph') await renderGraph(view);
 		else if (state.view === 'log') await renderLog(view);
 		else if (state.view === 'users') await renderUsers(view);
 		else if (state.view === 'access') await renderAccess(view);

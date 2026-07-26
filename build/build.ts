@@ -572,7 +572,7 @@ export async function build(): Promise<void> {
   // Each dashboard tab is its own URL under /admin/ (the same shell), so a refresh or a
   // bookmark lands on that tab instead of resetting to the map. The client reads the path
   // to pick the view; the map stays at /admin/ itself.
-  for (const v of ["log", "users", "access", "subscribers"]) {
+  for (const v of ["graph", "log", "users", "access", "subscribers"]) {
     await writePage(`admin/${v}/index.html`, adminShell(assets.cssHref, assets.dashHref));
   }
   // Emitted to dist/404.html; Cloudflare Pages serves it (with a 404 status) for any
