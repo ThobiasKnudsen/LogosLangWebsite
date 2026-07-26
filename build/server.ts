@@ -172,11 +172,14 @@ function stubEvents(now: number): StubEvent[] {
 	return out;
 }
 
-// Bot / crawler traffic (server-side `requests` in production). Only visible with the
-// Bots filter on, so local dev exercises the bot dots, the merged Log, and the toggles.
-interface StubBot {
-	bot_name: string;
-	path: string;
+// Traffic that never runs the beacon: crawlers and AI fetchers, plus a JS-off browser
+// (server-side `requests` in production). These have no visitor id, so the dashboard groups
+// them by fingerprint; one entry here is one such client. `hits` carries several requests so
+// local dev exercises visit-splitting on the 30-minute idle gap, and GPTBot's two bursts are
+// deliberately far enough apart to count as two visits.
+interface StubClient {
+	bot: boolean;
+	bot_name: string | null;
 	city: string;
 	region: string;
 	country: string;
@@ -184,25 +187,57 @@ interface StubBot {
 	lon: number;
 	asorg: string;
 	device: string;
-	agoMin: number;
-	status: number;
+	browser: string;
+	os: string;
+	hits: { agoMin: number; path: string; status: number }[];
 }
-const STUB_BOTS: StubBot[] = [
-	{ bot_name: 'ClaudeBot', path: '/', city: 'Ashburn', region: 'Virginia', country: 'US', lat: 39.04, lon: -77.49, asorg: 'Amazon', device: 'Desktop', agoMin: 5, status: 200 },
-	{ bot_name: 'Claude-User', path: '/', city: 'London', region: 'England', country: 'GB', lat: 51.51, lon: -0.13, asorg: 'Cloudflare', device: 'Desktop', agoMin: 8, status: 200 },
-	{ bot_name: 'GPTBot', path: '/vision/', city: 'Des Moines', region: 'Iowa', country: 'US', lat: 41.6, lon: -93.6, asorg: 'Microsoft', device: 'Desktop', agoMin: 22, status: 200 },
-	{ bot_name: 'Googlebot', path: '/download/', city: 'Mountain View', region: 'California', country: 'US', lat: 37.42, lon: -122.08, asorg: 'Google', device: 'Desktop', agoMin: 48, status: 200 },
-	{ bot_name: 'PerplexityBot', path: '/about/', city: 'San Francisco', region: 'California', country: 'US', lat: 37.77, lon: -122.42, asorg: 'Cloudflare', device: 'Desktop', agoMin: 70, status: 200 },
-	{ bot_name: 'bingbot', path: '/nope/', city: 'Dublin', region: 'Leinster', country: 'IE', lat: 53.35, lon: -6.26, asorg: 'Microsoft', device: 'Desktop', agoMin: 130, status: 404 },
+const STUB_CLIENTS: StubClient[] = [
+	{ bot: true, bot_name: 'ClaudeBot', city: 'Ashburn', region: 'Virginia', country: 'US', lat: 39.04, lon: -77.49, asorg: 'Amazon', device: 'Desktop', browser: 'Other', os: 'Other', hits: [{ agoMin: 5, path: '/', status: 200 }, { agoMin: 6, path: '/docs/', status: 200 }] },
+	{ bot: true, bot_name: 'Claude-User', city: 'London', region: 'England', country: 'GB', lat: 51.51, lon: -0.13, asorg: 'Cloudflare', device: 'Desktop', browser: 'Other', os: 'Other', hits: [{ agoMin: 8, path: '/', status: 200 }] },
+	{ bot: true, bot_name: 'GPTBot', city: 'Des Moines', region: 'Iowa', country: 'US', lat: 41.6, lon: -93.6, asorg: 'Microsoft', device: 'Desktop', browser: 'Other', os: 'Other', hits: [{ agoMin: 22, path: '/vision/', status: 200 }, { agoMin: 24, path: '/roadmap/', status: 200 }, { agoMin: 400, path: '/docs/', status: 200 }] },
+	{ bot: true, bot_name: 'Googlebot', city: 'Mountain View', region: 'California', country: 'US', lat: 37.42, lon: -122.08, asorg: 'Google', device: 'Desktop', browser: 'Other', os: 'Other', hits: [{ agoMin: 48, path: '/download/', status: 200 }] },
+	{ bot: true, bot_name: 'PerplexityBot', city: 'San Francisco', region: 'California', country: 'US', lat: 37.77, lon: -122.42, asorg: 'Cloudflare', device: 'Desktop', browser: 'Other', os: 'Other', hits: [{ agoMin: 70, path: '/about/', status: 200 }] },
+	{ bot: true, bot_name: 'bingbot', city: 'Dublin', region: 'Leinster', country: 'IE', lat: 53.35, lon: -6.26, asorg: 'Microsoft', device: 'Desktop', browser: 'Other', os: 'Other', hits: [{ agoMin: 130, path: '/nope/', status: 404 }] },
+	// A JS-off browser: not a bot, but the beacon never sees it either, so the Users tab
+	// would have missed it entirely before it was sourced from `requests` as well.
+	{ bot: false, bot_name: null, city: 'Warsaw', region: 'Mazovia', country: 'PL', lat: 52.23, lon: 21.01, asorg: 'Orange', device: 'Desktop', browser: 'Other', os: 'Other', hits: [{ agoMin: 15, path: '/', status: 200 }] },
 ];
 
+/** The fingerprint id functions/admin/api/stats.ts would build for this client. */
+function stubClientKey(c: Omit<StubClient, 'hits'>): string {
+	return [c.bot_name ?? '', 0, c.device, c.browser, c.os, c.country, c.city].join('|');
+}
+
+/** Visit count from hit timestamps, cutting on the same 30-minute idle gap as the real query. */
+function countStubVisits(tsAsc: number[]): number {
+	let visits = 0;
+	let prev = -Infinity;
+	for (const ts of tsAsc) {
+		if (ts - prev > 30 * 60000) visits++;
+		prev = ts;
+	}
+	return visits;
+}
+
+/** Flatten the fixture into request rows, newest-first friendly (absolute timestamps). */
+function stubClientHits(now: number, c: StubClient): { ts: number; path: string; status: number }[] {
+	return c.hits.map((h) => ({ ts: now - h.agoMin * 60000, path: h.path, status: h.status }));
+}
+
+type StubClientRun = Omit<StubClient, 'hits'> & { hits: { ts: number; path: string; status: number }[] };
+
+function stubClients(now: number): StubClientRun[] {
+	return STUB_CLIENTS.map((c) => ({ ...c, hits: stubClientHits(now, c) }));
+}
+
 function stubBotDots(): unknown[] {
-	const by = new Map<string, { lat: number; lon: number; city: string; region: string; country: string; asorg: string; bot_name: string; hits: number }>();
-	for (const b of STUB_BOTS) {
+	const by = new Map<string, { lat: number; lon: number; city: string; region: string; country: string; asorg: string; bot_name: string | null; hits: number }>();
+	for (const b of STUB_CLIENTS) {
+		if (!b.bot) continue; // JS-off humans are not bot traffic
 		const k = `${b.lat},${b.lon}`;
 		const cur = by.get(k);
-		if (cur) cur.hits++;
-		else by.set(k, { lat: b.lat, lon: b.lon, city: b.city, region: b.region, country: b.country, asorg: b.asorg, bot_name: b.bot_name, hits: 1 });
+		if (cur) cur.hits += b.hits.length;
+		else by.set(k, { lat: b.lat, lon: b.lon, city: b.city, region: b.region, country: b.country, asorg: b.asorg, bot_name: b.bot_name, hits: b.hits.length });
 	}
 	return [...by.values()];
 }
@@ -244,6 +279,35 @@ function sampleStats(url: string): unknown {
 		};
 	}
 
+	// One fingerprinted client's history, cut into visits on the 30-minute idle gap.
+	const clientId = q.get('client');
+	if (clientId) {
+		const c = stubClients(now).find((x) => stubClientKey(x) === clientId);
+		const hits = (c?.hits ?? []).slice().sort((a, b) => a.ts - b.ts);
+		const visits: { start: number; end: number; hits: typeof hits }[] = [];
+		for (const h of hits) {
+			const cur = visits[visits.length - 1];
+			if (cur && h.ts - cur.end <= 30 * 60000) {
+				cur.end = h.ts;
+				cur.hits.push(h);
+			} else visits.push({ start: h.ts, end: h.ts, hits: [h] });
+		}
+		return {
+			client: clientId,
+			bot: c?.bot ? 1 : 0,
+			bot_name: c?.bot_name ?? null,
+			visits: visits
+				.map((v) => ({
+					start: v.start, end: v.end,
+					city: c?.city ?? null, region: c?.region ?? null, country: c?.country ?? null,
+					asorg: c?.asorg ?? null, device: c?.device ?? null,
+					browser: c?.browser ?? null, os: c?.os ?? null,
+					hits: v.hits.map((h) => ({ ts: h.ts, path: h.path, status: h.status, ref: null })),
+				}))
+				.reverse(),
+		};
+	}
+
 	const view = q.get('view') ?? 'map';
 
 	if (view === 'log') {
@@ -254,12 +318,12 @@ function sampleStats(url: string): unknown {
 			for (const e of events.filter((e) => e.type === 'pageview')) {
 				rows.push({ kind: 'human', ts: e.ts, path: e.path, status: 200, bot: 0, bot_name: null, browser: e.browser, os: e.os, device: e.device, city: e.city, country: e.country, asorg: e.asorg, ref: e.ref });
 			}
-			// A no-JS hit the beacon would never see, now visible in the all-requests Log.
-			rows.push({ kind: 'human', ts: now - 15 * 60000, path: '/', status: 200, bot: 0, bot_name: null, browser: 'Other', os: 'Other', device: 'Desktop', city: 'Warsaw', country: 'PL', asorg: 'Orange', ref: null });
 		}
-		if (wantBots) {
-			for (const b of STUB_BOTS) {
-				rows.push({ kind: 'bot', ts: now - b.agoMin * 60000, path: b.path, status: b.status, bot: 1, bot_name: b.bot_name, browser: 'Other', os: 'Other', device: b.device, city: b.city, country: b.country, asorg: b.asorg, ref: null });
+		// Clients the beacon never sees: JS-off browsers count as humans, crawlers as bots.
+		for (const c of stubClients(now)) {
+			if (c.bot ? !wantBots : !wantHumans) continue;
+			for (const h of c.hits) {
+				rows.push({ kind: c.bot ? 'bot' : 'human', ts: h.ts, path: h.path, status: h.status, bot: c.bot ? 1 : 0, bot_name: c.bot_name, browser: c.browser, os: c.os, device: c.device, city: c.city, country: c.country, asorg: c.asorg, ref: null });
 			}
 		}
 		// Server-side-style column filters (mirror functions/admin/api/stats.ts).
@@ -294,24 +358,43 @@ function sampleStats(url: string): unknown {
 			arr.push(e);
 			byVisitor.set(e.visitor, arr);
 		}
-		let users = [...byVisitor.entries()].map(([visitor, evs]) => {
+		let users: Record<string, unknown>[] = [...byVisitor.entries()].map(([visitor, evs]) => {
 			const sorted = evs.slice().sort((a, b) => a.ts - b.ts);
-			const last = sorted[sorted.length - 1]!;
 			return {
-				visitor,
+				kind: 'visitor',
+				id: visitor,
 				bot: humanVisitors.has(visitor) ? 0 : 1,
 				visits: new Set(evs.map((e) => e.session)).size,
 				pageviews: evs.filter((e) => e.type === 'pageview').length,
 				firstSeen: sorted[0]!.ts,
-				lastSeen: last.ts,
+				lastSeen: sorted[sorted.length - 1]!.ts,
 				locations: [...new Set(evs.map((e) => `${e.city}|${e.country}`))],
-				lastCity: last.city,
-				lastDevice: last.device,
 			};
 		});
+		// Server-side clients that never ran the beacon, grouped by fingerprint the way
+		// functions/admin/api/stats.ts does. Only these two stub clients lack beacon events,
+		// so nothing here duplicates a visitor row above.
+		for (const c of stubClients(now)) {
+			const sorted = c.hits.slice().sort((a, b) => a.ts - b.ts);
+			users.push({
+				kind: 'client',
+				id: stubClientKey(c),
+				bot: c.bot ? 1 : 0,
+				visits: countStubVisits(sorted.map((h) => h.ts)),
+				pageviews: sorted.length,
+				firstSeen: sorted[0]!.ts,
+				lastSeen: sorted[sorted.length - 1]!.ts,
+				locations: [`${c.city}|${c.country}`],
+				botName: c.bot_name,
+				asorg: c.asorg,
+				device: c.device,
+				browser: c.browser,
+				os: c.os,
+			});
+		}
 		if (!wantHumans) users = users.filter((u) => u.bot);
 		if (!wantBots) users = users.filter((u) => !u.bot);
-		users.sort((a, b) => b.lastSeen - a.lastSeen);
+		users.sort((a, b) => (b.lastSeen as number) - (a.lastSeen as number));
 		return { users };
 	}
 
@@ -359,7 +442,7 @@ function sampleStats(url: string): unknown {
 			pageviews: wantHumans ? events.filter((e) => e.type === 'pageview' && humanVisitors.has(e.visitor)).length : 0,
 			visits: wantHumans ? humanSessions.length : 0,
 			visitors: wantHumans ? new Set(humanSessions.map((s) => s.visitor)).size : 0,
-			botHits: wantBots ? STUB_BOTS.length + botEventPvs.length : 0,
+			botHits: wantBots ? STUB_CLIENTS.filter((c) => c.bot).reduce((n, c) => n + c.hits.length, 0) + botEventPvs.length : 0,
 		},
 		dots,
 		botDots,

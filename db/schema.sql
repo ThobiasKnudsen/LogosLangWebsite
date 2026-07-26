@@ -74,7 +74,10 @@ CREATE INDEX IF NOT EXISTS idx_admin_access_ts ON admin_access(ts);
 -- (e.g. 'GPTBot', 'ClaudeBot', 'Googlebot'). Same privacy stance as `events`: no raw IP
 -- and no raw User-Agent are stored; geo is Cloudflare's edge data and the UA is reduced to
 -- coarse device/browser/os. There is no visitor/session id here (a server request can't
--- read the browser's localStorage), so per-visitor views stay sourced from `events`.
+-- read the browser's localStorage), so the dashboard's Users tab stands one in by grouping
+-- these rows on a fingerprint of the columns below (bot_name + asn + device/browser/os +
+-- country/city) -- see FINGERPRINT in functions/admin/api/stats.ts. That is what lets a
+-- crawler be followed across visits without storing anything new about it.
 CREATE TABLE IF NOT EXISTS requests (
   id       INTEGER PRIMARY KEY AUTOINCREMENT,
   ts       INTEGER NOT NULL,          -- epoch ms, server-stamped

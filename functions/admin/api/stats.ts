@@ -1,9 +1,10 @@
 // Cloudflare Pages Function: GET /admin/api/stats
 //
 // Read side of the cookieless analytics: queries the D1 database bound as DB and backs
-// the dashboard tabs (Map, Log, Users, Access) plus two drill-downs (one session, one
-// visitor). Paired with client/dashboard.ts, which renders the JSON, and written by
-// functions/api/collect.ts and functions/_middleware.ts. See db/schema.sql.
+// the dashboard tabs (Map, Log, Users, Access) plus three drill-downs (one session, one
+// visitor, one server-side client). Paired with client/dashboard.ts, which renders the
+// JSON, and written by functions/api/collect.ts and functions/_middleware.ts. See
+// db/schema.sql.
 //
 // SECURITY: everything under /admin/ is gated by functions/admin/_middleware.ts (HTTP
 // Basic Auth), so this function assumes the caller is already authenticated and adds no
@@ -48,6 +49,75 @@ function intParam(v: string | null, def: number, min: number, max: number): numb
 // (non-user-controlled) subquery fragment; `events.visitor` is NOT NULL, so `NOT IN` against
 // it can never be swallowed by a NULL row.
 const HUMAN_VISITORS = "SELECT visitor FROM events WHERE name = 'dwell'";
+
+// ── Server-side client identity ────────────────────────────────────────────────
+// `requests` rows carry no visitor id (a server request can't read localStorage), so the
+// clients that never run JS -- crawlers, AI fetchers, curl, JS-off browsers -- have no way
+// to be followed across visits. This fingerprint stands in for one: the columns below are
+// stored on BOTH `events` and `requests`, spelled identically, so the same expression runs
+// against either table and the two can be compared.
+//
+// It is deliberately coarse, and that is the whole trade: nothing new is collected and no
+// privacy claim on /privacy/ changes, so it also works retroactively over history already
+// on disk. The cost is that two people behind one ISP on the same browser and city collapse
+// into one row, and one client that switches network (wifi -> mobile) splits into two.
+//
+// Every part is COALESCE'd so the expression can never evaluate to NULL: it is used on the
+// right-hand side of a `NOT IN`, where a single NULL row would silently swallow the whole
+// result set.
+const FINGERPRINT =
+  "COALESCE(asn, 0) || '|' || COALESCE(device, '') || '|' || COALESCE(browser, '') || '|' ||" +
+  " COALESCE(os, '') || '|' || COALESCE(country, '') || '|' || COALESCE(city, '')";
+
+// The Users-tab id for a server-side client. Prefixed with the bot label so two different
+// crawlers sharing a cloud ASN stay separate rows. `events` has no bot_name column, so
+// comparisons against the beacon use FINGERPRINT (the shared part) instead.
+const CLIENT_KEY = `COALESCE(bot_name, '') || '|' || ${FINGERPRINT}`;
+
+// A client with no id of its own gets visits cut on idle time instead: a gap this long
+// between two hits starts a new visit. 30 minutes is the usual analytics convention and
+// matches how a browser session id tends to expire in practice.
+const VISIT_GAP_MS = 30 * 60_000;
+
+// A `requests` row is already represented on the Users tab when the beacon saw the same
+// client: it is a real browser (bot = 0) whose fingerprint also appears in `events` for the
+// window, so it already has a visitor row and counting it again would list every human
+// twice. Bot rows are never dropped, so a crawler sharing a fingerprint with a human still
+// gets its own row.
+const NOT_ALREADY_A_VISITOR =
+  `(bot = 1 OR ${FINGERPRINT} NOT IN (SELECT ${FINGERPRINT} FROM events WHERE ts >= ? AND ts <= ?))`;
+
+/** One `requests` row as read back for the client drill-down. */
+interface ClientHit {
+  ts: number;
+  path: string;
+  status: number | null;
+  ref: string | null;
+  bot: number;
+  bot_name: string | null;
+  city: string | null;
+  region: string | null;
+  country: string | null;
+  asorg: string | null;
+  device: string | null;
+  browser: string | null;
+  os: string | null;
+}
+
+/** Split time-ordered hits into visits, cutting whenever the client idles past the gap. */
+function intoVisits<T extends { ts: number }>(hits: T[]): { start: number; end: number; hits: T[] }[] {
+  const visits: { start: number; end: number; hits: T[] }[] = [];
+  for (const h of hits) {
+    const cur = visits[visits.length - 1];
+    if (cur && h.ts - cur.end <= VISIT_GAP_MS) {
+      cur.end = h.ts;
+      cur.hits.push(h);
+    } else {
+      visits.push({ start: h.ts, end: h.ts, hits: [h] });
+    }
+  }
+  return visits;
+}
 
 export async function onRequestGet(context: { request: Request; env: Env }): Promise<Response> {
   const { request, env } = context;
@@ -132,6 +202,41 @@ async function respond(db: D1Database, request: Request): Promise<Response> {
     return json({ visitor: visitorId, sessions });
   }
 
+  // ── Drill-down: one server-side client's whole history, cut into visits ─────
+  // The counterpart of the visitor drill-down for clients that never ran the beacon. Like
+  // that one it ignores the time window and shows everything on record, so a crawler's
+  // behaviour is readable across visits rather than only inside the current range. No
+  // dedup here: these rows are what this exact fingerprint did.
+  const clientId = q.get("client");
+  if (clientId) {
+    const { results } = await db
+      .prepare(
+        `SELECT ts, path, status, ref, bot, bot_name, city, region, country, asorg, device, browser, os
+           FROM requests WHERE ${CLIENT_KEY} = ? ORDER BY ts ASC LIMIT 2000`,
+      )
+      .bind(clientId)
+      .all<ClientHit>();
+    const first = results[0];
+    return json({
+      client: clientId,
+      bot: Number(first?.bot ?? 0),
+      bot_name: first?.bot_name ?? null,
+      // Most recent visit first, matching the visitor panel.
+      visits: intoVisits(results)
+        .map((v) => {
+          const h = v.hits[0]!;
+          return {
+            start: v.start,
+            end: v.end,
+            city: h.city, region: h.region, country: h.country, asorg: h.asorg,
+            device: h.device, browser: h.browser, os: h.os,
+            hits: v.hits.map((r) => ({ ts: r.ts, path: r.path, status: r.status, ref: r.ref })),
+          };
+        })
+        .reverse(),
+    });
+  }
+
   const view = q.get("view") ?? "map";
 
   // ── Access: security audit log for the dashboard itself ────────────────────
@@ -197,7 +302,13 @@ async function respond(db: D1Database, request: Request): Promise<Response> {
     return json({ rows });
   }
 
-  // ── Users: one row per visitor in range ────────────────────────────────────
+  // ── Users: one row per client in range, from BOTH sources ──────────────────
+  // Two kinds of row, unioned:
+  //   'visitor' -- ran the JS beacon, so it has a real localStorage id (`events`).
+  //   'client'  -- never ran it, so it is identified by FINGERPRINT (`requests`).
+  // Without the second kind the tab only ever listed the handful of clients that execute
+  // JavaScript, while the Log tab showed every crawler and no-JS fetcher that actually hit
+  // the site. NOT_ALREADY_A_VISITOR keeps a real browser from being listed under both.
   if (view === "users") {
     const limit = intParam(q.get("limit"), 200, 1, 1000);
     const offset = intParam(q.get("offset"), 0, 0, 1_000_000);
@@ -214,7 +325,7 @@ async function respond(db: D1Database, request: Request): Promise<Response> {
     // take a custom separator alongside DISTINCT, so each pair uses '|' internally and any
     // stray comma in a city name is stripped, keeping the client's comma-split unambiguous.
     // Pairs where both city and country are null are dropped (GROUP_CONCAT skips NULLs).
-    const { results } = await db
+    const beacon = await db
       .prepare(
         `SELECT visitor,
                 CASE WHEN visitor IN (${HUMAN_VISITORS}) THEN 0 ELSE 1 END AS bot,
@@ -230,15 +341,75 @@ async function respond(db: D1Database, request: Request): Promise<Response> {
       )
       .bind(from, to, limit, offset)
       .all();
-    const users = results.map((r) => ({
-      visitor: r.visitor,
-      bot: Number(r.bot),
-      visits: r.visits,
-      pageviews: r.pageviews,
-      firstSeen: r.firstSeen,
-      lastSeen: r.lastSeen,
-      locations: typeof r.locations === "string" && r.locations ? r.locations.split(",") : [],
-    }));
+
+    // Server-side clients. A client has no session id, so visits are cut on idle time:
+    // LAG marks every hit that follows a gap longer than VISIT_GAP_MS as a new visit and
+    // SUM counts them. Audience maps the same way it does on the Log tab, by the bot flag.
+    const clientAudience = wantHumans && wantBots ? "" : wantHumans ? "AND bot = 0" : "AND bot = 1";
+    const clients = await db
+      .prepare(
+        `WITH hits AS (
+           SELECT ${CLIENT_KEY} AS id,
+                  ts, bot, bot_name, asorg, device, browser, os, country, city
+             FROM requests
+            WHERE ts >= ? AND ts <= ? ${clientAudience} AND ${NOT_ALREADY_A_VISITOR}
+         ), cut AS (
+           SELECT *,
+                  CASE WHEN LAG(ts) OVER (PARTITION BY id ORDER BY ts) IS NULL
+                         OR ts - LAG(ts) OVER (PARTITION BY id ORDER BY ts) > ${VISIT_GAP_MS}
+                       THEN 1 ELSE 0 END AS newvisit
+             FROM hits
+         )
+         SELECT id,
+                MAX(bot)      AS bot,
+                MAX(bot_name) AS bot_name,
+                MAX(asorg)    AS asorg,
+                MAX(device)   AS device,
+                MAX(browser)  AS browser,
+                MAX(os)       AS os,
+                SUM(newvisit) AS visits,
+                COUNT(*)      AS pageviews,
+                MIN(ts)       AS firstSeen,
+                MAX(ts)       AS lastSeen,
+                GROUP_CONCAT(DISTINCT CASE WHEN city IS NOT NULL OR country IS NOT NULL
+                  THEN REPLACE(COALESCE(city, ''), ',', ' ') || '|' || COALESCE(country, '')
+                END) AS locations
+           FROM cut GROUP BY id ORDER BY lastSeen DESC LIMIT ? OFFSET ?`,
+      )
+      .bind(from, to, from, to, limit, offset)
+      .all();
+
+    const locs = (v: unknown): string[] =>
+      typeof v === "string" && v ? v.split(",") : [];
+    const users = [
+      ...beacon.results.map((r) => ({
+        kind: "visitor" as const,
+        id: String(r.visitor),
+        bot: Number(r.bot),
+        visits: Number(r.visits ?? 0),
+        pageviews: Number(r.pageviews ?? 0),
+        firstSeen: Number(r.firstSeen ?? 0),
+        lastSeen: Number(r.lastSeen ?? 0),
+        locations: locs(r.locations),
+      })),
+      ...clients.results.map((r) => ({
+        kind: "client" as const,
+        id: String(r.id),
+        bot: Number(r.bot),
+        visits: Number(r.visits ?? 0),
+        pageviews: Number(r.pageviews ?? 0),
+        firstSeen: Number(r.firstSeen ?? 0),
+        lastSeen: Number(r.lastSeen ?? 0),
+        locations: locs(r.locations),
+        botName: (r.bot_name as string | null) ?? null,
+        asorg: (r.asorg as string | null) ?? null,
+        device: (r.device as string | null) ?? null,
+        browser: (r.browser as string | null) ?? null,
+        os: (r.os as string | null) ?? null,
+      })),
+    ]
+      .sort((a, b) => b.lastSeen - a.lastSeen)
+      .slice(0, limit);
     return json({ users });
   }
 

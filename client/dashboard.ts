@@ -1,7 +1,10 @@
 // Analytics dashboard (client bundle for /admin/, loaded only by build/build.ts's
 // adminShell). Self-contained: it fetches JSON from /admin/api/stats (functions/admin/api/stats.ts)
-// and renders three tabs, Map / Log / Users, plus a drill-down panel for one visit or one
-// visitor. The route is guarded by HTTP Basic Auth (functions/admin/_middleware.ts), so
+// and renders three tabs, Map / Log / Users, plus a drill-down panel for one visit, one
+// visitor, or one server-side client. The Users tab covers both kinds of client: the ones
+// that run the JS beacon (real visitor ids) and the ones that never do (crawlers, AI
+// fetchers, JS-off browsers), which are grouped by fingerprint instead -- see UserRow.
+// The route is guarded by HTTP Basic Auth (functions/admin/_middleware.ts), so
 // this code assumes an authorized caller. Styling reuses the site's theme tokens
 // (styles/theme.css) for light/dark parity.
 
@@ -62,18 +65,48 @@ interface LogResp {
 	rows: LogRow[];
 	empty?: boolean;
 }
+// A Users row is one client, from either source. `kind` says which, and decides both the
+// label and which drill-down opens:
+//   'visitor' - ran the JS beacon, so `id` is its localStorage visitor id (rich timeline).
+//   'client'  - never ran it (crawler, AI fetcher, curl, JS-off browser), so `id` is the
+//               server-side fingerprint and the extra fields describe what it looks like.
 interface UserRow {
-	visitor: string;
-	bot?: number; // 1 = zero-dwell visitor (never a pagehide), treated as a bot
+	kind: 'visitor' | 'client';
+	id: string;
+	bot?: number; // 1 = zero-dwell visitor, or a detected bot on the requests side
 	visits: number;
 	pageviews: number;
 	firstSeen: number;
 	lastSeen: number;
 	locations: string[]; // each "city|country"; either part may be empty
+	botName?: string | null;
+	asorg?: string | null;
+	device?: string | null;
+	browser?: string | null;
+	os?: string | null;
 }
 interface UsersResp {
 	users: UserRow[];
 	empty?: boolean;
+}
+// One idle-gap-delimited visit by a server-side client (no session id exists for these).
+interface ClientVisit {
+	start: number;
+	end: number;
+	city: string | null;
+	region: string | null;
+	country: string | null;
+	asorg: string | null;
+	device: string | null;
+	browser: string | null;
+	os: string | null;
+	hits: { ts: number; path: string; status: number | null; ref: string | null }[];
+}
+interface ClientResp {
+	client: string;
+	bot: number;
+	bot_name: string | null;
+	visits: ClientVisit[];
 }
 interface AccessRow {
 	ts: number;
@@ -302,6 +335,8 @@ function injectStyles(): void {
 	.adm-leg__dot--human { background: var(--accent); }
 	.adm-leg__dot--bot { background: #c85c39; }
 	.adm-tag--bot { color: #c85c39; border-color: #c85c39; }
+	/* Marks a Users row identified by fingerprint rather than by its own browser id. */
+	.adm-tag--nojs { color: var(--muted); border-color: var(--hairline); }
 	.adm-row--bot { cursor: default; }
 	.adm-row--bot td { background: rgba(200, 92, 57, 0.06); }
 	/* Users rows flagged bot: same terracotta tint, but still clickable to inspect. */
@@ -656,9 +691,16 @@ async function renderLog(view: HTMLElement): Promise<void> {
 	});
 }
 
+/** How a client row is named: the bot's own label if it has one, else what it looks like. */
+function clientLabel(u: UserRow): string {
+	if (u.kind === 'visitor') return shortId(u.id);
+	const who = u.botName || [u.browser, u.os].filter((x) => x && x !== 'Other').join('/') || 'Unknown client';
+	return u.asorg ? `${who} · ${u.asorg}` : who;
+}
+
 async function renderUsers(view: HTMLElement): Promise<void> {
 	if (!state.humans && !state.bots) {
-		view.innerHTML = `<div class="adm-empty">Enable <b>Humans</b> or <b>Bots</b> in Filters to list visitors. Humans are visitors who spent measurable time on a page; bots ran the page but never recorded any dwell.</div>`;
+		view.innerHTML = `<div class="adm-empty">Enable <b>Humans</b> or <b>Bots</b> in Filters to list clients. Humans spent measurable time on a page; bots either ran the page without ever recording dwell, or never ran JavaScript at all.</div>`;
 		return;
 	}
 	const data = await fetchStats<UsersResp>({ view: 'users', limit: 200 });
@@ -667,7 +709,7 @@ async function renderUsers(view: HTMLElement): Promise<void> {
 		return;
 	}
 	if (!data.users.length) {
-		view.innerHTML = `<div class="adm-empty">No visitors in this range.</div>`;
+		view.innerHTML = `<div class="adm-empty">No clients in this range.</div>`;
 		return;
 	}
 	const rows = data.users
@@ -679,11 +721,19 @@ async function renderUsers(view: HTMLElement): Promise<void> {
 						return place(city || null, country || null);
 					})
 					.join(' · ') || 'Unknown';
-			// A visitor with no dwell ever (never a pagehide) is flagged bot: tint the row and
-			// tag the id, so bots stand out even when Humans and Bots are shown together.
+			// A visitor with no dwell ever (never a pagehide), or a detected crawler on the
+			// server side, is flagged bot: tint the row and tag the id, so bots stand out even
+			// when Humans and Bots are shown together.
 			const botTag = u.bot ? ` <span class="adm-tag adm-tag--bot">bot</span>` : '';
-			return `<tr data-visitor="${esc(u.visitor)}"${u.bot ? ' class="is-bot"' : ''}>
-			<td><span class="adm-path">${esc(shortId(u.visitor))}</span>${botTag}</td>
+			// Beacon visitors show their raw id in mono; fingerprinted clients read as prose,
+			// since their "id" is a synthesised key rather than something the client sent.
+			const name =
+				u.kind === 'visitor'
+					? `<span class="adm-path">${esc(clientLabel(u))}</span>`
+					: esc(clientLabel(u));
+			const noJs = u.kind === 'client' ? ` <span class="adm-tag adm-tag--nojs">no JS</span>` : '';
+			return `<tr data-kind="${u.kind}" data-id="${esc(u.id)}"${u.bot ? ' class="is-bot"' : ''}>
+			<td>${name}${botTag}${noJs}</td>
 			<td>${num(u.visits)}</td>
 			<td>${num(u.pageviews)}</td>
 			<td>${esc(locs)}</td>
@@ -692,13 +742,17 @@ async function renderUsers(view: HTMLElement): Promise<void> {
 		</tr>`;
 		})
 		.join('');
-	view.innerHTML = `<div class="adm-tablewrap"><table class="adm-table">
-		<thead><tr><th>Visitor</th><th>Visits</th><th>Pageviews</th><th>Locations</th><th>First seen</th><th>Last seen</th></tr></thead>
+	view.innerHTML = `<p class="adm-hint">Every client that reached the site, whether or not it runs JavaScript. Ones that do are followed by their own browser id; the rest are grouped by network and device, so a crawler stays one row across visits. Click any row for its history.</p>
+		<div class="adm-tablewrap"><table class="adm-table">
+		<thead><tr><th>Client</th><th>Visits</th><th>Pageviews</th><th>Locations</th><th>First seen</th><th>Last seen</th></tr></thead>
 		<tbody>${rows}</tbody></table></div>`;
 	const tbody = view.querySelector('tbody');
 	tbody?.addEventListener('click', (e) => {
-		const tr = (e.target as HTMLElement).closest<HTMLElement>('tr[data-visitor]');
-		if (tr && tr.dataset.visitor) void openVisitor(tr.dataset.visitor);
+		const tr = (e.target as HTMLElement).closest<HTMLElement>('tr[data-id]');
+		const id = tr?.dataset.id;
+		if (!id) return;
+		if (tr?.dataset.kind === 'client') void openClient(id);
+		else void openVisitor(id);
 	});
 }
 
@@ -860,6 +914,39 @@ async function openSession(sid: string): Promise<void> {
 		openPanel('Visit', meta, timeline(data.events));
 	} catch (e) {
 		openPanel('Visit', esc((e as Error).message), '');
+	}
+}
+
+/** Drill-down for a fingerprinted client: its request history, cut into idle-gap visits. */
+async function openClient(cid: string): Promise<void> {
+	openPanel('Client', 'Loading…', '');
+	try {
+		const data = await fetchStats<ClientResp>({ client: cid });
+		const meta = `${data.visits.length} visit(s) &middot; ${esc(data.bot_name ?? 'no bot label')}`;
+		const body = data.visits.length
+			? data.visits
+					.map((v) => {
+						const head = `${esc(fmtTime(v.start))} &middot; ${esc(place(v.city, v.country))} &middot; ${esc(v.device ?? '')} ${esc(v.browser ?? '')} &middot; ${esc(v.asorg ?? 'unknown network')}`;
+						const hits = `<ul class="adm-tl">${v.hits
+							.map((h) => {
+								const bad = h.status && h.status >= 400 ? ` <span class="adm-tag adm-tag--bad">${esc(h.status)}</span>` : '';
+								const from = h.ref ? ` <span class="adm-dim">via ${esc(h.ref)}</span>` : '';
+								return `<li><time>${esc(fmtTime(h.ts))}</time>Requested <span class="adm-path">${esc(h.path)}</span>${bad}${from}</li>`;
+							})
+							.join('')}</ul>`;
+						return `<div class="adm-sess"><div class="adm-sess__head">${head}</div>${hits}</div>`;
+					})
+					.join('')
+			: `<p class="adm-meta">No recorded requests.</p>`;
+		// This client never ran the beacon, so there is no dwell, scroll, or download to show:
+		// the whole history is server-side page hits, and the visits are cut on idle time.
+		openPanel(
+			'Client',
+			meta,
+			`<p class="adm-hint">This client never ran the page's JavaScript, so only server-side requests are recorded. Visits are split after 30 minutes of no activity, and the whole history is shown regardless of the time filter.</p>${body}`,
+		);
+	} catch (e) {
+		openPanel('Client', esc((e as Error).message), '');
 	}
 }
 

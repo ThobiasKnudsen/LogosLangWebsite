@@ -16,7 +16,9 @@
 // Privacy: same stance as functions/api/collect.ts and the /privacy/ page. No raw IP and
 // no raw User-Agent are stored; geo is Cloudflare's edge geolocation (request.cf) and the
 // UA is reduced to coarse device/browser/os plus a bot label. There is deliberately no
-// visitor/session id (a server request can't read the browser's localStorage).
+// visitor/session id (a server request can't read the browser's localStorage); the
+// dashboard follows these clients across visits by fingerprinting the columns already
+// written here, so nothing extra needs collecting (functions/admin/api/stats.ts).
 //
 // Setup: apply db/schema.sql (creates `requests`) and bind D1 as DB on the Pages project.
 // Until the binding exists this logs nothing and passes every request through unchanged.
