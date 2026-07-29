@@ -126,6 +126,9 @@ dist
 # TernJS port file
 .tern-port
 
+# Wrangler local state: build cache and the local D1 used by `wrangler pages dev`
+.wrangler/
+
 # Stores VSCode versions used for testing VSCode extensions
 .vscode-test
 

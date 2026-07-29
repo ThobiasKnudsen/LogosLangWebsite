@@ -1,5 +1,22 @@
+# logoslang.dev is optimised for reach, not for keeping crawlers out. Search engines, the
+# crawlers behind LLM answers (OAI-SearchBot, PerplexityBot, DuckAssistBot, ...), the
+# fetchers an assistant uses when a human asks it to open a page, AI training crawlers, and
+# link-preview unfurlers are all welcome on everything. See also /llms.txt.
 User-agent: *
 Allow: /
 Disallow: /admin/
+
+# SEO backlink databases and data resellers. They extract the whole site and never send a
+# reader back, so they only cost quota. The polite ones stop here; the rest get a 403 from
+# functions/_middleware.ts, which is also what catches unnamed automation and bare HTTP
+# clients (curl, python-requests, Scrapy, ...) that never read this file at all.
+User-agent: AhrefsBot
+User-agent: SemrushBot
+User-agent: MJ12bot
+User-agent: DotBot
+User-agent: DataForSeoBot
+User-agent: Diffbot
+User-agent: ImagesiftBot
+Disallow: /
 
 Sitemap: https://logoslang.dev/sitemap.xml
