@@ -249,27 +249,13 @@ a {
     align-items: center;
     gap: 0.85rem;
 }
-/* Icon-only GitHub button beside Download. Sized and hovered like the hamburger
-   button so the dock's icon buttons read as one family. Hidden once the nav
-   collapses (below 60rem): it moves into the dropdown as .nav-menu__github. */
-.gh-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 2.3rem;
-    height: 2.3rem;
-    border: 1px solid var(--dock-border);
-    border-radius: 8px;
-    color: var(--heading);
-}
-.gh-btn:hover {
-    border-color: var(--btn-hover);
-    color: var(--btn-hover);
-}
+/* The dock's styled button (.logos-btn--download inside .dock-right) is GitHub
+   while no public builds exist; it becomes Download again with the first release.
+   Below 30rem it hides and the dropdown's .nav-menu__github row stands in. */
 /* Hamburger button + collapsed dropdown. Hidden on wide screens (the inline .nav
    is shown instead); swapped in below 60rem where .nav is hidden. The breakpoint
    leaves slack: the inline links must never overflow the dock (a squeezed dock
-   would push the Download button outside it) before the burger takes over. */
+   would push the styled button outside it) before the burger takes over. */
 /* The burger and its dropdown share this one anchor, so the menu always hangs
    directly under the button wherever the button sits (dock-centred, or at the
    dock's right edge on phones). */
@@ -352,18 +338,11 @@ a {
     outline: 1.5px solid var(--btn-hover);
     outline-offset: -0.15rem;
 }
-/* Download's home inside the dropdown: hidden until the phone layout (below) hides
-   the dock's own Download button and this row stands in for it. Scoped under
-   .nav-menu so it outranks the generic .logos-btn display rule. */
-.nav-menu .nav-menu__download {
+/* GitHub's home inside the dropdown, a row like the nav links (same hover). Hidden
+   until the phone layout (below) hides the dock's styled GitHub button and this
+   row stands in for it. */
+.nav-menu .nav-menu__github {
     display: none;
-    justify-content: center;
-    margin-top: 0.35rem;
-}
-/* GitHub's home inside the dropdown, a row like the nav links (same hover). It is
-   only ever seen below 60rem, where the dock's .gh-btn is hidden. */
-.nav-menu__github {
-    display: flex;
     align-items: center;
     gap: 0.5rem;
 }
@@ -374,7 +353,7 @@ a {
     }
     .nav-burger {
         display: inline-flex;
-        /* Dead centre of the dock (absolute, so the wordmark and Download button
+        /* Dead centre of the dock (absolute, so the wordmark and styled-button
 		   widths can't push it off-centre). The dropdown anchors to this wrapper,
 		   so it rides along and always hangs right under the button. */
         position: absolute;
@@ -384,16 +363,13 @@ a {
     .nav-toggle {
         display: inline-flex;
     }
-    .gh-btn {
-        display: none; /* lives in the dropdown (.nav-menu__github) from here down */
-    }
 }
-/* Phone widths: nothing shrinks. The dock's Download button moves into the
-   hamburger dropdown (.nav-menu__download) and the burger takes its place at the
+/* Phone widths: nothing shrinks. The dock's styled GitHub button moves into the
+   hamburger dropdown (.nav-menu__github) and the burger takes its place at the
    dock's right edge, so the wordmark and burger keep their full size. */
 @media (max-width: 30rem) {
     /* Direct child only: the dropdown (now inside .dock-right via .nav-burger)
-	   carries its own Download row, which must NOT be hidden with it. */
+	   carries its own GitHub row, which must NOT be hidden with it. */
     .dock-right > .logos-btn--download {
         display: none;
     }
@@ -410,8 +386,8 @@ a {
         border-start-start-radius: 12px;
         border-start-end-radius: 0;
     }
-    .nav-menu .nav-menu__download {
-        display: inline-flex;
+    .nav-menu .nav-menu__github {
+        display: flex;
     }
 }
 
@@ -555,19 +531,6 @@ a {
     align-items: center;
     padding-inline: 1rem;
 }
-/* The TL;DR summary above the headline: a brand blue-purple (--logo) outline with
-   ordinary theme-aware text (--heading: near-black in light, near-white in dark). Its
-   bottom margin is the space between the box and the headline. */
-.hero__note {
-    margin: 0 0 clamp(2rem, 6vh, 2rem);
-    max-width: 46rem;
-    padding: 0.7rem 1.2rem;
-    border: 1px solid var(--logo);
-    border-radius: 12px;
-    color: var(--heading);
-    font-size: 0.9rem;
-    line-height: 1.55;
-}
 .hero__headline {
     font-family: var(--serif);
     /* 20% smaller than the original clamp(1.6rem, 8vw, 5.6rem). */
@@ -604,11 +567,11 @@ a {
     display: block;
     color: var(--heading);
 }
-/* The rotating enumeration beneath the thesis: a fixed "instead of a different one
-   for" followed by the rotating tail (systems, the GPU, … the compiler itself),
-   so the motion now argues the one-language claim instead of scattering superlatives.
-   Medium and muted so it supports the thesis without competing with it; the prefix
-   and the rotating word flow inline and wrap together on narrow screens. */
+/* The rotating enumeration beneath the thesis: the one-language claim ("One
+   language for everything,"), a fixed "instead of a different one for", and the
+   rotating tail (systems, the GPU, … the compiler itself), so the motion argues
+   the claim instead of scattering superlatives. Medium and muted so it supports
+   the thesis without competing with it. */
 .hero__rot-line {
     font-size: 0.4em; /* medium relative to the fluid headline size */
     font-weight: 500;
@@ -620,6 +583,12 @@ a {
        wraps within the viewport on phones (90vw), never overflowing. */
     max-width: min(90vw, 34ch);
     text-align: center;
+}
+/* The one-language claim leads the rotating line, a shade stronger than the muted
+   prefix so the claim reads before the enumeration does. */
+.hero__rot-one {
+    display: block;
+    color: var(--heading);
 }
 /* The prefix owns its own line, so the rotator (which reserves its WIDEST word's
    width via inline-grid) sits stably below it and the hero never reflows vertically
@@ -682,10 +651,14 @@ a {
     max-width: 46ch;
     margin: 2.25rem 0 0;
 }
-.hero__availability {
-    font-size: 0.85rem;
-    color: var(--muted);
-    margin: 0.9rem 0 0;
+/* The hero's actions: ghost links to the vision and roadmap, the honest CTAs while
+   no builds exist (the get-notified form lives at the bottom of the page). */
+.hero__actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.8rem;
+    margin-top: 2.2rem;
 }
 
 /* ── Get-notified form ────────────────────────────────────────────────────────
@@ -746,6 +719,33 @@ a {
     color: var(--warn-text);
 }
 
+/* ── Bottom-of-homepage signup ────────────────────────────────────────────────
+   The get-notified form's home: after the argument (matrix included), where a
+   convinced reader lands, styled like the other homepage sections. */
+.signup {
+    max-width: 46rem;
+    margin: clamp(4rem, 10vh, 7rem) auto 0;
+    padding-inline: 1.25rem;
+    text-align: center;
+}
+.signup__title {
+    font-family: var(--serif);
+    font-size: clamp(1.5rem, 3vw, 2.2rem);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: var(--heading);
+    margin: 0;
+}
+.signup__lead {
+    font-size: 0.95rem;
+    max-width: 56ch;
+    margin: 0.9rem auto 0;
+    color: var(--muted);
+}
+.signup .notify {
+    margin-top: 1.6rem;
+}
+
 /* ── Homepage code sample ─────────────────────────────────────────────────────
    A single code window of target syntax under the hero: an editor-style card with
    a filename bar and an explicit "target syntax" badge so it never reads as a
@@ -796,6 +796,40 @@ a {
     margin: 0 0 0.9rem;
 }
 .buildable__body p:last-child {
+    margin-bottom: 0;
+}
+.substrate {
+    max-width: 46rem;
+    margin: clamp(4rem, 10vh, 7rem) auto 0;
+    padding-inline: 1.25rem;
+    text-align: center;
+}
+.substrate__title {
+    font-family: var(--serif);
+    font-size: clamp(1.5rem, 3vw, 2.2rem);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: var(--heading);
+    margin: 0;
+}
+.substrate__lead {
+    max-width: 58ch;
+    margin: 1rem auto 0;
+    font-size: 1.02rem;
+    line-height: 1.6;
+    color: var(--heading);
+}
+.substrate__body {
+    max-width: 62ch;
+    margin: 1.2rem auto 0;
+    font-size: 0.95rem;
+    line-height: 1.65;
+    text-align: left;
+}
+.substrate__body p {
+    margin: 0 0 0.9rem;
+}
+.substrate__body p:last-child {
     margin-bottom: 0;
 }
 .code-card {
@@ -930,9 +964,12 @@ a {
     text-align: center;
 }
 .dyad-graph {
+    /* The SVG carries its natural max-width inline (computed from the laid-out
+	   columns in build/pages.ts). The min-width keeps its text near design size on
+	   phones, where .unify__graph scrolls it horizontally instead of shrinking it
+	   into illegibility. */
     width: 100%;
-    max-width: 832px;
-    min-width: 700px;
+    min-width: 860px;
     height: auto;
 }
 .unify__caption {
@@ -954,7 +991,7 @@ a {
     fill: var(--code-bg);
     stroke-dasharray: 4 3;
 }
-.dyad-box--generic {
+.dyad-box--record {
     fill: var(--code-bg);
 }
 .dyad-kind {
@@ -1017,7 +1054,7 @@ a {
        hairlines. The edge fade lives on the inner scroller (below) so only the
        TEXT dissolves at the sides, never the band or its hairlines. */
     background: var(--surface);
-    /* A medium gap between the hero's availability line and the frieze. */
+    /* A medium gap between the hero and the frieze. */
     margin-top: clamp(3rem, 8vh, 6rem);
     border-block: 1px solid var(--hairline);
     padding-block: 2rem;

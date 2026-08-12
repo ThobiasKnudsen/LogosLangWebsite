@@ -2,7 +2,6 @@
 // the pre-paint theme script, and the full-document shell.
 
 const GITHUB = 'https://github.com/ThobiasKnudsen/LogosLang';
-const DOWNLOAD = '/download/';
 
 // Absolute production origin, used for canonical URLs, Open Graph / Twitter tags,
 // the sitemap, and llms.txt. Overridable for local or preview builds via
@@ -41,11 +40,14 @@ export function escapeHtml(s: string): string {
 		.replace(/"/g, '&quot;');
 }
 
+// Playground is deliberately absent until a release ships a runnable WASM build:
+// the page still builds and stays reachable by URL, but the nav does not advertise
+// an empty room. Re-add { key: 'playground', label: 'Playground', href:
+// '/playground/' } when real in-browser execution lands.
 const NAV = [
 	{ key: 'vision', label: 'Vision', href: '/vision/' },
 	{ key: 'roadmap', label: 'Roadmap', href: '/roadmap/' },
 	{ key: 'examples', label: 'Examples', href: '/examples/' },
-	{ key: 'playground', label: 'Playground', href: '/playground/' },
 	{ key: 'docs', label: 'Docs', href: '/docs/' },
 	{ key: 'about', label: 'About', href: '/about/' },
 ];
@@ -87,16 +89,19 @@ function dockHtml(active: string): string {
 
 	// The same links appear inline on wide screens (.nav) and inside the collapsed
 	// dropdown (.nav-menu) on narrow ones, where the hamburger button toggles them.
+	// The dock's styled button is GitHub while no public builds exist (a Download
+	// button would lead to an empty page); it returns to Download with the first
+	// release. At phone widths the styled button hides and the dropdown's GitHub
+	// row takes over (see theme.css).
 	return `<header class="dock">
   <a class="wordmark" href="/" aria-label="Logos home">Λόγος</a>
   <nav class="nav" aria-label="Primary">${links}</nav>
   <div class="dock-right">
     <div class="nav-burger">
       <button class="nav-toggle" type="button" aria-label="Menu" aria-expanded="false" aria-controls="nav-menu">${MENU_SVG}</button>
-      <nav class="nav-menu" id="nav-menu" aria-label="Primary" hidden>${links}<a class="nav-link nav-menu__github" href="${GITHUB}" target="_blank" rel="noopener noreferrer">${GITHUB_SVG}<span>GitHub</span></a><a class="logos-btn logos-btn--download nav-menu__download" href="${DOWNLOAD}">Download</a></nav>
+      <nav class="nav-menu" id="nav-menu" aria-label="Primary" hidden>${links}<a class="nav-link nav-menu__github" href="${GITHUB}" target="_blank" rel="noopener noreferrer">${GITHUB_SVG}<span>GitHub</span></a></nav>
     </div>
-    <a class="gh-btn" href="${GITHUB}" target="_blank" rel="noopener noreferrer" aria-label="Logos on GitHub">${GITHUB_SVG}</a>
-    <a class="logos-btn logos-btn--download" href="${DOWNLOAD}">Download</a>
+    <a class="logos-btn logos-btn--download dock-github" href="${GITHUB}" target="_blank" rel="noopener noreferrer">${GITHUB_SVG}<span>GitHub</span></a>
   </div>
 </header>`;
 }

@@ -1,5 +1,6 @@
 // Inner HTML for the marketing pages. Kept faithful to the established design:
-// golden-section hero (whose primary action is the get-notified form until real
+// a hero leading with the machine-written-code thesis (its actions are the vision
+// and roadmap; the get-notified form lives at the bottom of the page until real
 // builds exist), a target-syntax code card, a scrolling frieze of Greek reflections
 // on the Logos, and the honest comparison matrix beneath it.
 import { escapeHtml } from "./templates.ts";
@@ -158,42 +159,42 @@ function notifyFormHtml(source: string): string {
 }
 
 // ── Homepage code sample ──────────────────────────────────────────────────────
-// Honest target syntax in the systems meta-language register of the actual sources,
-// showing the headline (everyday code and the language's own definition living in one
-// graph) rather than a CAS demo. The declare/reassign lines follow reference/operators
-// verbatim; the fn signature, `error «…»` body, `dyad` struct, and the `+ := type (…)`
-// operator definition are taken near-verbatim from LogosLang's language_sketch.logos
-// (where `+` is a stub, given a real body here to show operators are ordinary
-// identities defined in the language itself, mirroring how `array` / `mut` are defined
-// there); and `?` (the typed unknown) is DESIGN.md substrate vocabulary. The card
-// labels it all as target syntax so it never overclaims.
-const HOME_SAMPLE = `# Declare with \`:=\`, reassign with \`=\`. \`mut\` is a type modifier.
+// Honest target syntax tracking DESIGN.md (the design's vocabulary wins where the
+// seed's sketch lags it: the cell is the `synolon` with `logos`/`hyle` slots, the
+// former `type`/`struct` are merged into the one identity `logos`, and pointer
+// logos are prefix `@T`). It shows the headline (everyday code and the language's
+// own definition living in one graph) rather than a CAS demo. The declare/reassign
+// lines follow reference/operators verbatim; the fn signature and `error «…»` body
+// follow language_sketch.logos (where `+` is a stub, given a real body here to show
+// operators are ordinary identities defined in the language itself); and `?` (the
+// typed unknown) is DESIGN.md substrate vocabulary. The card labels it all as
+// target syntax so it never overclaims.
+const HOME_SAMPLE = `# Declare with \`:=\`, reassign with \`=\`. \`mut\` marks a mutable value.
 count := mut i32 0
 count = count + 1
 
 # Systems code: borrowed references, checked errors, no GC.
-advance := fn (tokens : &mut array dyad, idx : u64) -> void! (
+advance := fn (tokens : &mut array synolon, idx : u64) -> void! (
     if idx+1 >= tokens.size
         error «not enough tokens after idx»
 )
 
-# The language is written in itself. A node is two slots, and even
-# \`+\` is an ordinary identity: a node carrying a precedence and the
-# code for how it reads its operands. There is no separate macro
-# language, so new syntax is just more declarations in the same graph.
-dyad := struct (type := dyad@ ?, value := void@ ?)
-+ := type (
+# The language is written in itself. A node (a synolon) is two slots,
+# logos and hyle, and even \`+\` is an ordinary identity: a node carrying
+# a precedence and the code for how it reads its operands. There is no
+# separate macro language, so new syntax is just more declarations in
+# the same graph.
+synolon := logos (logos := @synolon ?, hyle := @void ?)
++ := logos (
     shared precedence    := f64 6.0
     shared associativity := u8 left_to_right
-    shared constructor   := fn (tokens : &mut array dyad, idx : u64) -> void! ( ? )
+    shared constructor   := fn (tokens : &mut array synolon, idx : u64) -> void! ( ? )
 )`;
 
 const LOGOS_KEYWORDS = new Set([
   "fn",
   "mut",
   "immut",
-  "type",
-  "struct",
   "shared",
   "if",
   "else",
@@ -209,8 +210,10 @@ const LOGOS_KEYWORDS = new Set([
   "error",
   "undefined",
 ]);
+// `@synolon` / `@void` tokenize as the `@` operator plus a bare identifier, so the
+// pointer-logos names appear here without their prefix.
 const LOGOS_TYPES =
-  /^(?:[iu](?:8|16|32|64)|f32|f64|string|bool|dyad@?|void@|exec@)$/;
+  /^(?:[iu](?:8|16|32|64)|f32|f64|string|bool|void!?|synolon|logos|exec)$/;
 
 /** Minimal Logos highlighter for the fixed homepage sample: comments, «strings»,
  *  numbers, keywords, primitive types, and operators become spans; everything else
@@ -254,22 +257,23 @@ function highlightLogos(source: string): string {
 
 // ── "The program is the structure" figure ────────────────────────────────────
 // The homepage payoff: the smallest program, `a = a + 1`, drawn as the actual Logic
-// Graph it becomes. The shape is verbatim from LogosLang's language_sketch.logos
-// (the `a = a + 1` expansion) and is V1PLAN's canonical smoke test, so it is the
-// real seed model, not decoration. Two node kinds: a DYAD node has a `type` field
-// and a `value` field; a GENERIC node (what a `value:void@` points at) has whatever
-// fields its type defines, here `lhs` and `rhs`. Every `->` in the source is one
-// edge that leaves a single FIELD (a port on the node's right edge, at that field's
+// Graph it becomes. The shape follows the `a = a + 1` expansion in LogosLang's
+// language_sketch.logos (V1PLAN's canonical smoke test), spelled in DESIGN.md's
+// vocabulary (synolon/logos/hyle; the sketch's older dyad/type/value spelling is
+// superseded). Two node kinds: a SYNOLON node has a `logos` slot and a `hyle` slot;
+// a RECORD node (what a `hyle:@void` points at) is the operand record whose fields
+// the logos defines, here `lhs` and `rhs`. Every `->` in the source is one edge
+// that leaves a single FIELD (a port on the node's right edge, at that field's
 // row) and points at a whole NODE. So `a = a + 1` unfolds left to right as
-// dyad -> generic -> dyad -> generic -> dyad, bottoming out at the identity nodes
-// `=`, `+`, `rational_number`, the variable `a`, and the literal `"1"`. Laid out as a
-// planar left-to-right tree (leaf rows in reading order, columns by depth), rendered
-// as inline SVG with no client JS.
+// synolon -> record -> synolon -> record -> synolon, bottoming out at the identity
+// nodes `=`, `+`, `rational_number`, the variable `a`, and the literal `1`. Laid
+// out as a planar left-to-right tree (leaf rows in reading order, columns by
+// depth), rendered as inline SVG with no client JS. The viewBox width is computed
+// from the laid-out columns, so wider field text never clips.
 const SG_VY = 8; // viewBox top (leaves room for the kind labels above the top nodes)
-const SG_W = 832; // viewBox width (matches the computed left-to-right layout below)
 const SG_VH = 314; // viewBox height
 
-const GNODE_H = 42; // a dyad/generic node: two field rows
+const GNODE_H = 42; // a synolon/record node: two field rows
 const GLEAF_H = 26; // an un-expanded identity / literal node
 const GROW_Y = [16, 32]; // y of each field row's port, within a node
 
@@ -277,7 +281,7 @@ const GROW_Y = [16, 32]; // y of each field row's port, within a node
 // a little margin so text never touches a node edge. Node widths are derived from
 // these (structW / leafW), so a field like `value:void@` always fits its box.
 const FIELD_CW = 7.9; // .dyad-field, 13px (the field name)
-const SLOT_CW = 6.0; // .dyad-slot, 10px (the `:type` suffix)
+const SLOT_CW = 6.0; // .dyad-slot, 10px (the `:logos` suffix)
 const HEAD_CW = 9.7; // .dyad-head, 16px (a leaf identity name)
 const PAD_L = 10; // text inset from a node's left edge
 const PAD_R = 13; // gap between the text and the right-edge port
@@ -294,16 +298,16 @@ interface GNode {
   y: number;
   w: number;
   h: number;
-  kind: "dyad" | "generic" | "leaf";
-  /** For a structural node: two [name, type] fields, e.g. ["type", "dyad@"]. */
+  kind: "synolon" | "record" | "leaf";
+  /** For a structural node: two [name, logos] fields, e.g. ["logos", "@synolon"]. */
   rows?: [string, string][];
   label?: string;
-  /** Kind label drawn above the node. Leaves are dyads too, so they carry one. */
+  /** Kind label drawn above the node. Leaves are synolons too, so they carry one. */
   tag?: string;
 }
 
-/** A node: a leaf identity/literal (dashed, just its name) or a two-field dyad /
- *  generic box. Each field prints its name and its `:type` (dyad@ / void@), and
+/** A node: a leaf identity/literal (dashed, just its name) or a two-field synolon /
+ *  record box. Each field prints its name and its `:logos` (@synolon / @void), and
  *  carries a port on the right edge, exactly where that field's edge leaves. Every
  *  node shows its kind above it (a leaf's `tag`, a structural node's own kind). */
 function gNode(n: GNode): string {
@@ -349,53 +353,54 @@ function gEdge(src: GNode, f: number, dst: GNode, dy = 0): string {
   ]);
 }
 
-// The ten nodes of `a = a + 1`, laid out left to right. Every node is a dyad, so the
-// leaf identities (`=`, `+`, `a`, `rational_number`) are tagged "dyad" too; only the
-// literal `"1"` (a raw void@ value) is untagged. Column x-positions are derived from
-// each column's widest node, so widening a node (for its field text) never overlaps a
-// neighbour. `a` is one shared node two edges point at: `+`'s lhs reaches it up-right
-// (short), and `=`'s lhs reaches it along a lane over the top of the chain (long).
+// The ten nodes of `a = a + 1`, laid out left to right. Every node is a synolon, so
+// the leaf identities (`=`, `+`, `a`, `rational_number`) are tagged "synolon" too;
+// the literal `1` is the raw matter a hyle bottoms out at, so it is tagged "hyle".
+// Column x-positions are derived from each column's widest node, so widening a node
+// (for its field text) never overlaps a neighbour. `a` is one shared node two edges
+// point at: `+`'s lhs reaches it up-right (short), and `=`'s lhs reaches it along a
+// lane over the top of the chain (long).
 function structureGraphSvg(): string {
-  const dyadRows: [string, string][] = [
-    ["type", "dyad@"],
-    ["value", "void@"],
+  const synRows: [string, string][] = [
+    ["logos", "@synolon"],
+    ["hyle", "@void"],
   ];
-  const genRows: [string, string][] = [
-    ["lhs", "dyad@"],
-    ["rhs", "dyad@"],
+  const recRows: [string, string][] = [
+    ["lhs", "@synolon"],
+    ["rhs", "@synolon"],
   ];
 
   interface Spec {
     id: string;
     col: number;
     y: number;
-    kind: "dyad" | "generic" | "leaf";
+    kind: "synolon" | "record" | "leaf";
     label?: string;
     tag?: string;
   }
   const specs: Spec[] = [
-    { id: "D1", col: 0, y: 52, kind: "dyad" },
-    { id: "EQ", col: 1, y: 26, kind: "leaf", label: "=", tag: "dyad" },
-    { id: "G1", col: 1, y: 102, kind: "generic" },
-    { id: "D2", col: 2, y: 154, kind: "dyad" },
-    { id: "PLUS", col: 3, y: 128, kind: "leaf", label: "+", tag: "dyad" },
-    { id: "G2", col: 3, y: 206, kind: "generic" },
-    { id: "A", col: 4, y: 162, kind: "leaf", label: "a", tag: "dyad" },
-    { id: "D3", col: 4, y: 258, kind: "dyad" },
+    { id: "D1", col: 0, y: 52, kind: "synolon" },
+    { id: "EQ", col: 1, y: 26, kind: "leaf", label: "=", tag: "synolon" },
+    { id: "G1", col: 1, y: 102, kind: "record" },
+    { id: "D2", col: 2, y: 154, kind: "synolon" },
+    { id: "PLUS", col: 3, y: 128, kind: "leaf", label: "+", tag: "synolon" },
+    { id: "G2", col: 3, y: 206, kind: "record" },
+    { id: "A", col: 4, y: 162, kind: "leaf", label: "a", tag: "synolon" },
+    { id: "D3", col: 4, y: 258, kind: "synolon" },
     {
       id: "RAT",
       col: 5,
       y: 240,
       kind: "leaf",
       label: "rational_number",
-      tag: "dyad",
+      tag: "synolon",
     },
-    { id: "ONE", col: 5, y: 290, kind: "leaf", label: '"1"', tag: "generic" },
+    { id: "ONE", col: 5, y: 290, kind: "leaf", label: "1", tag: "hyle" },
   ];
   const wOf = (s: Spec): number =>
     s.kind === "leaf"
       ? leafW(s.label!)
-      : structW(s.kind === "dyad" ? dyadRows : genRows);
+      : structW(s.kind === "synolon" ? synRows : recRows);
 
   // Column x from each column's widest node, so nodes never overlap once auto-sized.
   const NCOL = 6;
@@ -428,14 +433,17 @@ function structureGraphSvg(): string {
             w: wOf(s),
             h: GNODE_H,
             kind: s.kind,
-            rows: s.kind === "dyad" ? dyadRows : genRows,
+            rows: s.kind === "synolon" ? synRows : recRows,
           };
   }
   const nodes = specs.map((s) => gNode(N[s.id]!)).join("");
+  // Natural width of the laid-out graph: the last column's right edge plus the same
+  // margin the first column starts at. Used for the viewBox and the width attribute.
+  const width = Math.ceil(colX[NCOL - 1]! + colW[NCOL - 1]! + 16);
 
   // `=`.lhs -> a routed over the top: right stub, up to a lane above the chain,
   // across, then down into a's left side, landing just above +.lhs's landing. The
-  // lane sits above the "dyad" kind label over the `+` leaf (at ~y116), so raise it.
+  // lane sits above the "synolon" kind label over the `+` leaf (at ~y116), so raise it.
   const LANE_Y = 102;
   const [glx, gly] = gPort(N.G1!, 0);
   const [aex, aey] = gEntry(N.A!, -5);
@@ -449,18 +457,20 @@ function structureGraphSvg(): string {
   ]);
 
   const edges = [
-    gEdge(N.D1!, 0, N.EQ!), // =dyad.type  -> =
-    gEdge(N.D1!, 1, N.G1!), // =dyad.value -> generic
-    eqLhsToA, // =generic.lhs -> a (shared, over the top)
-    gEdge(N.G1!, 1, N.D2!), // =generic.rhs -> +dyad
-    gEdge(N.D2!, 0, N.PLUS!), // +dyad.type  -> +
-    gEdge(N.D2!, 1, N.G2!), // +dyad.value -> generic
-    gEdge(N.G2!, 0, N.A!, 5), // +generic.lhs -> a (shared)
-    gEdge(N.G2!, 1, N.D3!), // +generic.rhs -> rational_number dyad
-    gEdge(N.D3!, 0, N.RAT!), // ratdyad.type  -> rational_number
-    gEdge(N.D3!, 1, N.ONE!), // ratdyad.value -> "1"
+    gEdge(N.D1!, 0, N.EQ!), // =synolon.logos -> =
+    gEdge(N.D1!, 1, N.G1!), // =synolon.hyle  -> record
+    eqLhsToA, // =record.lhs -> a (shared, over the top)
+    gEdge(N.G1!, 1, N.D2!), // =record.rhs -> +synolon
+    gEdge(N.D2!, 0, N.PLUS!), // +synolon.logos -> +
+    gEdge(N.D2!, 1, N.G2!), // +synolon.hyle  -> record
+    gEdge(N.G2!, 0, N.A!, 5), // +record.lhs -> a (shared)
+    gEdge(N.G2!, 1, N.D3!), // +record.rhs -> rational_number synolon
+    gEdge(N.D3!, 0, N.RAT!), // rat synolon.logos -> rational_number
+    gEdge(N.D3!, 1, N.ONE!), // rat synolon.hyle  -> 1
   ].join("");
-  return `<svg class="dyad-graph" viewBox="0 ${SG_VY} ${SG_W} ${SG_VH}" width="${SG_W}" height="${SG_VH}" role="img" aria-label="The program a = a + 1 as a Logic Graph: a dyad node whose type field points at =, and whose value field points at a generic node; that generic node's lhs points at the one variable a and its rhs unfolds into a + dyad and then a rational_number dyad whose value is the literal 1. Both lhs fields point at the same a.">
+  // The inline max-width keeps CSS from stretching the graph past its natural size
+  // while letting narrow viewports scroll it at a readable scale (see .dyad-graph).
+  return `<svg class="dyad-graph" viewBox="0 ${SG_VY} ${width} ${SG_VH}" width="${width}" height="${SG_VH}" style="max-width:${width}px" role="img" aria-label="The program a = a + 1 as a Logic Graph: a synolon whose logos slot points at = and whose hyle slot points at an operand record; that record's lhs points at the one variable a, and its rhs unfolds into a + synolon and then a rational_number synolon whose hyle is the literal 1. Both lhs fields point at the same a.">
   <defs><marker id="dyad-arrow" viewBox="0 0 8 8" refX="6.5" refY="4" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L8 4 L0 8 z" /></marker></defs>
   ${edges}
   ${nodes}
@@ -470,12 +480,12 @@ function structureGraphSvg(): string {
 function structureHtml(): string {
   return `<section class="unify" aria-label="A program is the structure that runs it">
   <h2 class="unify__title">The program is the structure</h2>
-  <p class="unify__lead">Radical unification is not a metaphor. The smallest program, <code>a = a + 1</code>, is not text a compiler reads once and throws away. It <em>is</em> a graph called Logic Graph (LG). This name is chosen because the graph should be able to explain any logic immaginable. And since its a graph structure the graph itself can reflect on the graph, intepret it or compile and run it. </p>
+  <p class="unify__lead">Radical unification is not a metaphor. The smallest program, <code>a = a + 1</code>, is not text a compiler reads once and throws away. It <em>is</em> a graph, the Logic Graph (LG), named because it should be able to hold any logic imaginable. And because it is a graph, the same structure can reflect on itself, interpret itself, or compile and run itself.</p>
   <figure class="unify__figure">
     <pre class="unify__source"><code>${highlightLogos("a = a + 1")}</code></pre>
     <span class="unify__becomes"><span class="unify__becomes-arrow" aria-hidden="true">↓</span> becomes</span>
     <div class="unify__graph">${structureGraphSvg()}</div>
-    <figcaption class="unify__caption">Read it left to right: every arrow leaves one <em>field</em> of a node (the <code>:dyad@</code> or <code>:void@</code> next to it is that field's type) and points at another whole node. A <strong>dyad</strong> node carries a <code>type</code> and a <code>value</code>; a <code>value:void@</code> points at a <strong>generic</strong> node whose fields (here <code>lhs</code>, <code>rhs</code>) are defined by its type. So <code>a = a + 1</code> unfolds into dyads and operand structs, bottoming out at the identities <code>=</code>, <code>+</code>, <code>rational_number</code>, the variable <code>a</code>, and the literal <code>"1"</code>. Both <code>lhs</code> fields point at the one <code>a</code>, so it is genuinely a graph, not a tree. Because your program already is this structure, the same operations that run it can read it, rewrite it, optimize it, and prove it, so the optimizer, the computer-algebra system, the proof checker, and metaprogramming are one thing over one structure rather than four tools bolted on from outside.</figcaption>
+    <figcaption class="unify__caption">Read it left to right: every arrow leaves one <em>field</em> of a node (the <code>:@synolon</code> or <code>:@void</code> next to it is what that field points at) and points at another whole node. A <strong>synolon</strong> is a node of exactly two slots: a <code>logos</code>, which says what the node is, and a <code>hyle</code>, the matter the logos gives meaning to. Here each <code>hyle</code> points at an operand <strong>record</strong> whose fields (<code>lhs</code>, <code>rhs</code>) are defined by the logos. So <code>a = a + 1</code> unfolds into synolons and operand records, bottoming out at the identities <code>=</code>, <code>+</code>, <code>rational_number</code>, the variable <code>a</code>, and the literal <code>1</code>. Both <code>lhs</code> fields point at the one <code>a</code>, so it is genuinely a graph, not a tree. Because your program already is this structure, the same operations that run it can read it, rewrite it, optimize it, and prove it, so the optimizer, the computer-algebra system, the proof checker, and metaprogramming are one thing over one structure rather than four tools bolted on from outside.</figcaption>
   </figure>
 </section>`;
 }
@@ -1042,19 +1052,48 @@ function buildableHtml(): string {
 </section>`;
 }
 
+// The "why now" section: Logos as the substrate for machine-written code. The hero
+// above states the thesis; this section carries the full argument, that a
+// reflective, rewritable structure carrying its own proofs flips from luxury to
+// requirement once models write most code, and that this is the half Smalltalk
+// (malleable, unproven) and Lean (proven, not a systems substrate) each miss.
+// Kept honest: it is the direction, not a shipping feature.
+function aiSubstrateHtml(): string {
+  return `<section class="substrate" aria-label="A substrate for machine-written code">
+  <h2 class="substrate__title">Why one structure, and why now</h2>
+  <p class="substrate__lead">When people wrote all the code, a structure that carries its own types and proofs and can rewrite itself was a luxury. When models write most of it, that same structure becomes the requirement.</p>
+  <div class="substrate__body">
+    <p>An AI that edits <em>text</em> pushes a guess through a fragile toolchain and hopes it holds. An AI that edits a <strong>Logic Graph</strong> rewrites a structure that already carries its scopes, types, borrow states, and proofs, and gets machine-checked feedback that the change is correct and safe before it ever runs. The same reader-writer rule that governs memory also governs self-modifying code, so a program can improve its own code, iteratively, without being allowed to break it.</p>
+    <p>This is the gap between the two systems Logos learns from. Smalltalk gave a live system that can inspect and rewrite itself, but nothing that could prove a change was right. Lean gives machine-checked proof, but it is a prover built for mathematicians, garbage-collected and functional, not a systems substrate a program rewrites and runs at native speed. Neither has both halves. Logos reaches for both in one structure: rewrite it as freely as Smalltalk, check it as strictly as Lean, run it as fast as Rust.</p>
+    <p>That combination is what code written by machines will need, and it is the direction Logos is built toward. It does not run yet; the <a href="/roadmap/">roadmap</a> tracks what does.</p>
+  </div>
+</section>`;
+}
+
+// The signup section at the bottom of the homepage: intent capture placed where a
+// convinced reader lands, after the argument, never as the first thing seen.
+function notifySectionHtml(): string {
+  return `<section class="signup" aria-label="Get notified about the first builds">
+  <h2 class="signup__title">Hear about the first build</h2>
+  <p class="signup__lead">No public builds exist yet. Leave your email and you will get a message when the most important builds ship. No spam, ever; removal any time (see <a href="/privacy/">Privacy</a>).</p>
+  ${notifyFormHtml("home-bottom")}
+</section>`;
+}
+
 export function homePage(): string {
   return `<section class="hero">
   <div class="hero__copy">
-    <p class="hero__note"><strong>TL;DR:</strong> Logos is one programming language for everything, from systems code and GPUs to machine-checked proofs and its own compiler, all held in a single structure where a program, its types, and its proofs are the same thing. It is still being built, but every part already exists in some language, and the <a href="/roadmap/">roadmap</a> tracks what runs today.</p>
     <h1 class="hero__headline">
       <span class="hero__brand" aria-hidden="true">Λόγος</span>
-      <span class="hero__lead" aria-hidden="true">One language for everything</span>
-      <span class="hero__rot-line" aria-hidden="true"><span class="hero__rot-prefix">instead of a different one for</span> <span class="hero__rotator" data-rotator><span class="hero__rot-item is-current">systems</span><span class="hero__rot-item">speed</span><span class="hero__rot-item">the GPU</span><span class="hero__rot-item">async</span><span class="hero__rot-item">proofs</span><span class="hero__rot-item">true metaprogramming</span><span class="hero__rot-item">new languages</span><span class="hero__rot-item">dedicated hardware</span><span class="hero__rot-item">JIT</span><span class="hero__rot-item">special use cases</span><span class="hero__rot-item">the compiler itself</span></span></span>
-      <span class="sr-only">One language for everything: Logos aims to be a single language for systems code, speed, GPUs, async, proofs, metaprogramming, new languages, dedicated hardware, and its own compiler, instead of a different one for every job.</span>
+      <span class="hero__lead" aria-hidden="true">Built for machines to write, and to prove</span>
+      <span class="hero__rot-line" aria-hidden="true"><span class="hero__rot-one">One language for everything,</span> <span class="hero__rot-prefix">instead of a different one for</span> <span class="hero__rotator" data-rotator><span class="hero__rot-item is-current">systems</span><span class="hero__rot-item">speed</span><span class="hero__rot-item">the GPU</span><span class="hero__rot-item">async</span><span class="hero__rot-item">proofs</span><span class="hero__rot-item">true metaprogramming</span><span class="hero__rot-item">new languages</span><span class="hero__rot-item">dedicated hardware</span><span class="hero__rot-item">JIT</span><span class="hero__rot-item">special use cases</span><span class="hero__rot-item">the compiler itself</span></span></span>
+      <span class="sr-only">Logos: a language built for machines to write, and to prove. One language for everything: systems code, speed, GPUs, async, proofs, metaprogramming, new languages, dedicated hardware, and its own compiler, instead of a different one for every job.</span>
     </h1>
-    <p class="hero__sub">The compiler, the parser, the files, the build, the types, the borrow checker, the proofs, all in one structure. The same operations that run your code can read, rewrite, optimize, and prove any of it.</p>
-    ${notifyFormHtml("home-hero")}
-    <p class="hero__availability">No public builds yet. You will get an email for the most important builds. You will not be spammed</p>
+    <p class="hero__sub">An AI that edits text pushes a guess through a fragile toolchain and hopes. Logos code is a live structure that carries its own types, borrow states, and proofs, so every change gets machine-checked feedback before it ever runs.</p>
+    <div class="hero__actions">
+      <a class="logos-btn logos-btn--ghost" href="/vision/">Read the vision</a>
+      <a class="logos-btn logos-btn--ghost" href="/roadmap/">See the roadmap</a>
+    </div>
   </div>
 </section>
 <section class="wisdom" aria-label="On the Logos, voices across the ages">
@@ -1062,8 +1101,10 @@ export function homePage(): string {
 </section>
 ${codePeekHtml()}
 ${structureHtml()}
+${aiSubstrateHtml()}
 ${buildableHtml()}
-${compareHtml()}`;
+${compareHtml()}
+${notifySectionHtml()}`;
 }
 
 export function visionPage(): string {
@@ -1102,26 +1143,27 @@ export function visionPage(): string {
 }
 
 // ── About page ────────────────────────────────────────────────────────────────
-// Who is building Logos, written in Thobias's own voice (first person). The photo
-// ships as /public/thobias.jpg (a web-sized copy of resources/images/
-// ThobiasKnudsen.png).
+// Who is building Logos, still in Thobias's own first-person voice, but framed
+// around the question and the language rather than the builder: the reader's real
+// question is "can this person build something this large?", so the achievements
+// read as evidence for that, not as a trophy case. The photo ships as
+// /public/thobias.jpg (a web-sized copy of resources/images/ThobiasKnudsen.png).
 export function aboutPage(): string {
   return `<article class="about">
-  <h1 class="about__title">Thobias Melfjord Knudsen</h1>
-  <p class="about__lead">In my first year of high school I could not put down one question: given a set of data points, why is there no way to find a mathematical formula, over any number of variables, that fits them?</p>
+  <h1 class="about__title">Who is building Logos</h1>
+  <p class="about__lead">Logos began with a question that would not let go: given a set of data points, why is there no way to find a mathematical formula, over any number of variables, that fits them?</p>
   <figure class="about__portrait">
     <img src="/thobias.jpg" alt="Thobias Melfjord Knudsen" width="640" height="743" loading="lazy" />
     <figcaption>Thobias Melfjord Knudsen</figcaption>
   </figure>
-  <p>I am a systems programmer studying infromatics. I started programming in Python in 2020, and by 2022 I was building a math application to chase that question, learning C++ as I went. I had a working version in about six months.</p>
-  <p>Chasing it, I understood why no such tool exists. Through any finite set of points you can draw endlessly many curves, so there is no single formula waiting to be found. The most you can do is decide in advance what shape of formula you will accept, then search for one of that shape that fits the points, and even then you might find nothing, or infinitely many. What the problem really needs is a language where formulas are as easy to build and reshape as numbers, and where the language can look at and rewrite its own expressions: functions that write other functions, shaped by whatever you give them. Lisp came closest, treating code as data, but it still falls short of what the problem demands.</p>
-  <p>The decisive turn was seeing that this generalizes to almost everything logical. Building a memory system for agents, I ran into the same wall from a completely separate direction. There too, the real limit was the language. I saw that if English could be made programmable (which Logos could do) it would open up for making a memory system as good as our own memory or even better. Two separate roads ended in the same place.</p>
+  <p>My name is Thobias Melfjord Knudsen. I am a systems programmer studying informatics, and that question caught me in my first year of high school. Python came first, in 2020; by 2022 a math application built to chase the question was underway, with C++ learned along the way. A working version took about six months.</p>
+  <p>The chase explained why no such tool exists. Through any finite set of points endlessly many curves can be drawn, so there is no single formula waiting to be found. The most a tool can do is decide in advance what shape of formula it will accept, then search for one of that shape that fits the points, and even then it may find nothing, or infinitely many. What the problem really needs is a language where formulas are as easy to build and reshape as numbers, and where the language can look at and rewrite its own expressions: functions that write other functions, shaped by whatever they are given. Lisp came closest, treating code as data, but it still falls short of what the problem demands.</p>
+  <p>The decisive turn was seeing that this generalizes to almost everything logical. A memory system for AI agents, built later, hit the same wall from a completely separate direction: there too, the real limit was the language. If English could be made programmable, and Logos is built to host exactly that, a memory system as good as our own memory, or better, comes within reach. Two separate roads ended in the same place.</p>
   <blockquote class="about__pull-quote"><p>The bottleneck was never the mathematics. It was the language.</p></blockquote>
-  <h2 class="about__subhead">What I have built</h2>
-  <p><a href="https://github.com/ThobiasKnudsen/LogosMath" target="_blank" rel="noopener noreferrer">LogosMath</a> is where it began: a working math application with its own small language, built to go further than symbolic tools like Wolfram Alpha and Matlab. Chasing it is what led me to the language itself. Along the way I also built <a href="https://github.com/ThobiasKnudsen/Memra" target="_blank" rel="noopener noreferrer">Memra</a>, the memory system mentioned earlier. In my benchmarks it came close to the best available.</p>
-  <p>During my military service I built a high-resolution offline <a href="https://github.com/ThobiasKnudsen/Map" target="_blank" rel="noopener noreferrer">map</a>, written in C++. Some month ago I made <a href="https://github.com/ThobiasKnudsen/verztable" target="_blank" rel="noopener noreferrer">hash table in Zig</a> that runs almost as fast as the fastest I could find.</p>
-  <p>In NTNU's Algorithms and Data Structures course, one of the university's hardest courses, with around 900 students, I made the fastest algorithm most times in the weekly challenges through the autumn of 2025. This year, together with a teammate, I placed first in Norway's first national championship in AI, out of more than 1,100 teams. The <a href="https://github.com/JardarIversen/ainm-2026" target="_blank" rel="noopener noreferrer">solution</a> is on GitHub.</p>
-  <p>Recently I turned from the math-application to the language itself. Logos is an attempt at one language for everything, built on a single commitment: radical unification. The program, its types, its proofs, the compiler, and the grammar itself all live in one structure. It is a serious systems language, with a borrow checker, native compilation, and no garbage collector, reaching also for machine-checked proofs and self-reflection. It does not run yet. A small Rust bootstrap seed is all there is so far.</p>
+  <h2 class="about__subhead">The evidence it can be built</h2>
+  <p>A project this size stands or falls on whether its builder finishes hard things, so here is the record. <a href="https://github.com/ThobiasKnudsen/LogosMath" target="_blank" rel="noopener noreferrer">LogosMath</a> is where it began: a working math application with its own small language, built to go further than symbolic tools like Wolfram Alpha and Matlab. <a href="https://github.com/ThobiasKnudsen/Memra" target="_blank" rel="noopener noreferrer">Memra</a> is the agent memory system from the second road; in my benchmarks it came close to the best available. Military service produced a high-resolution offline <a href="https://github.com/ThobiasKnudsen/Map" target="_blank" rel="noopener noreferrer">map</a> in C++, and a recent <a href="https://github.com/ThobiasKnudsen/verztable" target="_blank" rel="noopener noreferrer">Zig hash table</a> runs almost as fast as the fastest published.</p>
+  <p>At NTNU, in the Algorithms and Data Structures course (one of the university's hardest, around 900 students), my solutions were the fastest in most of the weekly challenges through the autumn of 2025. And this year, my teammate and I placed first in Norway's first national championship in AI, out of more than 1,100 teams; the <a href="https://github.com/JardarIversen/ainm-2026" target="_blank" rel="noopener noreferrer">solution</a> is on GitHub.</p>
+  <p>Logos itself is the turn from the math application to the language underneath it: one language for everything, built on a single commitment, radical unification. The program, its types, its proofs, the compiler, and the grammar itself all live in one structure. It is a serious systems language, with a borrow checker, native compilation, and no garbage collector, reaching also for machine-checked proofs and self-reflection. It does not run yet; a small Rust bootstrap seed is all there is so far, and the <a href="/roadmap/">roadmap</a> tracks it honestly.</p>
   <p class="about__coda">Sometimes I suspect that a complete meta-language, where each word is defined using all other words, is the closest one can get to reflecting on how God works.</p>
   <p class="about__cta">If it interests you, you are welcome to follow along on GitHub: star the <a href="https://github.com/ThobiasKnudsen/LogosLang" target="_blank" rel="noopener noreferrer">seed</a>, watch the language take shape, and word of the first build will come there.</p>
 </article>`;

@@ -2,7 +2,7 @@
   "milestones": [
     {
       "number": 1,
-      "title": "v1",
+      "title": "v0.1",
       "dueOn": null,
       "state": "open",
       "url": "https://github.com/ThobiasKnudsen/LogosLang/milestone/1"
@@ -34,10 +34,227 @@
       ]
     },
     {
+      "number": 44,
+      "title": "@exec is the callable ground: concrete-op identities carry their code, run/lower tables retire into the graph",
+      "blurb": "Successor to 30's constructor slot and to the record work in 9c4b1d4; settled in discussion, July 2026 (recorded in DESIGN: The callable ground is @exec). Fixes the one remaining dishonesty that work introduced: operators are typed fn but their value is a record, not [input, output, body, bcode] — the mod-8 discriminant in identities/meta.rs is a patch over that lie.",
+      "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/44",
+      "state": "closed",
+      "blockedBy": [],
+      "status": "done",
+      "tier": 0,
+      "milestone": 1,
+      "labels": [
+        {
+          "name": "seed",
+          "color": "155878"
+        }
+      ]
+    },
+    {
+      "number": 49,
+      "title": "Implement the ruled drop model: constructor-inserted defer teardown",
+      "blurb": "The ruling (DESIGN.md, 2026-07-20, commit 6e8474d)",
+      "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/49",
+      "state": "closed",
+      "blockedBy": [],
+      "status": "done",
+      "tier": 0,
+      "milestone": 1,
+      "labels": [
+        {
+          "name": "ai-generated",
+          "color": "1ead0b"
+        },
+        {
+          "name": "seed",
+          "color": "155878"
+        }
+      ]
+    },
+    {
+      "number": 50,
+      "title": "Memory management of executable code: persist and re-attach compiled artifacts so a program can stop and continue",
+      "blurb": "Goal",
+      "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/50",
+      "state": "open",
+      "blockedBy": [],
+      "status": "ready",
+      "tier": 0,
+      "milestone": 2,
+      "labels": [
+        {
+          "name": "ai-generated",
+          "color": "1ead0b"
+        },
+        {
+          "name": "seed",
+          "color": "155878"
+        }
+      ]
+    },
+    {
+      "number": 51,
+      "title": "Async: stackless tasks on user-defined pools — .await, wakers, boundary preemption, cancellation",
+      "blurb": "What",
+      "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/51",
+      "state": "open",
+      "blockedBy": [],
+      "status": "ready",
+      "tier": 0,
+      "milestone": 2,
+      "labels": [
+        {
+          "name": "ai-generated",
+          "color": "1ead0b"
+        },
+        {
+          "name": "seed",
+          "color": "155878"
+        }
+      ]
+    },
+    {
+      "number": 52,
+      "title": "Metareflection from within the language: dyad as an identity with shared methods — read a value's fields through its type",
+      "blurb": "What",
+      "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/52",
+      "state": "open",
+      "blockedBy": [],
+      "status": "ready",
+      "tier": 0,
+      "milestone": 1,
+      "labels": [
+        {
+          "name": "ai-generated",
+          "color": "1ead0b"
+        },
+        {
+          "name": "seed",
+          "color": "155878"
+        }
+      ]
+    },
+    {
+      "number": 53,
+      "title": "Ownership gates: borrow / single-owner / multi-owner as take/drop gates on references (name vs synolon lifetime)",
+      "blurb": "The idea (design discussion, 2026-07-23)",
+      "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/53",
+      "state": "open",
+      "blockedBy": [],
+      "status": "ready",
+      "tier": 0,
+      "milestone": 1,
+      "labels": [
+        {
+          "name": "ai-generated",
+          "color": "1ead0b"
+        },
+        {
+          "name": "seed",
+          "color": "155878"
+        }
+      ]
+    },
+    {
+      "number": 27,
+      "title": "Lexer",
+      "blurb": "The lexer is a trie where a node can also match a regex, so nearly any string identification is expressible in one structure. It is the single global way to recognize identities in source text, and being a trie it is both fast and mutable.",
+      "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/27",
+      "state": "closed",
+      "blockedBy": [
+        29
+      ],
+      "status": "done",
+      "tier": 1,
+      "milestone": 1,
+      "labels": [
+        {
+          "name": "seed",
+          "color": "155878"
+        }
+      ]
+    },
+    {
+      "number": 28,
+      "title": "Parser",
+      "blurb": "The parser needs to know what each token from the lexer means and therefore all tokens needs to have a defined type.",
+      "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/28",
+      "state": "closed",
+      "blockedBy": [
+        29
+      ],
+      "status": "done",
+      "tier": 1,
+      "milestone": 1,
+      "labels": [
+        {
+          "name": "seed",
+          "color": "155878"
+        }
+      ]
+    },
+    {
       "number": 30,
       "title": "Type",
-      "blurb": "Everything in Logos has a type and is used to explain the value. The type of type is type itself",
+      "blurb": "Everything in Logos has a type, which explains how its value is read. The type of type is type itself, the one fixed point the seed knows a priori.",
       "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/30",
+      "state": "open",
+      "blockedBy": [
+        29
+      ],
+      "status": "ready",
+      "tier": 1,
+      "milestone": 1,
+      "labels": [
+        {
+          "name": "seed",
+          "color": "155878"
+        }
+      ]
+    },
+    {
+      "number": 31,
+      "title": "Compiler",
+      "blurb": "Compiling the Logic Graph to binary code. Only functions can be compiled. A set of identities are leafs which represents the IR primitives.",
+      "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/31",
+      "state": "closed",
+      "blockedBy": [
+        29
+      ],
+      "status": "done",
+      "tier": 1,
+      "milestone": 1,
+      "labels": [
+        {
+          "name": "seed",
+          "color": "155878"
+        }
+      ]
+    },
+    {
+      "number": 32,
+      "title": "Create all fundamental identities",
+      "blurb": "In Logos everything is an identity. In the seed other identities are needed as well like struct, i32, f64, ., &, @, (, +, language, :=, for, if, while, fn, -, and '«'. Its not necessary to make an issue for each identity as many will be made together in batches that are unknown beforehand.",
+      "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/32",
+      "state": "open",
+      "blockedBy": [
+        29
+      ],
+      "status": "ready",
+      "tier": 1,
+      "milestone": 1,
+      "labels": [
+        {
+          "name": "seed",
+          "color": "155878"
+        }
+      ]
+    },
+    {
+      "number": 33,
+      "title": "mut, pub and other (new) rw gates",
+      "blurb": "These aren't strictly needed in the seed but they help a lot with safety since everything should only be readable by default and also not everything should be able to read everything. Most likely everything in the seed would need read every other part of the seed and there must be a explicit rw gate for this, just like mut and pub.",
+      "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/33",
       "state": "open",
       "blockedBy": [
         29
@@ -55,14 +272,14 @@
     {
       "number": 36,
       "title": "Token",
-      "blurb": "Lexer creates tokens and the parser consumes tokens. Each token contains an identity that is identified by the lexer but is not instantiated yet. The parser is what instantiates the identities in the tokens and removes the tokens.",
+      "blurb": "A token is the pending, not-yet-reduced unit on the parsing tape. There is no separate \"lexer creates tokens, parser consumes tokens\" two-pass flow; lexing and parsing are one constructor-driven pass.",
       "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/36",
       "state": "open",
       "blockedBy": [
-        30
+        29
       ],
-      "status": "blocked",
-      "tier": 2,
+      "status": "ready",
+      "tier": 1,
       "milestone": 1,
       "labels": [
         {
@@ -72,54 +289,16 @@
       ]
     },
     {
-      "number": 27,
-      "title": "Lexer",
-      "blurb": "The lexer is based on a trie just that each node can also be a regex pattern so that nearly all string identifications you want to do could be represented. Since its a trie its both fast but also mutable. The default way to identify anything in any string of any language is through this global lexer. It resolves multiple equal strings by checking what context in the Logic Graph it is declared.",
-      "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/27",
-      "state": "open",
+      "number": 37,
+      "title": "Interpreter",
+      "blurb": "The interpreter runs any give Logic Graph function without compiling anything, but it relies on at least the leaves being compiled, because the leaves is the \"ground truth\" in the Logic Graph and everything is fundamentally defined in through leaves at the bottom but the leaves isn't defined in other identities. They are defined but their definitions lies in the compiled and how it converts the leaves to machine-code.",
+      "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/37",
+      "state": "closed",
       "blockedBy": [
-        36
+        29
       ],
-      "status": "blocked",
-      "tier": 3,
-      "milestone": 1,
-      "labels": [
-        {
-          "name": "seed",
-          "color": "155878"
-        }
-      ]
-    },
-    {
-      "number": 32,
-      "title": "Create all fundamental identities",
-      "blurb": "In Logos everything is an identity. In the seed other identities are needed as well like struct, i32, f64, ., &, @, (, +, language, :=, for, if, while, fn, -, and '«'. Its not necessary to make an issue for each identity as many will be made together in batches that are unknown beforehand.",
-      "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/32",
-      "state": "open",
-      "blockedBy": [
-        27
-      ],
-      "status": "blocked",
-      "tier": 4,
-      "milestone": 1,
-      "labels": [
-        {
-          "name": "seed",
-          "color": "155878"
-        }
-      ]
-    },
-    {
-      "number": 33,
-      "title": "mut, pub and other (new) rw gates",
-      "blurb": "These aren't strictly needed in the seed but they help a lot with safety since everything should only be readable by default and also not everything should be able to read everything. Most likely everything in the seed would need read every other part of the seed and there must be a explicit rw gate for this, just like mut and pub.",
-      "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/33",
-      "state": "open",
-      "blockedBy": [
-        27
-      ],
-      "status": "blocked",
-      "tier": 4,
+      "status": "done",
+      "tier": 1,
       "milestone": 1,
       "labels": [
         {
@@ -135,10 +314,10 @@
       "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/38",
       "state": "open",
       "blockedBy": [
-        27
+        29
       ],
-      "status": "blocked",
-      "tier": 4,
+      "status": "ready",
+      "tier": 1,
       "milestone": 1,
       "labels": [
         {
@@ -148,18 +327,16 @@
       ]
     },
     {
-      "number": 28,
-      "title": "Parser",
-      "blurb": "The parser needs to know what each token from the lexer means and therefore all tokens needs to have a defined type.",
-      "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/28",
-      "state": "open",
+      "number": 42,
+      "title": "Structure reflectability: node layout as graph data",
+      "blurb": "Per DESIGN, the only opaque thing in v1 is a function's bcode (the exec@ callable). Everything else — nodes, types, values, scopes, a function's source body, and the layout that says how to read each node's value — must be reflectable from the Logic Graph.",
+      "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/42",
+      "state": "closed",
       "blockedBy": [
-        32,
-        33,
-        38
+        29
       ],
-      "status": "blocked",
-      "tier": 5,
+      "status": "done",
+      "tier": 1,
       "milestone": 1,
       "labels": [
         {
@@ -169,37 +346,22 @@
       ]
     },
     {
-      "number": 31,
-      "title": "Compiler",
-      "blurb": "Compiling the Logic Graph to binary code. Only functions can be compiled. A set of identities are leafs which represents the IR primitives.",
-      "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/31",
+      "number": 48,
+      "title": "Review the Parser and the ConstructFn protocol — and grow it toward tape-ops-as-identities",
+      "blurb": "Context",
+      "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/48",
       "state": "open",
       "blockedBy": [
-        28
+        29
       ],
-      "status": "blocked",
-      "tier": 6,
+      "status": "ready",
+      "tier": 1,
       "milestone": 1,
       "labels": [
         {
-          "name": "seed",
-          "color": "155878"
-        }
-      ]
-    },
-    {
-      "number": 37,
-      "title": "Interpreter",
-      "blurb": "The interpreter runs any give Logic Graph function without compiling anything, but it relies on at least the leaves being compiled, because the leaves is the \"ground truth\" in the Logic Graph and everything is fundamentally defined in through leaves at the bottom but the leaves isn't defined in other identities. They are defined but their definitions lies in the compiled and how it converts the leaves to machine-code.",
-      "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/37",
-      "state": "open",
-      "blockedBy": [
-        31
-      ],
-      "status": "blocked",
-      "tier": 7,
-      "milestone": 1,
-      "labels": [
+          "name": "ai-generated",
+          "color": "1ead0b"
+        },
         {
           "name": "seed",
           "color": "155878"
@@ -217,9 +379,47 @@
         38
       ],
       "status": "blocked",
-      "tier": 8,
+      "tier": 2,
       "milestone": 2,
       "labels": []
+    },
+    {
+      "number": 43,
+      "title": "Logic Graph renderer / visualizer",
+      "blurb": "A tool to render the Logic Graph of any parsed Logos snippet, so structure, shared nodes, and resolved types are visible at a glance — for debugging \"what is wrong / what is missing\", and eventually a visual for the website.",
+      "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/43",
+      "state": "open",
+      "blockedBy": [
+        42
+      ],
+      "status": "ready",
+      "tier": 2,
+      "milestone": 1,
+      "labels": [
+        {
+          "name": "seed",
+          "color": "155878"
+        }
+      ]
+    },
+    {
+      "number": 46,
+      "title": "CLI: the `logos` command (run a file, or REPL)",
+      "blurb": "The logos command: run a file top to bottom like a script (no main), or start the REPL. Its whole job is handing source to the interpreter — no subcommands and no compile flags, because the code itself decides what compiles.",
+      "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/46",
+      "state": "closed",
+      "blockedBy": [
+        37
+      ],
+      "status": "done",
+      "tier": 2,
+      "milestone": 1,
+      "labels": [
+        {
+          "name": "seed",
+          "color": "155878"
+        }
+      ]
     },
     {
       "number": 35,
@@ -232,9 +432,29 @@
         34
       ],
       "status": "blocked",
-      "tier": 9,
+      "tier": 3,
       "milestone": 2,
       "labels": []
+    },
+    {
+      "number": 45,
+      "title": "FFI v1: seamless C calls (Rust and C++ ride the C ABI)",
+      "blurb": "C interop is the growth engine for the years Logos has no libraries: the C ABI is the lingua franca, and winning there wins Rust (cdylib + cbindgen) and C++ (extern \"C\" surfaces) transitively. Zig's @cImport is the proof that automatic, near-seamless C access carries a young language — that is the bar, reached in two stages (v1 here; header ingestion after).",
+      "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/45",
+      "state": "open",
+      "blockedBy": [
+        44,
+        46
+      ],
+      "status": "ready",
+      "tier": 3,
+      "milestone": 1,
+      "labels": [
+        {
+          "name": "seed",
+          "color": "155878"
+        }
+      ]
     }
   ]
 }
