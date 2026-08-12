@@ -567,11 +567,10 @@ a {
     display: block;
     color: var(--heading);
 }
-/* The rotating enumeration beneath the thesis: the one-language claim ("One
-   language for everything,"), a fixed "instead of a different one for", and the
-   rotating tail (systems, the GPU, … the compiler itself), so the motion argues
-   the claim instead of scattering superlatives. Medium and muted so it supports
-   the thesis without competing with it. */
+/* The rotating enumeration beneath the thesis: a fixed "instead of a different one
+   for" followed by the rotating tail (systems, the GPU, … the compiler itself),
+   so the motion argues the one-language claim instead of scattering superlatives.
+   Medium and muted so it supports the thesis without competing with it. */
 .hero__rot-line {
     font-size: 0.4em; /* medium relative to the fluid headline size */
     font-weight: 500;
@@ -583,12 +582,6 @@ a {
        wraps within the viewport on phones (90vw), never overflowing. */
     max-width: min(90vw, 34ch);
     text-align: center;
-}
-/* The one-language claim leads the rotating line, a shade stronger than the muted
-   prefix so the claim reads before the enumeration does. */
-.hero__rot-one {
-    display: block;
-    color: var(--heading);
 }
 /* The prefix owns its own line, so the rotator (which reserves its WIDEST word's
    width via inline-grid) sits stably below it and the hero never reflows vertically
