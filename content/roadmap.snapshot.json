@@ -156,6 +156,27 @@
       ]
     },
     {
+      "number": 58,
+      "title": "seed: the command line is Logos source — argv runs as one line, `import` loads files (pub-only)",
+      "blurb": "Ruling",
+      "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/58",
+      "state": "open",
+      "blockedBy": [],
+      "status": "ready",
+      "tier": 0,
+      "milestone": 1,
+      "labels": [
+        {
+          "name": "ai-generated",
+          "color": "1ead0b"
+        },
+        {
+          "name": "seed",
+          "color": "155878"
+        }
+      ]
+    },
+    {
       "number": 27,
       "title": "Lexer",
       "blurb": "The lexer is a trie where a node can also match a regex, so nearly any string identification is expressible in one structure. It is the single global way to recognize identities in source text, and being a trie it is both fast and mutable.",
