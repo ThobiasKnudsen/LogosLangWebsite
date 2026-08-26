@@ -50,8 +50,10 @@ const GITHUB = "https://github.com/ThobiasKnudsen/LogosLang";
 // covers word, speech and reason at once; Cicero's "ratio et oratio", Seneca's
 // "oratio" and Epictetus's "logikē dynamis" (the power of Logos), the Latin and
 // Greek for the same idea, are rendered "Logos" as well, so that every line says
-// something about the Logos itself. Only the ordinary plural "words" stays English,
-// in Anselm's contrast, Augustine's spoken word, and the proverb. Heraclitus appears
+// something about the Logos itself. Augustine's "verbum quod foris sonat" is Logos
+// too: he uses one word for the outer and the inner, and says the name belongs more
+// properly to the inner. Only the ordinary plural "words" stays English, in Anselm's
+// contrast and the proverb. Heraclitus appears
 // five times because he is where the word begins; his fragments are spaced out
 // along the frieze. The Aristotle line keeps its internal "…", which marks a real
 // elision between two clauses of the Politics.
@@ -69,7 +71,7 @@ const WISDOM: { text: string; author: string }[] = [
     author: "Gorgias",
   },
   {
-    text: "The word spoken aloud\nis only a sign of the Logos\nthat shines within.",
+    text: "The Logos that sounds outside\nis only a sign of the Logos\nthat shines within.",
     author: "Augustine",
   },
   {
