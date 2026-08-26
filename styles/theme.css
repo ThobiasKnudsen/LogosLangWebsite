@@ -567,48 +567,58 @@ a {
     display: block;
     color: var(--heading);
 }
-/* The rotating enumeration beneath the thesis: a fixed "instead of a different one
-   for" followed by the rotating tail (systems, the GPU, … the compiler itself),
-   so the motion argues the one-language claim instead of scattering superlatives.
-   Medium and muted so it supports the thesis without competing with it. */
+/* "The programming language": a quiet line between the wordmark and the thesis.
+   Sized on its own clamp rather than in em of the fluid headline, so it stays
+   readable on phones. */
+.hero__kicker {
+    display: block;
+    font-size: clamp(0.85rem, 2vw, 1.7rem);
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    line-height: 1.2;
+    color: var(--muted);
+    margin: 0.35em 0 0.25em;
+}
+/* The rotating compound beneath the thesis: a fixed "Meta-" followed by the
+   rotating tail (programming, language, circular, … meta), so the motion
+   enumerates what "maximally meta" means. Sized on its own clamp so it stays
+   legible on phones, where 0.4em of the fluid headline was ten pixels. Prefix and
+   rotator sit on one baseline and the pair is centered as a unit; the rotator's
+   width follows the current word (see .hero__rotator), so the hyphen never
+   drifts away from the word. */
 .hero__rot-line {
-    font-size: 0.4em; /* medium relative to the fluid headline size */
+    display: inline-flex;
+    align-items: baseline;
+    font-size: clamp(1rem, 2.6vw, 2.2rem);
     font-weight: 500;
     letter-spacing: 0;
     line-height: 1.25;
-    color: var(--muted);
-    margin-top: 0.7em;
-    /* Bounded so the prefix sits on one line on wide screens (34ch clears it) and
-       wraps within the viewport on phones (90vw), never overflowing. */
-    max-width: min(90vw, 34ch);
-    text-align: center;
+    color: var(--heading);
+    margin-top: 0.55em;
+    max-width: 100%;
+    white-space: nowrap;
 }
-/* The prefix owns its own line, so the rotator (which reserves its WIDEST word's
-   width via inline-grid) sits stably below it and the hero never reflows vertically
-   as the word cycles between "systems" and "the compiler itself". */
 .hero__rot-prefix {
-    display: block;
-    color: var(--muted);
+    color: var(--heading);
 }
 .hero__rotator {
     display: inline-grid;
-    /* All phrases stack in one grid cell and are centered, so the box's intrinsic
-	   width is the WIDEST phrase and every phrase is centered on the line. max-width
-	   (and the wrap rule below) keep it from ever exceeding the viewport. */
-    justify-items: center;
-    text-align: center;
+    /* All phrases stack in one grid cell, left-aligned so each starts right after
+       the "Meta-" hyphen. initHeroRotator sets the box's width to the CURRENT
+       phrase and this transition animates the change, so "Meta-logic" and
+       "Meta-interpreter" both sit centered under the thesis; before JS runs,
+       inline-grid gives it the widest phrase's width. */
+    justify-items: start;
+    text-align: left;
     max-width: 100%;
     vertical-align: bottom;
-    overflow: hidden;
     line-height: 1.02;
-    /* With overflow clipped, the box aligns by its bottom edge, so padding-bottom
-	   (clip room for descenders like the "g" in Language) would lift the words off
-	   the "Logos is" baseline; the equal negative margin pulls them back down. */
-    padding-bottom: 0.22em;
-    margin-bottom: -0.22em;
-    /* A sliver of clip-room on the right so a serif glyph's overhang (the final "e"
-	   in Language) isn't shaved off by the overflow clip. */
-    padding-right: 0.06em;
+    /* Clip only above and below (the band the phrases slide through). The negative
+       side insets leave horizontal overhang visible, so an incoming wide phrase is
+       never shaved while the box is still widening, and a serif glyph's overhang
+       survives. The bottom inset is room for descenders. */
+    clip-path: inset(0 -100% -0.22em 0);
+    transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
 }
 .hero__rot-item {
     grid-area: 1 / 1;
@@ -632,7 +642,8 @@ a {
     transition: none;
 }
 @media (prefers-reduced-motion: reduce) {
-    .hero__rot-item {
+    .hero__rot-item,
+    .hero__rotator {
         transition: none;
     }
 }
@@ -1172,7 +1183,7 @@ a {
     fill: var(--muted);
 }
 /* ── Wisdom frieze ────────────────────────────────────────────────────────────
-   A slow right-to-left drift of Greek reflections on the Logos, framed by two
+   A slow right-to-left drift of reflections on the Logos, in English, framed by two
    hairlines like an inscription. Each quote exists exactly ONCE in the track; the
    drift is driven in JS by nudging scrollLeft (see initWisdom), so the visitor can
    also grab and scroll the frieze left/right by hand; auto and manual share one
@@ -1245,7 +1256,7 @@ a {
     white-space: pre-line;
     text-align: center;
 }
-.wisdom__greek {
+.wisdom__text {
     margin: 0;
     font-family: var(--serif);
     font-style: italic;
@@ -1268,7 +1279,7 @@ a {
     line-height: 1;
     color: var(--logo);
     opacity: 0.55;
-    /* Sit the ornament on the Greek line, not the author line below it. */
+    /* Sit the ornament on the quote line, not the author line below it. */
     transform: translateY(-0.55em);
 }
 /* No motion: initWisdom skips the auto-drift, so the frieze just holds still and

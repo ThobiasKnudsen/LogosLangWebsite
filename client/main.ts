@@ -147,6 +147,16 @@ function initHeroRotator(): void {
 	const INTERVAL = 4500;
 	let i = 0;
 
+	// The box is only as wide as the CURRENT phrase (the CSS animates the change), so
+	// "Meta-" plus the phrase stays centered as one unit. Re-measure once the web font
+	// lands and on resize, since the headline size is fluid.
+	const fit = (): void => {
+		rotator.style.width = `${items[i]!.offsetWidth}px`;
+	};
+	fit();
+	document.fonts?.ready.then(fit);
+	window.addEventListener('resize', fit);
+
 	if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
 	function advance(): void {
@@ -163,8 +173,7 @@ function initHeroRotator(): void {
 		cur.classList.add('is-prev');
 		next.classList.add('is-current');
 		i = nextIdx;
-		// The box holds the widest phrase's width in CSS (inline-grid), so it stays put
-		// as phrases rotate; no per-phrase resizing is needed here.
+		fit();
 	}
 
 	let timer = window.setInterval(advance, INTERVAL);

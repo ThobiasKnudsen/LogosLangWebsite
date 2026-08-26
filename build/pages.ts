@@ -23,107 +23,98 @@ import { depmapHtml, DEFAULT_ASPECT } from "./roadmap-render.ts";
 
 const GITHUB = "https://github.com/ThobiasKnudsen/LogosLang";
 
-// Reflections on the Logos across the ages, scrolled as a slow frieze beneath the
-// hero. The wording is kept verbatim (EB Garamond, selectable); the attribution under
-// each is in English. Greek antiquity and the Latin (Vulgate John, Anselm, Aquinas)
-// meet on the one Word, Λόγος / Verbum, through which all things are made and known.
-// Attributions name only the person (and "John 1:1" / "Hebrews 4:12" alone, so the
-// frieze reads as antiquity rather than as a denominational statement). Full sources
-// for the record:
+// Reflections on the Logos across the ages, scrolled as a slow frieze near the foot
+// of the homepage. Rendered in English (italic, EB Garamond) so visitors actually
+// understand them; the sources are Greek and Latin, and the renderings here are our
+// own plain translations. Greek antiquity and the Latin (Vulgate John, Anselm,
+// Aquinas) meet on the one Word, Λόγος / Verbum, through which all things are made
+// and known. Attributions name only the person (and "John 1:1" / "Hebrews 4:12"
+// alone, so the frieze reads as antiquity rather than as a denominational
+// statement). Sources, in order:
 // John 1:1 (Vulgate); Heraclitus, Fragment 1 (DK B1); Gorgias, Encomium of Helen 8;
 // Anselm, Monologion 30; Aristotle, Politics 1253a; Cicero, De Officiis 1.50;
 // Heraclitus, Fragment 45 (DK B45); Plato, Sophist 263e; Seneca, Epistles 115.2;
 // Isocrates, Nicocles 7; Thomas Aquinas, Summa Theologiae I.34.3; Philo of
 // Alexandria; Heraclitus, Fragment 115 (DK B115); Disticha Catonis 1.10 (second
-// hemistich); Hebrews 4:12; the "verba volant" line is a traditional Latin proverb
-// with no single ancient source.
-// Each quote carries explicit "\n" line breaks (honored by `white-space: pre-line` in
-// the CSS) so it reads as a short stanza. Wording is untouched except the Aristotle
-// line, which drops its trailing ellipsis (the internal "…" stays, marking a real
-// elision between two clauses in the Politics).
+// hemistich); Hebrews 4:12; "verba volant, scripta manent" is a traditional Latin
+// proverb with no single ancient source.
+// Each quote carries explicit "\n" line breaks (honored by `white-space: pre-line`
+// in the CSS) so it reads as a short stanza. Where the original says λόγος in the
+// sense this site is named for, the translation keeps "Logos"; where it plainly
+// means speech or reason, it says so. The Aristotle line keeps its internal "…",
+// which marks a real elision between two clauses of the Politics.
 // NOTE: the "Stoic tradition" line's exact source is uncertain; swap in a precise
 // citation when you have one.
-// Ordered so Greek and Latin mix: with 10 Greek and 7 Latin, the Latin quotes sit at
-// positions 0/3/5/8/10/13/15, so no two Latin run back to back and Greek never runs
-// more than two in a row, including across the frieze's loop wrap
-// (last -> first is Greek -> Latin).
 const WISDOM: { text: string; author: string }[] = [
   {
-    text: "In principio erat Verbum,\net Verbum erat apud Deum,\net Deus erat Verbum.",
+    text: "In the beginning was the Word,\nand the Word was with God,\nand the Word was God.",
     author: "John 1:1",
   },
   {
-    text: "τοῦ δὲ λόγου τοῦδ’ ἐόντος αἰεὶ\nἀξύνετοι γίνονται ἄνθρωποι\nκαὶ πρόσθεν ἢ ἀκούσασι\nκαὶ ἀκούσαντες τὸ πρῶτον.",
+    text: "Though this Logos holds forever,\npeople fail to understand it,\nboth before they hear it\nand once they have heard it.",
     author: "Heraclitus",
   },
   {
-    text: "λόγος δυνάστης μέγας ἐστίν,\nὃς σμικροτάτῳ σώματι καὶ ἀφανεστάτῳ\nθειότατα ἔργα ἀποτελεῖ.",
+    text: "Speech is a mighty lord:\nwith the smallest and least visible body\nit achieves the most divine works.",
     author: "Gorgias",
   },
   {
-    text: "Non igitur constat pluribus verbis,\nsed est unum Verbum\nper quod facta sunt omnia.",
+    text: "It does not consist of many words,\nbut is one Word\nthrough which all things were made.",
     author: "Anselm",
   },
   {
-    text: "λόγον δὲ μόνον ἄνθρωπος ἔχει τῶν ζῴων…\nὁ δὲ λόγος ἐπὶ τῷ δηλοῦν ἐστι\nτὸ συμφέρον καὶ τὸ βλαβερόν,\nὥστε καὶ τὸ δίκαιον καὶ τὸ ἄδικον",
+    text: "Alone among the animals, humans have speech…\nand speech exists to make clear\nthe useful and the harmful,\nand so the just and the unjust.",
     author: "Aristotle",
   },
   {
-    text: "Eius autem vinculum est\nratio et oratio.",
+    text: "The bond of human fellowship\nis reason and speech.",
     author: "Cicero",
   },
   {
-    text: "ψυχῆς πείρατα ἰὼν οὐκ ἂν ἐξεύροιο,\nπᾶσαν ἐπιπορευόμενος ὁδόν·\nοὕτω βαθὺν λόγον ἔχει.",
+    text: "You could not find the limits of the soul,\nthough you travelled every road:\nso deep is its Logos.",
     author: "Heraclitus",
   },
   {
-    text: "διάνοια μὲν καὶ λόγος ταὐτόν·\nπλὴν ὁ μὲν ἐντὸς τῆς ψυχῆς\nπρὸς αὑτὴν διάλογος ἄνευ φωνῆς γιγνόμενος.",
+    text: "Thought and speech are the same,\nexcept that thought is the soul's\nsilent dialogue with itself.",
     author: "Plato",
   },
   {
-    text: "Oratio vultus animi est.",
+    text: "Speech is the face of the soul.",
     author: "Seneca",
   },
   {
-    text: "λόγος ἀληθὴς καὶ νόμιμος καὶ δίκαιος\nψυχῆς ἀγαθῆς καὶ πιστῆς\nεἴδωλόν ἐστι.",
+    text: "Speech that is true, lawful and just\nis the image\nof a good and faithful soul.",
     author: "Isocrates",
   },
   {
-    text: "Deus uno actu et se et omnia intelligit,\nunicum Verbum eius est expressivum\nnon solum Patris, sed etiam creaturarum.",
+    text: "God knows himself and all things in one act,\nso his single Word expresses\nnot the Father alone, but every creature.",
     author: "Thomas Aquinas",
   },
   {
-    text: "ὁ δὲ τοῦ θεοῦ λόγος ἐστὶν\nὁ δεσμός τῶν πάντων,\nσυνέχων τὰ μέρη καὶ σφίγγων.",
+    text: "The Logos of God is\nthe bond of all things,\nholding the parts together and binding them fast.",
     author: "Philo of Alexandria",
   },
   {
-    text: "ψυχῆς ἐστι λόγος\nἑαυτὸν αὔξων.",
+    text: "The soul has a Logos\nthat grows itself.",
     author: "Heraclitus",
   },
   {
-    text: "Sermo datur cunctis,\nanimi sapientia paucis.",
+    text: "Speech is given to all,\nwisdom of mind to few.",
     author: "Disticha Catonis",
   },
   {
-    text: "ζῶν γὰρ ὁ λόγος τοῦ θεοῦ καὶ ἐνεργὴς\nκαὶ τομώτερος ὑπὲρ\nπᾶσαν μάχαιραν δίστομον.",
+    text: "For the Word of God is living and active,\nsharper than any two-edged sword.",
     author: "Hebrews 4:12",
   },
   {
-    text: "Verba volant,\nscripta manent.",
+    text: "Spoken words fly away,\nwritten words remain.",
     author: "Latin proverb",
   },
   {
-    text: "ὁ δὲ θεὸς οὐδὲν ἄλλο ἐστὶν\nἢ νοῦς καὶ λόγος.",
+    text: "God is nothing other\nthan mind and Logos.",
     author: "Stoic tradition",
   },
 ];
-
-/** 'grc' for the Greek stanzas, 'la' for the Latin ones, detected from the script so
- *  the quote list stays plain data. The lang attribute lets screen readers switch
- *  voice instead of reading ancient Greek with English pronunciation (WCAG 3.1.2). */
-function quoteLang(text: string): "grc" | "la" {
-  return /[Ͱ-Ͽἀ-῿]/.test(text) ? "grc" : "la";
-}
 
 /** The quote units of the frieze: each quote appears exactly once, as a stanza plus
  *  its trailing manuscript ornament. The endless loop is achieved in the client by
@@ -132,9 +123,7 @@ function quoteLang(text: string): "grc" | "la" {
 function wisdomUnits(): string {
   return WISDOM.map(
     (q) =>
-      `<div class="wisdom__unit"><figure class="wisdom__quote"><blockquote class="wisdom__greek" lang="${quoteLang(
-        q.text,
-      )}">${escapeHtml(
+      `<div class="wisdom__unit"><figure class="wisdom__quote"><blockquote class="wisdom__text">${escapeHtml(
         q.text,
       )}</blockquote><figcaption class="wisdom__author">- ${escapeHtml(
         q.author,
@@ -1192,11 +1181,12 @@ export function homePage(): string {
   <div class="hero__copy">
     <h1 class="hero__headline">
       <span class="hero__brand" aria-hidden="true">Λόγος</span>
-      <span class="hero__lead" aria-hidden="true">Maximally meta</span>
-      <span class="hero__rot-line" aria-hidden="true"><span class="hero__rot-prefix">your code can read and redefine</span> <span class="hero__rotator" data-rotator><span class="hero__rot-item is-current">the grammar</span><span class="hero__rot-item">the type system</span><span class="hero__rot-item">the borrow rules</span><span class="hero__rot-item">the proofs</span><span class="hero__rot-item">the optimizer</span><span class="hero__rot-item">the compiler</span><span class="hero__rot-item">the interpreter</span><span class="hero__rot-item">the language itself</span></span></span>
-      <span class="sr-only">Maximally meta: in Logos your code can read and redefine the grammar, the type system, the borrow rules, the proofs, the optimizer, the compiler, the interpreter, and the language itself, and every change is checked before it runs.</span>
+      <span class="hero__kicker" aria-hidden="true">The programming language</span>
+      <span class="hero__lead" aria-hidden="true">Maximally Meta</span>
+      <span class="hero__rot-line" aria-hidden="true"><span class="hero__rot-prefix">Meta-</span><span class="hero__rotator" data-rotator><span class="hero__rot-item is-current">programming</span><span class="hero__rot-item">language</span><span class="hero__rot-item">circular</span><span class="hero__rot-item">compiler</span><span class="hero__rot-item">interpreter</span><span class="hero__rot-item">logic</span><span class="hero__rot-item">proofs</span><span class="hero__rot-item">theory</span><span class="hero__rot-item">mathematics</span><span class="hero__rot-item">borrow checking</span><span class="hero__rot-item">linguistic</span><span class="hero__rot-item">meta</span></span></span>
+      <span class="sr-only">Λόγος, the programming language. Maximally meta: metaprogramming, metalanguage, metacircular, metacompiler, metainterpreter, metalogic, metaproofs, metatheory, metamathematics, meta borrow checking, metalinguistic, meta-meta. Every part of the language is code your code can read and redefine, and every change is checked before it runs.</span>
     </h1>
-    <p class="hero__sub">The program, its types, its proofs, its grammar and its compiler are nodes in one graph, and the same operations that run code can read and redefine any of them. Every redefinition is checked the way ordinary code is: the freedom of Lisp and Smalltalk, with the check they never had.</p>
+    <p class="hero__sub">Logos is written in itself, all the way down to a small seed. Its grammar, types, borrow rules, proofs, compiler and interpreter are nodes in the same graph as your program, so your code can read and redefine any of them, and every change is checked the way ordinary code is. Meta used to mean unchecked and slow. Here it is checked, and it runs at native speed.</p>
     <div class="hero__actions">
       <a class="logos-btn logos-btn--ghost" href="/vision/">Read the vision</a>
       <a class="logos-btn logos-btn--ghost" href="/roadmap/">See the roadmap</a>
