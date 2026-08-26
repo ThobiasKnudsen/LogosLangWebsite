@@ -4,8 +4,9 @@
 // languages a PL-literate visitor will name; the Logic Graph figure and the code
 // card show the mechanism; "Checked, not clever" answers the Lisp/Smalltalk
 // objection; the payoffs say why it matters; then the proven-parts section, the
-// honest comparison matrix, the frieze of reflections on the Logos as a coda, and
-// the get-notified form last, where a convinced reader lands.
+// honest comparison matrix, and the get-notified form last, where a convinced
+// reader lands. The frieze of reflections on the Logos sits directly under the
+// hero, where Thobias wants it (2026-08-26): it is part of the name, not a coda.
 import { escapeHtml } from "./templates.ts";
 import {
   OS_ORDER,
@@ -23,8 +24,8 @@ import { depmapHtml, DEFAULT_ASPECT } from "./roadmap-render.ts";
 
 const GITHUB = "https://github.com/ThobiasKnudsen/LogosLang";
 
-// Reflections on the Logos across the ages, scrolled as a slow frieze near the foot
-// of the homepage. Rendered in English (italic, EB Garamond) so visitors actually
+// Reflections on the Logos across the ages, scrolled as a slow frieze directly
+// beneath the hero. Rendered in English (italic, EB Garamond) so visitors actually
 // understand them; the sources are Greek and Latin, and the renderings here are our
 // own plain translations. Greek antiquity and the Latin (Vulgate John, Anselm,
 // Aquinas) meet on the one Word, Λόγος / Verbum, through which all things are made
@@ -1194,6 +1195,9 @@ export function homePage(): string {
     <p class="hero__status">Under development. A small Rust seed exists; nothing you can run yet.</p>
   </div>
 </section>
+<section class="wisdom" aria-label="On the Logos, voices across the ages">
+  <div class="wisdom__scroll"><div class="wisdom__track">${wisdomUnits()}</div></div>
+</section>
 ${metaLadderHtml()}
 ${structureHtml()}
 ${codePeekHtml()}
@@ -1201,9 +1205,6 @@ ${checkedHtml()}
 ${payoffsHtml()}
 ${buildableHtml()}
 ${compareHtml()}
-<section class="wisdom" aria-label="On the Logos, voices across the ages">
-  <div class="wisdom__scroll"><div class="wisdom__track">${wisdomUnits()}</div></div>
-</section>
 ${notifySectionHtml()}`;
 }
 

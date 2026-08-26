@@ -561,23 +561,22 @@ a {
     white-space: nowrap;
     margin-bottom: 0.1em;
 }
-/* The fixed thesis line, the one sentence a first-time visitor should read. It
-   inherits the full headline size, so it is the largest thing in the hero. */
+/* The fixed thesis line, at the SAME size as the rotating compound directly under
+   it (the two share one clamp), set apart from the name above by a gap. */
 .hero__lead {
     display: block;
+    font-size: clamp(1rem, 2.6vw, 2.2rem);
+    letter-spacing: 0;
+    line-height: 1.25;
     color: var(--heading);
+    margin-top: 1.1em;
 }
-/* "The programming language": a quiet line between the wordmark and the thesis.
-   Sized on its own clamp rather than in em of the fluid headline, so it stays
-   readable on phones. */
+/* "The programming language": the second half of the name, at the SAME size as
+   the wordmark above it, so "Λόγος / The programming language" reads as one title.
+   The smaller pair beneath (thesis + rotating compound) is the claim. */
 .hero__kicker {
     display: block;
-    font-size: clamp(0.85rem, 2vw, 1.7rem);
-    font-weight: 500;
-    letter-spacing: 0.01em;
-    line-height: 1.2;
-    color: var(--muted);
-    margin: 0.35em 0 0.25em;
+    color: var(--heading);
 }
 /* The rotating compound beneath the thesis: a fixed "Meta-" followed by the
    rotating tail (programming, language, circular, … meta), so the motion
@@ -594,7 +593,7 @@ a {
     letter-spacing: 0;
     line-height: 1.25;
     color: var(--heading);
-    margin-top: 0.55em;
+    margin-top: 0.15em;
     max-width: 100%;
     white-space: nowrap;
 }
@@ -1198,7 +1197,7 @@ a {
        hairlines. The edge fade lives on the inner scroller (below) so only the
        TEXT dissolves at the sides, never the band or its hairlines. */
     background: var(--surface);
-    /* A medium gap between the section above and the frieze. */
+    /* A medium gap between the hero and the frieze. */
     margin-top: clamp(3rem, 8vh, 6rem);
     border-block: 1px solid var(--hairline);
     padding-block: 2rem;
