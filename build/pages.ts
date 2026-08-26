@@ -71,7 +71,7 @@ const WISDOM: { text: string; author: string }[] = [
     author: "Gorgias",
   },
   {
-    text: "The Logos that sounds outside\nis only a sign of the Logos\nthat shines within.",
+    text: "The Logos spoken aloud\nis only a sign of the Logos\nthat shines within.",
     author: "Augustine",
   },
   {
