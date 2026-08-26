@@ -40,15 +40,18 @@ const GITHUB = "https://github.com/ThobiasKnudsen/LogosLang";
 // hemistich); Hebrews 4:12; "verba volant, scripta manent" is a traditional Latin
 // proverb with no single ancient source.
 // Each quote carries explicit "\n" line breaks (honored by `white-space: pre-line`
-// in the CSS) so it reads as a short stanza. Where the original says λόγος in the
-// sense this site is named for, the translation keeps "Logos"; where it plainly
-// means speech or reason, it says so. The Aristotle line keeps its internal "…",
-// which marks a real elision between two clauses of the Politics.
+// in the CSS) so it reads as a short stanza. Wherever the source word is λόγος (or
+// Verbum standing for it) it is left untranslated as "Logos", since no English word
+// covers word, speech and reason at once. Where the Latin is a different word it
+// stays English: Cicero's "ratio et oratio" (reason and speech, the pun is the
+// point), Seneca's and the Disticha's oratio / sermo ("speech"), and the plural
+// "words" in Anselm's contrast and in the proverb. The Aristotle line keeps its
+// internal "…", which marks a real elision between two clauses of the Politics.
 // NOTE: the "Stoic tradition" line's exact source is uncertain; swap in a precise
 // citation when you have one.
 const WISDOM: { text: string; author: string }[] = [
   {
-    text: "In the beginning was the Word,\nand the Word was with God,\nand the Word was God.",
+    text: "In the beginning was the Logos,\nand the Logos was with God,\nand the Logos was God.",
     author: "John 1:1",
   },
   {
@@ -56,15 +59,15 @@ const WISDOM: { text: string; author: string }[] = [
     author: "Heraclitus",
   },
   {
-    text: "Speech is a mighty lord:\nwith the smallest and least visible body\nit achieves the most divine works.",
+    text: "Logos is a mighty lord:\nwith the smallest and least visible body\nit achieves the most divine works.",
     author: "Gorgias",
   },
   {
-    text: "It does not consist of many words,\nbut is one Word\nthrough which all things were made.",
+    text: "It does not consist of many words,\nbut is one Logos\nthrough which all things were made.",
     author: "Anselm",
   },
   {
-    text: "Alone among the animals, humans have speech…\nand speech exists to make clear\nthe useful and the harmful,\nand so the just and the unjust.",
+    text: "Alone among the animals, humans have Logos…\nand Logos exists to make clear\nthe useful and the harmful,\nand so the just and the unjust.",
     author: "Aristotle",
   },
   {
@@ -76,7 +79,7 @@ const WISDOM: { text: string; author: string }[] = [
     author: "Heraclitus",
   },
   {
-    text: "Thought and speech are the same,\nexcept that thought is the soul's\nsilent dialogue with itself.",
+    text: "Thought and Logos are the same,\nexcept that thought is the soul's\nsilent dialogue with itself.",
     author: "Plato",
   },
   {
@@ -84,11 +87,11 @@ const WISDOM: { text: string; author: string }[] = [
     author: "Seneca",
   },
   {
-    text: "Speech that is true, lawful and just\nis the image\nof a good and faithful soul.",
+    text: "Logos that is true, lawful and just\nis the image\nof a good and faithful soul.",
     author: "Isocrates",
   },
   {
-    text: "God knows himself and all things in one act,\nso his single Word expresses\nnot the Father alone, but every creature.",
+    text: "God knows himself and all things in one act,\nso his single Logos expresses\nnot the Father alone, but every creature.",
     author: "Thomas Aquinas",
   },
   {
@@ -104,7 +107,7 @@ const WISDOM: { text: string; author: string }[] = [
     author: "Disticha Catonis",
   },
   {
-    text: "For the Word of God is living and active,\nsharper than any two-edged sword.",
+    text: "For the Logos of God is living and active,\nsharper than any two-edged sword.",
     author: "Hebrews 4:12",
   },
   {
