@@ -36,17 +36,19 @@ const GITHUB = "https://github.com/ThobiasKnudsen/LogosLang";
 // Anselm, Monologion 30; Aristotle, Politics 1253a; Cicero, De Officiis 1.50;
 // Heraclitus, Fragment 45 (DK B45); Plato, Sophist 263e; Seneca, Epistles 115.2;
 // Isocrates, Nicocles 7; Thomas Aquinas, Summa Theologiae I.34.3; Philo of
-// Alexandria; Heraclitus, Fragment 115 (DK B115); Disticha Catonis 1.10 (second
-// hemistich); Hebrews 4:12; "verba volant, scripta manent" is a traditional Latin
-// proverb with no single ancient source.
+// Alexandria; Heraclitus, Fragment 115 (DK B115); Cleanthes, Hymn to Zeus 12-13;
+// Hebrews 4:12; "verba volant, scripta manent" is a traditional Latin proverb with
+// no single ancient source.
 // Each quote carries explicit "\n" line breaks (honored by `white-space: pre-line`
 // in the CSS) so it reads as a short stanza. Wherever the source word is λόγος (or
 // Verbum standing for it) it is left untranslated as "Logos", since no English word
-// covers word, speech and reason at once. Where the Latin is a different word it
-// stays English: Cicero's "ratio et oratio" (reason and speech, the pun is the
-// point), Seneca's and the Disticha's oratio / sermo ("speech"), and the plural
-// "words" in Anselm's contrast and in the proverb. The Aristotle line keeps its
-// internal "…", which marks a real elision between two clauses of the Politics.
+// covers word, speech and reason at once; Cicero's "ratio et oratio" and Seneca's
+// "oratio", the Latin for the same idea, are rendered "Logos" as well, so that every
+// line says something about the Logos itself (Thobias, 2026-08-26; the Disticha
+// Catonis line on speech and wisdom was dropped for the same reason). Only the
+// plural "words" stays English, in Anselm's contrast and in the proverb. The
+// Aristotle line keeps its internal "…", which marks a real elision between two
+// clauses of the Politics.
 // NOTE: the "Stoic tradition" line's exact source is uncertain; swap in a precise
 // citation when you have one.
 const WISDOM: { text: string; author: string }[] = [
@@ -71,7 +73,7 @@ const WISDOM: { text: string; author: string }[] = [
     author: "Aristotle",
   },
   {
-    text: "The bond of human fellowship\nis reason and speech.",
+    text: "The bond of human fellowship\nis Logos.",
     author: "Cicero",
   },
   {
@@ -79,11 +81,11 @@ const WISDOM: { text: string; author: string }[] = [
     author: "Heraclitus",
   },
   {
-    text: "Thought and Logos are the same,\nexcept that thought is the soul's\nsilent dialogue with itself.",
+    text: "Thought is Logos:\nthe soul's silent dialogue\nwith itself.",
     author: "Plato",
   },
   {
-    text: "Speech is the face of the soul.",
+    text: "Logos is the face of the soul.",
     author: "Seneca",
   },
   {
@@ -103,8 +105,8 @@ const WISDOM: { text: string; author: string }[] = [
     author: "Heraclitus",
   },
   {
-    text: "Speech is given to all,\nwisdom of mind to few.",
-    author: "Disticha Catonis",
+    text: "The common Logos\nmoves through all things.",
+    author: "Cleanthes",
   },
   {
     text: "For the Logos of God is living and active,\nsharper than any two-edged sword.",
