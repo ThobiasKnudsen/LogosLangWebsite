@@ -1,12 +1,13 @@
 // Inner HTML for the marketing pages. The homepage argues one brand, "maximally
 // meta", in this order: the hero states the claim and the mechanism (one graph,
-// checked redefinition); the ladder of meta makes the claim concrete against the
-// languages a PL-literate visitor will name; the Logic Graph figure and the code
-// card show the mechanism; "Checked, not clever" answers the Lisp/Smalltalk
-// objection; the payoffs say why it matters; then the proven-parts section, the
-// honest comparison matrix, and the get-notified form last, where a convinced
-// reader lands. The frieze of reflections on the Logos sits directly under the
-// hero, where Thobias wants it (2026-08-26): it is part of the name, not a coda.
+// checked redefinition); the frieze of reflections on the Logos sits directly under
+// it, part of the name (Thobias, 2026-08-26); the code card comes next with one line
+// of description, so a developer sees syntax before theory; the ladder of meta makes
+// the claim concrete against the languages a PL-literate visitor will name; the
+// Logic Graph figure shows the mechanism; "Checked, not clever" answers the
+// Lisp/Smalltalk objection; the payoffs say why it matters; then the proven-parts
+// section, the honest comparison matrix, and the get-notified form last, where a
+// convinced reader lands.
 import { escapeHtml } from "./templates.ts";
 import {
   OS_ORDER,
@@ -187,37 +188,48 @@ function notifyFormHtml(source: string): string {
 }
 
 // ── Homepage code sample ──────────────────────────────────────────────────────
-// Honest target syntax tracking DESIGN.md (the design's vocabulary wins where the
-// seed's sketch lags it: the cell is the `synolon` with `logos`/`hyle` slots, the
-// former `type`/`struct` are merged into the one identity `logos`, and pointer
-// logos are prefix `@T`). It shows the headline (everyday code and the language's
-// own definition living in one graph) rather than a CAS demo. The declare/reassign
-// lines follow reference/operators verbatim; the fn signature and `error «…»` body
-// follow language_sketch.logos (where `+` is a stub, given a real body here to show
-// operators are ordinary identities defined in the language itself); and `?` (the
-// typed unknown) is DESIGN.md substrate vocabulary. The card labels it all as
-// target syntax so it never overclaims.
+// Target syntax in DESIGN.md's vocabulary (dyad / .type / .value, ruled August 2026;
+// `logos` is the one ground identity and the definition keyword). The content is
+// lifted from LogosLang/identites/*.logos, the definitions the seed is being ported
+// toward: `dyad` and `logos` (the self-classifying ground, logos : logos), `(` as
+// an identity whose constructor reads the parsing tape (the whole macro mechanism),
+// and `proof` rules shared by the optimizer and the computer-algebra system. Bodies
+// left as `?` (the typed unknown) are `?` in the source too. The card labels it all
+// as target syntax so it never overclaims.
 const HOME_SAMPLE = `# Declare with \`:=\`, reassign with \`=\`. \`mut\` marks a mutable value.
 count := mut i32 0
 count = count + 1
 
-# Systems code: borrowed references, checked errors, no GC.
-advance := fn (tokens : &mut array synolon, idx : u64) -> void! (
-    if idx+1 >= tokens.size
-        error «not enough tokens after idx»
+# Every node in the graph is a dyad: a type slot and a value slot.
+# The classifier of all types is itself an ordinary value, and it
+# classifies itself. Every chain of types ends at logos : logos.
+dyad  := logos (type := @dyad ?, value := @void ?)
+logos := logos (
+    shared precedence    := f64 2.0
+    shared associativity := u8 left_to_right
+    shared constructor   := fn (tape : parsing_tape) -> void! ( ? )
 )
 
-# The language is written in itself. A node (a synolon) is two slots,
-# logos and hyle, and even \`+\` is an ordinary identity: a node carrying
-# a precedence and the code for how it reads its operands. There is no
-# separate macro language, so new syntax is just more declarations in
-# the same graph.
-synolon := logos (logos := @synolon ?, hyle := @void ?)
-+ := logos (
-    shared precedence    := f64 6.0
-    shared associativity := u8 left_to_right
-    shared constructor   := fn (tokens : &mut array synolon, idx : u64) -> void! ( ? )
-)`;
+# Even \`(\` is an identity. Its constructor reads the parsing tape,
+# walks to the matching \`)\`, and leaves a scope where the token was.
+# That is the whole macro mechanism: there is no macro language.
+( := logos (
+    constructor = fn (tape : parsing_tape) -> void! (
+        new_scope := mut scope
+        for i in 1..10_000 (
+            if tape[i] == lex «)»
+                break
+        )
+        tape[0].value = new_scope
+    )
+)
+
+# Proofs are declarations too: a pattern, a replacement, a premise,
+# and a derivation the trusted core checks once. The optimizer and
+# the computer-algebra system run on the same rules.
+p1 := proof (a : generic_number, a + a) -> (2 * a) ( ? )
+p2 := proof (a : generic_number, a != 0, a / a) -> 1 ( ? )`;
+
 
 const LOGOS_KEYWORDS = new Set([
   "fn",
@@ -237,11 +249,13 @@ const LOGOS_KEYWORDS = new Set([
   "self",
   "error",
   "undefined",
+  "in",
+  "break",
 ]);
-// `@synolon` / `@void` tokenize as the `@` operator plus a bare identifier, so the
-// pointer-logos names appear here without their prefix.
+// `@dyad` / `@void` tokenize as the `@` operator plus a bare identifier, so the
+// pointer type names appear here without their prefix.
 const LOGOS_TYPES =
-  /^(?:[iu](?:8|16|32|64)|f32|f64|string|bool|void!?|synolon|logos|exec)$/;
+  /^(?:[iu](?:8|16|32|64)|f32|f64|string|bool|void!?|dyad|logos|exec|scope|proof|parsing_tape|callable|generic_number|array)$/;
 
 /** Minimal Logos highlighter for the fixed homepage sample: comments, «strings»,
  *  numbers, keywords, primitive types, and operators become spans; everything else
@@ -249,7 +263,7 @@ const LOGOS_TYPES =
  *  marketing snippets this file controls. */
 function highlightLogos(source: string): string {
   const TOKEN =
-    /«[^»]*»|\d+(?:\.\d+)?|[A-Za-z_][A-Za-z0-9_@]*!?|:=|->|==|!=|<=|>=|[:=+\-*/%^<>.&@()[\],?!]/g;
+    /«[^»]*»|\d[\d_]*(?:\.\d+)?|[A-Za-z_][A-Za-z0-9_@]*!?|:=|->|==|!=|<=|>=|[:=+\-*/%^<>.&@()[\],?!]/g;
   const renderCode = (code: string): string => {
     let out = "";
     let idx = 0;
@@ -287,13 +301,13 @@ function highlightLogos(source: string): string {
 // The homepage payoff: the smallest program, `a = a + 1`, drawn as the actual Logic
 // Graph it becomes. The shape follows the `a = a + 1` expansion in LogosLang's
 // language_sketch.logos (V1PLAN's canonical smoke test), spelled in DESIGN.md's
-// vocabulary (synolon/logos/hyle; the sketch's older dyad/type/value spelling is
-// superseded). Two node kinds: a SYNOLON node has a `logos` slot and a `hyle` slot;
-// a RECORD node (what a `hyle:@void` points at) is the operand record whose fields
-// the logos defines, here `lhs` and `rhs`. Every `->` in the source is one edge
-// that leaves a single FIELD (a port on the node's right edge, at that field's
-// row) and points at a whole NODE. So `a = a + 1` unfolds left to right as
-// synolon -> record -> synolon -> record -> synolon, bottoming out at the identity
+// vocabulary (dyad / .type / .value, ruled August 2026; the July dyad/logos/value
+// spelling is retired). Two node kinds: a DYAD node has a `type` slot and a
+// `value` slot; a RECORD node (what a `value:@void` points at) is the operand
+// record whose fields the type defines, here `lhs` and `rhs`. Every `->` in the
+// source is one edge that leaves a single FIELD (a port on the node's right edge,
+// at that field's row) and points at a whole NODE. So `a = a + 1` unfolds left to
+// right as dyad -> record -> dyad -> record -> dyad, bottoming out at the identity
 // nodes `=`, `+`, `rational_number`, the variable `a`, and the literal `1`. Laid
 // out as a planar left-to-right tree (leaf rows in reading order, columns by
 // depth), rendered as inline SVG with no client JS. The viewBox width is computed
@@ -301,7 +315,7 @@ function highlightLogos(source: string): string {
 const SG_VY = 8; // viewBox top (leaves room for the kind labels above the top nodes)
 const SG_VH = 314; // viewBox height
 
-const GNODE_H = 42; // a synolon/record node: two field rows
+const GNODE_H = 42; // a dyad/record node: two field rows
 const GLEAF_H = 26; // an un-expanded identity / literal node
 const GROW_Y = [16, 32]; // y of each field row's port, within a node
 
@@ -309,7 +323,7 @@ const GROW_Y = [16, 32]; // y of each field row's port, within a node
 // a little margin so text never touches a node edge. Node widths are derived from
 // these (structW / leafW), so a field like `value:void@` always fits its box.
 const FIELD_CW = 7.9; // .dyad-field, 13px (the field name)
-const SLOT_CW = 6.0; // .dyad-slot, 10px (the `:logos` suffix)
+const SLOT_CW = 6.0; // .dyad-slot, 10px (the `:@dyad` / `:@void` suffix)
 const HEAD_CW = 9.7; // .dyad-head, 16px (a leaf identity name)
 const PAD_L = 10; // text inset from a node's left edge
 const PAD_R = 13; // gap between the text and the right-edge port
@@ -326,16 +340,16 @@ interface GNode {
   y: number;
   w: number;
   h: number;
-  kind: "synolon" | "record" | "leaf";
-  /** For a structural node: two [name, logos] fields, e.g. ["logos", "@synolon"]. */
+  kind: "dyad" | "record" | "leaf";
+  /** For a structural node: two [name, type] fields, e.g. ["type", "@dyad"]. */
   rows?: [string, string][];
   label?: string;
-  /** Kind label drawn above the node. Leaves are synolons too, so they carry one. */
+  /** Kind label drawn above the node. Leaves are dyads too, so they carry one. */
   tag?: string;
 }
 
-/** A node: a leaf identity/literal (dashed, just its name) or a two-field synolon /
- *  record box. Each field prints its name and its `:logos` (@synolon / @void), and
+/** A node: a leaf identity/literal (dashed, just its name) or a two-field dyad /
+ *  record box. Each field prints its name and its type (:@dyad / :@void), and
  *  carries a port on the right edge, exactly where that field's edge leaves. Every
  *  node shows its kind above it (a leaf's `tag`, a structural node's own kind). */
 function gNode(n: GNode): string {
@@ -381,54 +395,54 @@ function gEdge(src: GNode, f: number, dst: GNode, dy = 0): string {
   ]);
 }
 
-// The ten nodes of `a = a + 1`, laid out left to right. Every node is a synolon, so
-// the leaf identities (`=`, `+`, `a`, `rational_number`) are tagged "synolon" too;
-// the literal `1` is the raw matter a hyle bottoms out at, so it is tagged "hyle".
+// The ten nodes of `a = a + 1`, laid out left to right. Every node is a dyad, so
+// the leaf identities (`=`, `+`, `a`, `rational_number`) are tagged "dyad" too;
+// the literal `1` is the raw matter a value bottoms out at, so it is tagged "value".
 // Column x-positions are derived from each column's widest node, so widening a node
 // (for its field text) never overlaps a neighbour. `a` is one shared node two edges
 // point at: `+`'s lhs reaches it up-right (short), and `=`'s lhs reaches it along a
 // lane over the top of the chain (long).
 function structureGraphSvg(): string {
-  const synRows: [string, string][] = [
-    ["logos", "@synolon"],
-    ["hyle", "@void"],
+  const dyadRows: [string, string][] = [
+    ["type", "@dyad"],
+    ["value", "@void"],
   ];
   const recRows: [string, string][] = [
-    ["lhs", "@synolon"],
-    ["rhs", "@synolon"],
+    ["lhs", "@dyad"],
+    ["rhs", "@dyad"],
   ];
 
   interface Spec {
     id: string;
     col: number;
     y: number;
-    kind: "synolon" | "record" | "leaf";
+    kind: "dyad" | "record" | "leaf";
     label?: string;
     tag?: string;
   }
   const specs: Spec[] = [
-    { id: "D1", col: 0, y: 52, kind: "synolon" },
-    { id: "EQ", col: 1, y: 26, kind: "leaf", label: "=", tag: "synolon" },
+    { id: "D1", col: 0, y: 52, kind: "dyad" },
+    { id: "EQ", col: 1, y: 26, kind: "leaf", label: "=", tag: "dyad" },
     { id: "G1", col: 1, y: 102, kind: "record" },
-    { id: "D2", col: 2, y: 154, kind: "synolon" },
-    { id: "PLUS", col: 3, y: 128, kind: "leaf", label: "+", tag: "synolon" },
+    { id: "D2", col: 2, y: 154, kind: "dyad" },
+    { id: "PLUS", col: 3, y: 128, kind: "leaf", label: "+", tag: "dyad" },
     { id: "G2", col: 3, y: 206, kind: "record" },
-    { id: "A", col: 4, y: 162, kind: "leaf", label: "a", tag: "synolon" },
-    { id: "D3", col: 4, y: 258, kind: "synolon" },
+    { id: "A", col: 4, y: 162, kind: "leaf", label: "a", tag: "dyad" },
+    { id: "D3", col: 4, y: 258, kind: "dyad" },
     {
       id: "RAT",
       col: 5,
       y: 240,
       kind: "leaf",
       label: "rational_number",
-      tag: "synolon",
+      tag: "dyad",
     },
-    { id: "ONE", col: 5, y: 290, kind: "leaf", label: "1", tag: "hyle" },
+    { id: "ONE", col: 5, y: 290, kind: "leaf", label: "1", tag: "value" },
   ];
   const wOf = (s: Spec): number =>
     s.kind === "leaf"
       ? leafW(s.label!)
-      : structW(s.kind === "synolon" ? synRows : recRows);
+      : structW(s.kind === "dyad" ? dyadRows : recRows);
 
   // Column x from each column's widest node, so nodes never overlap once auto-sized.
   const NCOL = 6;
@@ -461,7 +475,7 @@ function structureGraphSvg(): string {
             w: wOf(s),
             h: GNODE_H,
             kind: s.kind,
-            rows: s.kind === "synolon" ? synRows : recRows,
+            rows: s.kind === "dyad" ? dyadRows : recRows,
           };
   }
   const nodes = specs.map((s) => gNode(N[s.id]!)).join("");
@@ -471,7 +485,7 @@ function structureGraphSvg(): string {
 
   // `=`.lhs -> a routed over the top: right stub, up to a lane above the chain,
   // across, then down into a's left side, landing just above +.lhs's landing. The
-  // lane sits above the "synolon" kind label over the `+` leaf (at ~y116), so raise it.
+  // lane sits above the "dyad" kind label over the `+` leaf (at ~y116), so raise it.
   const LANE_Y = 102;
   const [glx, gly] = gPort(N.G1!, 0);
   const [aex, aey] = gEntry(N.A!, -5);
@@ -485,20 +499,20 @@ function structureGraphSvg(): string {
   ]);
 
   const edges = [
-    gEdge(N.D1!, 0, N.EQ!), // =synolon.logos -> =
-    gEdge(N.D1!, 1, N.G1!), // =synolon.hyle  -> record
+    gEdge(N.D1!, 0, N.EQ!), // =dyad.type -> =
+    gEdge(N.D1!, 1, N.G1!), // =dyad.value  -> record
     eqLhsToA, // =record.lhs -> a (shared, over the top)
-    gEdge(N.G1!, 1, N.D2!), // =record.rhs -> +synolon
-    gEdge(N.D2!, 0, N.PLUS!), // +synolon.logos -> +
-    gEdge(N.D2!, 1, N.G2!), // +synolon.hyle  -> record
+    gEdge(N.G1!, 1, N.D2!), // =record.rhs -> +dyad
+    gEdge(N.D2!, 0, N.PLUS!), // +dyad.type -> +
+    gEdge(N.D2!, 1, N.G2!), // +dyad.value  -> record
     gEdge(N.G2!, 0, N.A!, 5), // +record.lhs -> a (shared)
-    gEdge(N.G2!, 1, N.D3!), // +record.rhs -> rational_number synolon
-    gEdge(N.D3!, 0, N.RAT!), // rat synolon.logos -> rational_number
-    gEdge(N.D3!, 1, N.ONE!), // rat synolon.hyle  -> 1
+    gEdge(N.G2!, 1, N.D3!), // +record.rhs -> rational_number dyad
+    gEdge(N.D3!, 0, N.RAT!), // rat dyad.type -> rational_number
+    gEdge(N.D3!, 1, N.ONE!), // rat dyad.value  -> 1
   ].join("");
   // The inline max-width keeps CSS from stretching the graph past its natural size
   // while letting narrow viewports scroll it at a readable scale (see .dyad-graph).
-  return `<svg class="dyad-graph" viewBox="0 ${SG_VY} ${width} ${SG_VH}" width="${width}" height="${SG_VH}" style="max-width:${width}px" role="img" aria-label="The program a = a + 1 as a Logic Graph: a synolon whose logos slot points at = and whose hyle slot points at an operand record; that record's lhs points at the one variable a, and its rhs unfolds into a + synolon and then a rational_number synolon whose hyle is the literal 1. Both lhs fields point at the same a.">
+  return `<svg class="dyad-graph" viewBox="0 ${SG_VY} ${width} ${SG_VH}" width="${width}" height="${SG_VH}" style="max-width:${width}px" role="img" aria-label="The program a = a + 1 as a Logic Graph: a dyad whose type slot points at = and whose value slot points at an operand record; that record's lhs points at the one variable a, and its rhs unfolds into a + dyad and then a rational_number dyad whose value is the literal 1. Both lhs fields point at the same a.">
   <defs><marker id="dyad-arrow" viewBox="0 0 8 8" refX="6.5" refY="4" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L8 4 L0 8 z" /></marker></defs>
   ${edges}
   ${nodes}
@@ -513,7 +527,7 @@ function structureHtml(): string {
     <pre class="unify__source"><code>${highlightLogos("a = a + 1")}</code></pre>
     <span class="unify__becomes"><span class="unify__becomes-arrow" aria-hidden="true">↓</span> becomes</span>
     <div class="unify__graph">${structureGraphSvg()}</div>
-    <figcaption class="unify__caption">Every arrow leaves one <em>field</em> of a node and points at another whole node. A <strong>synolon</strong> is a node of exactly two slots: a <code>logos</code>, which says what the node is, and a <code>hyle</code>, the matter the logos gives meaning to. Here each <code>hyle</code> points at an operand <strong>record</strong> whose fields (<code>lhs</code>, <code>rhs</code>) the logos defines, bottoming out at the identities <code>=</code>, <code>+</code>, <code>rational_number</code>, the variable <code>a</code>, and the literal <code>1</code>. Both <code>lhs</code> fields point at the one <code>a</code>, so it is a graph, not a tree. And because <code>=</code> and <code>+</code> are themselves nodes carrying their own parsing code, the operations that run this program can also read, rewrite, optimize, and prove it, or redefine <code>+</code>: the optimizer, the computer-algebra system, the proof checker, and metaprogramming are one set of operations over one structure.</figcaption>
+    <figcaption class="unify__caption">Every arrow leaves one <em>field</em> of a node and points at another whole node. A <strong>dyad</strong> is a node of exactly two slots: a <code>type</code>, which says what the node is, and a <code>value</code>, the matter the type gives meaning to. Here each <code>value</code> points at an operand <strong>record</strong> whose fields (<code>lhs</code>, <code>rhs</code>) the type defines, bottoming out at the identities <code>=</code>, <code>+</code>, <code>rational_number</code>, the variable <code>a</code>, and the literal <code>1</code>. Both <code>lhs</code> fields point at the one <code>a</code>, so it is a graph, not a tree. And because <code>=</code> and <code>+</code> are themselves dyads carrying their own parsing code, the operations that run this program can also read, rewrite, optimize, and prove it, or redefine <code>+</code>: the optimizer, the computer-algebra system, the proof checker, and metaprogramming are one set of operations over one structure.</figcaption>
   </figure>
 </section>`;
 }
@@ -521,7 +535,7 @@ function structureHtml(): string {
 function codePeekHtml(): string {
   return `<section class="code-peek" aria-label="What Logos looks like">
   <h2 class="code-peek__title">What Logos looks like</h2>
-  <p class="code-peek__lead">Target syntax, taken straight from the language design and the <a href="/docs/">docs</a>: everyday systems code and the language's own definition live in the same structure. The compiler that runs it is still being built; the <a href="/roadmap/">roadmap</a> tracks what actually works today.</p>
+  <p class="code-peek__lead">Target syntax from the language design; the compiler that runs it is still being built.</p>
   <figure class="code-card">
     <figcaption class="code-card__bar"><span class="code-card__name">target-syntax.logos</span><span class="code-card__badge">target syntax, not yet runnable</span></figcaption>
     <pre class="code-card__pre"><code>${highlightLogos(HOME_SAMPLE)}</code></pre>
@@ -1233,9 +1247,9 @@ export function homePage(): string {
 <section class="wisdom" aria-label="On the Logos, voices across the ages">
   <div class="wisdom__scroll"><div class="wisdom__track">${wisdomUnits()}</div></div>
 </section>
+${codePeekHtml()}
 ${metaLadderHtml()}
 ${structureHtml()}
-${codePeekHtml()}
 ${checkedHtml()}
 ${payoffsHtml()}
 ${buildableHtml()}
