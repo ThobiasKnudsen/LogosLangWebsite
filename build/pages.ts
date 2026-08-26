@@ -1,8 +1,11 @@
-// Inner HTML for the marketing pages. Kept faithful to the established design:
-// a hero leading with the machine-written-code thesis (its actions are the vision
-// and roadmap; the get-notified form lives at the bottom of the page until real
-// builds exist), a target-syntax code card, a scrolling frieze of Greek reflections
-// on the Logos, and the honest comparison matrix beneath it.
+// Inner HTML for the marketing pages. The homepage argues one brand, "maximally
+// meta", in this order: the hero states the claim and the mechanism (one graph,
+// checked redefinition); the ladder of meta makes the claim concrete against the
+// languages a PL-literate visitor will name; the Logic Graph figure and the code
+// card show the mechanism; "Checked, not clever" answers the Lisp/Smalltalk
+// objection; the payoffs say why it matters; then the proven-parts section, the
+// honest comparison matrix, the frieze of reflections on the Logos as a coda, and
+// the get-notified form last, where a convinced reader lands.
 import { escapeHtml } from "./templates.ts";
 import {
   OS_ORDER,
@@ -480,12 +483,12 @@ function structureGraphSvg(): string {
 function structureHtml(): string {
   return `<section class="unify" aria-label="A program is the structure that runs it">
   <h2 class="unify__title">The program is the structure</h2>
-  <p class="unify__lead">Radical unification is not a metaphor. The smallest program, <code>a = a + 1</code>, is not text a compiler reads once and throws away. It <em>is</em> a graph, the Logic Graph (LG), named because it should be able to hold any logic imaginable. And because it is a graph, the same structure can reflect on itself, interpret itself, or compile and run itself.</p>
+  <p class="unify__lead">The smallest program, <code>a = a + 1</code>, is not text a compiler reads once and throws away. It <em>is</em> a graph, the Logic Graph, and the grammar that parsed it, the types that check it, and the compiler that runs it are nodes of the same kind in the same graph. That is the whole trick behind "maximally meta": there is nothing outside the graph for code to be unable to reach.</p>
   <figure class="unify__figure">
     <pre class="unify__source"><code>${highlightLogos("a = a + 1")}</code></pre>
     <span class="unify__becomes"><span class="unify__becomes-arrow" aria-hidden="true">↓</span> becomes</span>
     <div class="unify__graph">${structureGraphSvg()}</div>
-    <figcaption class="unify__caption">Read it left to right: every arrow leaves one <em>field</em> of a node (the <code>:@synolon</code> or <code>:@void</code> next to it is what that field points at) and points at another whole node. A <strong>synolon</strong> is a node of exactly two slots: a <code>logos</code>, which says what the node is, and a <code>hyle</code>, the matter the logos gives meaning to. Here each <code>hyle</code> points at an operand <strong>record</strong> whose fields (<code>lhs</code>, <code>rhs</code>) are defined by the logos. So <code>a = a + 1</code> unfolds into synolons and operand records, bottoming out at the identities <code>=</code>, <code>+</code>, <code>rational_number</code>, the variable <code>a</code>, and the literal <code>1</code>. Both <code>lhs</code> fields point at the one <code>a</code>, so it is genuinely a graph, not a tree. Because your program already is this structure, the same operations that run it can read it, rewrite it, optimize it, and prove it, so the optimizer, the computer-algebra system, the proof checker, and metaprogramming are one thing over one structure rather than four tools bolted on from outside.</figcaption>
+    <figcaption class="unify__caption">Every arrow leaves one <em>field</em> of a node and points at another whole node. A <strong>synolon</strong> is a node of exactly two slots: a <code>logos</code>, which says what the node is, and a <code>hyle</code>, the matter the logos gives meaning to. Here each <code>hyle</code> points at an operand <strong>record</strong> whose fields (<code>lhs</code>, <code>rhs</code>) the logos defines, bottoming out at the identities <code>=</code>, <code>+</code>, <code>rational_number</code>, the variable <code>a</code>, and the literal <code>1</code>. Both <code>lhs</code> fields point at the one <code>a</code>, so it is a graph, not a tree. And because <code>=</code> and <code>+</code> are themselves nodes carrying their own parsing code, the operations that run this program can also read, rewrite, optimize, and prove it, or redefine <code>+</code>: the optimizer, the computer-algebra system, the proof checker, and metaprogramming are one set of operations over one structure.</figcaption>
   </figure>
 </section>`;
 }
@@ -1052,20 +1055,124 @@ function buildableHtml(): string {
 </section>`;
 }
 
-// The "why now" section: Logos as the substrate for machine-written code. The hero
-// above states the thesis; this section carries the full argument, that a
-// reflective, rewritable structure carrying its own proofs flips from luxury to
-// requirement once models write most code, and that this is the half Smalltalk
-// (malleable, unproven) and Lean (proven, not a systems substrate) each miss.
-// Kept honest: it is the direction, not a shipping feature.
-function aiSubstrateHtml(): string {
-  return `<section class="substrate" aria-label="A substrate for machine-written code">
-  <h2 class="substrate__title">Why one structure, and why now</h2>
-  <p class="substrate__lead">When people wrote all the code, a structure that carries its own types and proofs and can rewrite itself was a luxury. When models write most of it, that same structure becomes the requirement.</p>
-  <div class="substrate__body">
-    <p>An AI that edits <em>text</em> pushes a guess through a fragile toolchain and hopes it holds. An AI that edits a <strong>Logic Graph</strong> rewrites a structure that already carries its scopes, types, borrow states, and proofs, and gets machine-checked feedback that the change is correct and safe before it ever runs. The same reader-writer rule that governs memory also governs self-modifying code, so a program can improve its own code, iteratively, without being allowed to break it.</p>
-    <p>This is the gap between the two systems Logos learns from. Smalltalk gave a live system that can inspect and rewrite itself, but nothing that could prove a change was right. Lean gives machine-checked proof, but it is a prover built for mathematicians, garbage-collected and functional, not a systems substrate a program rewrites and runs at native speed. Neither has both halves. Logos reaches for both in one structure: rewrite it as freely as Smalltalk, check it as strictly as Lean, run it as fast as Rust.</p>
-    <p>That combination is what code written by machines will need, and it is the direction Logos is built toward. It does not run yet; the <a href="/roadmap/">roadmap</a> tracks what does.</p>
+// ── The levels of meta ───────────────────────────────────────────────────────
+// The brand made concrete. "Maximally meta" is a ranking, so the page shows the
+// scale: how much of the language a program's own code can reach, from text macros
+// up to Logos, where the grammar, types, borrow rules, proofs, compiler and
+// interpreter are all nodes of the graph the program lives in. Each language sits
+// at the highest rung it reaches (a Lisp has code-as-data too, but tops out at
+// "live system"). Levels are listed bottom-up here and rendered top-down, so Logos,
+// the summit, is what a reader sees first. Kept honest: the Logos rung says it is
+// the design, not shipping software.
+interface MetaLevel {
+  name: string;
+  /** What a program's own code can reach at this level. */
+  what: string;
+  /** Languages whose highest rung this is. */
+  who: string;
+}
+const META_LEVELS: MetaLevel[] = [
+  {
+    name: "Text and token macros",
+    what: "Code rewrites code before the compiler understands any of it.",
+    who: "C preprocessor, Rust macros",
+  },
+  {
+    name: "Compile-time execution",
+    what: "Ordinary code runs while compiling and its results are baked in.",
+    who: "Zig, C++ constexpr, D",
+  },
+  {
+    name: "Code as data",
+    what: "Programs are values a program can build, inspect, and evaluate.",
+    who: "Clojure, Julia, Elixir",
+  },
+  {
+    name: "Redefinable grammar",
+    what: "The parser is code you can change, so whole languages become libraries.",
+    who: "Racket",
+  },
+  {
+    name: "Live system",
+    what: "Anything, including the compiler, can be redefined while it runs. Nothing checks the result.",
+    who: "Smalltalk, Forth, Common Lisp",
+  },
+  {
+    name: "Checked metaprogramming",
+    what: "Types and proofs are data, and metaprograms are themselves type-checked. Syntax, elaboration, and the kernel stay separate layers, on managed memory.",
+    who: "Lean 4, Agda, Coq",
+  },
+];
+const LOGOS_LEVEL: MetaLevel = {
+  name: "Everything in one checked graph",
+  what: "The program, its types, its borrow rules, its proofs, its grammar, its parser, its compiler and its interpreter are nodes in one graph, and the same operations that run code can read and redefine any of them. Every redefinition is borrow-checked, and proof-checked where you ask for it, before it runs. Still a systems language: no garbage collector, native speed.",
+  who: "Logos (designed; not yet running)",
+};
+
+function ladderRung(lvl: MetaLevel, n: number, extraClass = ""): string {
+  return `<li class="ladder__rung${extraClass}"><span class="ladder__num" aria-hidden="true">${n}</span><div class="ladder__text"><h3 class="ladder__name">${lvl.name}</h3><p class="ladder__what">${lvl.what}</p><p class="ladder__who">${lvl.who}</p></div></li>`;
+}
+
+function metaLadderHtml(): string {
+  const rungs = META_LEVELS.map((lvl, i) => ladderRung(lvl, i + 1))
+    .reverse()
+    .join("\n    ");
+  return `<section class="ladder" aria-label="The levels of metaprogramming">
+  <h2 class="ladder__title">The levels of meta</h2>
+  <p class="ladder__lead">Most languages have "metaprogramming". The word hides a ladder: how much of the language your own code can reach. Every language stops somewhere. Logos is designed so that nothing is out of reach.</p>
+  <ol class="ladder__list" reversed>
+    ${ladderRung(LOGOS_LEVEL, META_LEVELS.length + 1, " ladder__rung--logos")}
+    ${rungs}
+  </ol>
+  <p class="ladder__note">Each language sits at the highest level it reaches.</p>
+</section>`;
+}
+
+// ── Checked, not clever ───────────────────────────────────────────────────────
+// The objection every experienced programmer raises at "redefine the language":
+// Lisp, Forth and Smalltalk allowed exactly that, nothing checked the result, and
+// teams learned to fence it off. This section answers with the mechanism (a
+// redefinition is a checked write into the graph under the one reader-writer rule)
+// and names the half each ancestor misses. Kept honest: direction, not feature.
+function checkedHtml(): string {
+  return `<section class="checked" aria-label="Why redefining the language is safe in Logos">
+  <h2 class="checked__title">Checked, not clever</h2>
+  <p class="checked__lead">Total metaprogramming has a bad reputation, and it earned it. Lisp, Forth and Smalltalk let code redefine anything, nothing checked the result, and teams learned to fence off the very feature that made those languages special.</p>
+  <div class="checked__body">
+    <p>Logos keeps the freedom and adds the check. Redefining a type, the grammar, or the compiler itself is an ordinary write into the Logic Graph, governed by the same rule as every other write: many readers or one writer, never both. The type system sees the change, the borrow checker sees it, and where you have asked for proofs, the proof kernel sees it, all before it runs.</p>
+    <p>That is the half each of Logos's ancestors misses. Smalltalk can rewrite itself but cannot prove a change right. Lean can prove a change right, but it is a prover built for mathematicians, on managed memory, with syntax, elaboration and kernel terms kept as separate layers, not a systems substrate a program rewrites and runs at native speed. Logos reaches for both in one structure: rewrite it as freely as Smalltalk, check it as strictly as Lean, run it as fast as Rust.</p>
+    <p>This is the direction Logos is built toward, not a shipping feature. It does not run yet; the <a href="/roadmap/">roadmap</a> tracks what does.</p>
+  </div>
+</section>`;
+}
+
+// ── What maximum meta buys ────────────────────────────────────────────────────
+// The reason to care. Meta is the brand, not the goal; these four are what the
+// project is for, and each follows from the one graph rather than being a separate
+// feature. The first keeps the former headline, "one language for everything", as
+// the first consequence; the second and fourth are the two roads the about page
+// tells (AI memory, mathematics); the third is DESIGN.md's "why now".
+function payoffsHtml(): string {
+  return `<section class="payoff" aria-label="What being maximally meta makes possible">
+  <h2 class="payoff__title">What maximum meta buys</h2>
+  <p class="payoff__lead">Meta is not the goal. It is the one property the rest follows from.</p>
+  <div class="payoff__grid">
+    <div class="payoff__item">
+      <h3 class="payoff__name">One language for everything</h3>
+      <p>Systems code, GPU kernels, async, proofs, a new syntax, a hosted language, the compiler itself: each is a library over the same graph, not another language with another toolchain.</p>
+    </div>
+    <div class="payoff__item">
+      <h3 class="payoff__name">Human language you can run</h3>
+      <p>Grammar is ordinary code, so a human language can be given one and executed. An AI's memory then stops being text matched by similarity and becomes a structure it can query, prove things against, and correct.</p>
+    </div>
+    <div class="payoff__item">
+      <h3 class="payoff__name">Code machines can safely write</h3>
+      <p>An AI that edits text pushes a guess through a toolchain and hopes. An AI that edits the Logic Graph edits a structure carrying its own types, borrow states and proofs, and gets machine-checked feedback before anything runs.</p>
+    </div>
+    <div class="payoff__item">
+      <h3 class="payoff__name">Mathematics as values</h3>
+      <p>Formulas are values you build, reshape and prove things about. The rewriting engine that turns <code>x + 0</code> into <code>x</code> for the compiler is the one that turns <code>sin²θ + cos²θ</code> into <code>1</code> for you.</p>
+    </div>
   </div>
 </section>`;
 }
@@ -1085,25 +1192,28 @@ export function homePage(): string {
   <div class="hero__copy">
     <h1 class="hero__headline">
       <span class="hero__brand" aria-hidden="true">Λόγος</span>
-      <span class="hero__lead" aria-hidden="true">One language for everything</span>
-      <span class="hero__rot-line" aria-hidden="true"><span class="hero__rot-prefix">instead of a different one for</span> <span class="hero__rotator" data-rotator><span class="hero__rot-item is-current">systems</span><span class="hero__rot-item">speed</span><span class="hero__rot-item">the GPU</span><span class="hero__rot-item">async</span><span class="hero__rot-item">proofs</span><span class="hero__rot-item">true metaprogramming</span><span class="hero__rot-item">new languages</span><span class="hero__rot-item">dedicated hardware</span><span class="hero__rot-item">JIT</span><span class="hero__rot-item">special use cases</span><span class="hero__rot-item">the compiler itself</span></span></span>
-      <span class="sr-only">One language for everything: Logos aims to be a single language for systems code, speed, GPUs, async, proofs, metaprogramming, new languages, dedicated hardware, and its own compiler, instead of a different one for every job.</span>
+      <span class="hero__lead" aria-hidden="true">Maximally meta</span>
+      <span class="hero__rot-line" aria-hidden="true"><span class="hero__rot-prefix">your code can read and redefine</span> <span class="hero__rotator" data-rotator><span class="hero__rot-item is-current">the grammar</span><span class="hero__rot-item">the type system</span><span class="hero__rot-item">the borrow rules</span><span class="hero__rot-item">the proofs</span><span class="hero__rot-item">the optimizer</span><span class="hero__rot-item">the compiler</span><span class="hero__rot-item">the interpreter</span><span class="hero__rot-item">the language itself</span></span></span>
+      <span class="sr-only">Maximally meta: in Logos your code can read and redefine the grammar, the type system, the borrow rules, the proofs, the optimizer, the compiler, the interpreter, and the language itself, and every change is checked before it runs.</span>
     </h1>
-    <p class="hero__sub">An AI that edits text pushes a guess through a fragile toolchain and hopes. Logos code is a live structure that carries its own types, borrow states, and proofs, so every change gets machine-checked feedback before it ever runs.</p>
+    <p class="hero__sub">The program, its types, its proofs, its grammar and its compiler are nodes in one graph, and the same operations that run code can read and redefine any of them. Every redefinition is checked the way ordinary code is: the freedom of Lisp and Smalltalk, with the check they never had.</p>
     <div class="hero__actions">
       <a class="logos-btn logos-btn--ghost" href="/vision/">Read the vision</a>
       <a class="logos-btn logos-btn--ghost" href="/roadmap/">See the roadmap</a>
     </div>
+    <p class="hero__status">Under development. A small Rust seed exists; nothing you can run yet.</p>
   </div>
 </section>
+${metaLadderHtml()}
+${structureHtml()}
+${codePeekHtml()}
+${checkedHtml()}
+${payoffsHtml()}
+${buildableHtml()}
+${compareHtml()}
 <section class="wisdom" aria-label="On the Logos, voices across the ages">
   <div class="wisdom__scroll"><div class="wisdom__track">${wisdomUnits()}</div></div>
 </section>
-${codePeekHtml()}
-${structureHtml()}
-${aiSubstrateHtml()}
-${buildableHtml()}
-${compareHtml()}
 ${notifySectionHtml()}`;
 }
 

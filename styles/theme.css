@@ -641,7 +641,7 @@ a {
     line-height: 1.55;
     /* Matched to the Download button's text color. */
     color: var(--download-fg);
-    max-width: 46ch;
+    max-width: 56ch;
     margin: 2.25rem 0 0;
 }
 /* The hero's actions: ghost links to the vision and roadmap, the honest CTAs while
@@ -652,6 +652,12 @@ a {
     justify-content: center;
     gap: 0.8rem;
     margin-top: 2.2rem;
+}
+/* One honest line under the actions: the language is designed, not yet running. */
+.hero__status {
+    font-size: 0.82rem;
+    color: var(--muted);
+    margin: 1.4rem 0 0;
 }
 
 /* ── Get-notified form ────────────────────────────────────────────────────────
@@ -791,13 +797,13 @@ a {
 .buildable__body p:last-child {
     margin-bottom: 0;
 }
-.substrate {
+.checked {
     max-width: 46rem;
     margin: clamp(4rem, 10vh, 7rem) auto 0;
     padding-inline: 1.25rem;
     text-align: center;
 }
-.substrate__title {
+.checked__title {
     font-family: var(--serif);
     font-size: clamp(1.5rem, 3vw, 2.2rem);
     font-weight: 600;
@@ -805,25 +811,159 @@ a {
     color: var(--heading);
     margin: 0;
 }
-.substrate__lead {
+.checked__lead {
     max-width: 58ch;
     margin: 1rem auto 0;
     font-size: 1.02rem;
     line-height: 1.6;
     color: var(--heading);
 }
-.substrate__body {
+.checked__body {
     max-width: 62ch;
     margin: 1.2rem auto 0;
     font-size: 0.95rem;
     line-height: 1.65;
     text-align: left;
 }
-.substrate__body p {
+.checked__body p {
     margin: 0 0 0.9rem;
 }
-.substrate__body p:last-child {
+.checked__body p:last-child {
     margin-bottom: 0;
+}
+
+/* ── The levels of meta ───────────────────────────────────────────────────────
+   The brand made concrete: a ladder of how much of the language code can reach,
+   rendered top-down so the Logos rung (the summit) is read first. One column at
+   every width, unlike the comparison matrix, so it holds on phones. */
+.ladder {
+    max-width: 46rem;
+    margin: clamp(4rem, 10vh, 7rem) auto 0;
+    padding-inline: 1.25rem;
+    text-align: center;
+}
+.ladder__title {
+    font-family: var(--serif);
+    font-size: clamp(1.5rem, 3vw, 2.2rem);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: var(--heading);
+    margin: 0;
+}
+.ladder__lead {
+    font-size: 0.95rem;
+    max-width: 58ch;
+    margin: 0.9rem auto 0;
+}
+.ladder__list {
+    list-style: none;
+    margin: 1.8rem auto 0;
+    padding: 0;
+    max-width: 40rem;
+    text-align: left;
+}
+.ladder__rung {
+    display: grid;
+    grid-template-columns: 2.2rem minmax(0, 1fr);
+    column-gap: 0.9rem;
+    padding: 0.85rem 0.9rem 0.85rem 0;
+    border-top: 1px solid var(--hairline);
+}
+.ladder__rung:last-child {
+    border-bottom: 1px solid var(--hairline);
+}
+.ladder__num {
+    font-family: var(--mono);
+    font-size: 0.85rem;
+    color: var(--muted);
+    text-align: right;
+    padding-top: 0.15rem;
+}
+.ladder__name {
+    font-family: var(--sans);
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--heading);
+    margin: 0;
+}
+.ladder__what {
+    font-size: 0.92rem;
+    line-height: 1.55;
+    margin: 0.2rem 0 0;
+}
+.ladder__who {
+    font-size: 0.82rem;
+    color: var(--muted);
+    margin: 0.25rem 0 0;
+}
+/* The summit: Logos, framed in the brand accent and raised on the surface tint. */
+.ladder__rung--logos {
+    background: var(--surface);
+    border: 1px solid var(--accent);
+    border-radius: 0.6rem;
+    padding: 1rem 1rem 1rem 0;
+    margin-bottom: 0.9rem;
+}
+.ladder__rung--logos .ladder__num,
+.ladder__rung--logos .ladder__who {
+    color: var(--accent);
+}
+.ladder__note {
+    font-size: 0.82rem;
+    color: var(--muted);
+    margin: 0.9rem auto 0;
+}
+
+/* ── What maximum meta buys ───────────────────────────────────────────────────
+   Four consequences of the one graph, a two-column grid that collapses to one
+   column on narrow screens. */
+.payoff {
+    max-width: 46rem;
+    margin: clamp(4rem, 10vh, 7rem) auto 0;
+    padding-inline: 1.25rem;
+    text-align: center;
+}
+.payoff__title {
+    font-family: var(--serif);
+    font-size: clamp(1.5rem, 3vw, 2.2rem);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: var(--heading);
+    margin: 0;
+}
+.payoff__lead {
+    font-size: 0.95rem;
+    max-width: 58ch;
+    margin: 0.9rem auto 0;
+}
+.payoff__grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.6rem 2rem;
+    margin-top: 1.8rem;
+    text-align: left;
+}
+@media (max-width: 40rem) {
+    .payoff__grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+.payoff__name {
+    font-family: var(--sans);
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--heading);
+    margin: 0;
+}
+.payoff__item p {
+    font-size: 0.92rem;
+    line-height: 1.6;
+    margin: 0.35rem 0 0;
+}
+.payoff__item code {
+    font-family: var(--mono);
+    font-size: 0.9em;
+    color: var(--heading);
 }
 .code-card {
     margin: 1.8rem 0 0;
@@ -1047,7 +1187,7 @@ a {
        hairlines. The edge fade lives on the inner scroller (below) so only the
        TEXT dissolves at the sides, never the band or its hairlines. */
     background: var(--surface);
-    /* A medium gap between the hero and the frieze. */
+    /* A medium gap between the section above and the frieze. */
     margin-top: clamp(3rem, 8vh, 6rem);
     border-block: 1px solid var(--hairline);
     padding-block: 2rem;

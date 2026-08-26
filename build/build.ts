@@ -437,7 +437,7 @@ export async function build(): Promise<void> {
   setAssetUrls(assets.cssHref, assets.jsHref);
 
   const homeDesc =
-    "Logos is a self-hosting systems programming language built on radical unification: programs, types, proofs, the optimizer, the standard library, and the compiler itself all live in one reflectable structure, the Logic Graph.";
+    "Logos is the maximally meta programming language: a self-hosting systems language in which the program, its types, its proofs, its grammar and its compiler are nodes in one graph, the Logic Graph, and the same checked operations that run code can read and redefine any of them.";
   const roadmapDesc =
     "Where Logos actually stands: an honest map of what runs today versus the still-planned pieces of the vision, from the self-hosting seed to dependent-type proofs.";
   const examplesDesc =
@@ -592,7 +592,7 @@ export async function build(): Promise<void> {
   // Discovery files: sitemap of canonical URLs, and llms.txt pointing AI
   // answer-engines at the same content with one-line summaries.
   const marketing = [
-    { path: "/", title: "Logos: Radical Unification", desc: homeDesc },
+    { path: "/", title: "Logos: Maximally Meta", desc: homeDesc },
     {
       path: "/vision/",
       title: "Vision",
@@ -652,7 +652,7 @@ async function writeLlmsTxt(
   const parts = [
     "# Logos (Λόγος)",
     "",
-    "> Logos is a self-hosting systems programming language built on radical unification: programs, types, proofs, the optimizer, the standard library, and the compiler itself all live in one reflectable structure, the Logic Graph. The same operations that run a program can read, write, update, optimize, and prove any of it",
+    "> Logos is the maximally meta programming language: a self-hosting systems language in which the program, its types, its proofs, its grammar, the optimizer, the standard library, and the compiler itself are nodes in one graph, the Logic Graph. The same operations that run a program can read, rewrite, optimize, prove, and redefine any of it, and every change is checked before it runs",
     "",
     "## Pages",
     "",

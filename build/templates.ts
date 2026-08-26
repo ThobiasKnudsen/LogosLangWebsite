@@ -11,7 +11,7 @@ export const SITE_URL = (process.env.SITE_URL || 'https://logoslang.dev').replac
 // Social preview card (1200x630). Served from /public. Leave '' to omit og:image.
 export const OG_IMAGE = '/og.png';
 const SITE_NAME = 'Logos';
-const DEFAULT_DESC = 'Logos: a self-hosting systems language built on radical unification.';
+const DEFAULT_DESC = 'Logos: the maximally meta programming language. Program, types, proofs, grammar and compiler are one graph that code can read and redefine, with every change checked.';
 
 // Hashed asset URLs, set by the build after bundling (build/build.ts) so a fresh
 // deploy never serves stale CSS/JS from a cached fixed filename. Defaults are the
