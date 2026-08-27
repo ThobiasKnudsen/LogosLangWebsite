@@ -551,11 +551,11 @@ a {
     white-space: nowrap;
     margin-bottom: 0.1em;
 }
-/* The identity line, the one sentence a first-time visitor should read, at 70% of
+/* The identity line, the one sentence a first-time visitor should read, at 80% of
    the wordmark above it (Thobias, 2026-08-26). */
 .hero__lead {
     display: block;
-    font-size: 0.7em;
+    font-size: 0.8em;
     color: var(--heading);
 }
 .hero__sub {
