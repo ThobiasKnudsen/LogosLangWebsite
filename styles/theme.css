@@ -519,7 +519,7 @@ a {
 .hero {
     /* Room above the headline: it should sit clearly below the dock, not hug it.
        The frieze's own top margin (see .wisdom) sets the gap beneath the hero. */
-    padding-top: clamp(4rem, 16vh, 9rem);
+    padding-top: clamp(4rem, 16vh, 5rem);
     text-align: center;
 }
 .hero__copy {
@@ -551,11 +551,11 @@ a {
     white-space: nowrap;
     margin-bottom: 0.1em;
 }
-/* The identity line, the one sentence a first-time visitor should read. It inherits
-   the full headline size, so together with the wordmark it is the largest thing in
-   the hero. */
+/* The identity line, the one sentence a first-time visitor should read, at 70% of
+   the wordmark above it (Thobias, 2026-08-26). */
 .hero__lead {
     display: block;
+    font-size: 0.7em;
     color: var(--heading);
 }
 .hero__sub {
@@ -565,7 +565,7 @@ a {
     color: var(--download-fg);
     max-width: 56ch;
     /* Air between the two-line title and the paragraph, so the title stands alone. */
-    margin: 3.25rem 0 0;
+    margin: 4.5rem 0 0;
 }
 /* The hero's actions: ghost links to the vision and roadmap, the honest CTAs while
    no builds exist (the get-notified form lives at the bottom of the page). */
