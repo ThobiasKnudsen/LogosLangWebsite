@@ -1,13 +1,13 @@
-// Inner HTML for the marketing pages. The homepage argues one brand, "maximally
-// meta", in this order: the hero states the claim and the mechanism (one graph,
-// checked redefinition); the frieze of reflections on the Logos sits directly under
-// it, part of the name (Thobias, 2026-08-26); the code card comes next with one line
-// of description, so a developer sees syntax before theory; the ladder of meta makes
-// the claim concrete against the languages a PL-literate visitor will name; the
-// Logic Graph figure shows the mechanism; "Checked, not clever" answers the
-// Lisp/Smalltalk objection; the payoffs say why it matters; then the proven-parts
-// section, the honest comparison matrix, and the get-notified form last, where a
-// convinced reader lands.
+// Inner HTML for the marketing pages. The homepage order: the hero is the identity,
+// "Λόγος / One language for everything", over one paragraph on the mechanism (one
+// graph, checked redefinition); the frieze of reflections on the Logos sits directly
+// under it, part of the name (Thobias, 2026-08-26); the code card comes next with one
+// line of description, so a developer sees syntax before theory; the ladder of meta
+// makes the "maximally meta" claim concrete against the languages a PL-literate
+// visitor will name; the Logic Graph figure shows the mechanism; "Checked, not
+// clever" answers the Lisp/Smalltalk objection; the payoffs say why it matters; then
+// the proven-parts section, the honest comparison matrix, and the get-notified form
+// last, where a convinced reader lands.
 import { escapeHtml } from "./templates.ts";
 import {
   OS_ORDER,
@@ -1231,10 +1231,8 @@ export function homePage(): string {
   <div class="hero__copy">
     <h1 class="hero__headline">
       <span class="hero__brand" aria-hidden="true">Λόγος</span>
-      <span class="hero__kicker" aria-hidden="true">The programming language</span>
-      <span class="hero__lead" aria-hidden="true">Maximally Meta</span>
-      <span class="hero__rot-line" aria-hidden="true"><span class="hero__rot-prefix">Meta-</span><span class="hero__rotator" data-rotator><span class="hero__rot-item is-current">programming</span><span class="hero__rot-item">language</span><span class="hero__rot-item">circular</span><span class="hero__rot-item">compiler</span><span class="hero__rot-item">interpreter</span><span class="hero__rot-item">logic</span><span class="hero__rot-item">proofs</span><span class="hero__rot-item">theory</span><span class="hero__rot-item">mathematics</span><span class="hero__rot-item">borrow checking</span><span class="hero__rot-item">linguistic</span><span class="hero__rot-item">meta</span></span></span>
-      <span class="sr-only">Λόγος, the programming language. Maximally meta: metaprogramming, metalanguage, metacircular, metacompiler, metainterpreter, metalogic, metaproofs, metatheory, metamathematics, meta borrow checking, metalinguistic, meta-meta. Every part of the language is code your code can read and redefine, and every change is checked before it runs.</span>
+      <span class="hero__lead" aria-hidden="true">One language for everything</span>
+      <span class="sr-only">Λόγος: one language for everything.</span>
     </h1>
     <p class="hero__sub">Logos is written in itself. Its grammar, types, proofs, compiler and interpreter live in the same graph as your program, so your code can read and redefine any of them, and every change is checked. Meta used to mean unchecked and slow. Here it is neither.</p>
     <div class="hero__actions">

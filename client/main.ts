@@ -22,7 +22,6 @@ import type { Roadmap } from '../build/roadmap.ts';
 initThemeToggle();
 initNavMenu();
 initDockHide();
-initHeroRotator();
 initWisdom();
 initScrollbars();
 initAnalytics();
@@ -138,51 +137,6 @@ function initDockHide(): void {
 // re-centering jitter). Pure progressive enhancement: with JS off (or reduced
 // motion) the first phrase stays shown. Pauses while the pointer is over the
 // rotator so a reader can hold a phrase.
-function initHeroRotator(): void {
-	const rotator = document.querySelector<HTMLElement>('[data-rotator]');
-	if (!rotator) return;
-	const items = [...rotator.querySelectorAll<HTMLElement>('.hero__rot-item')];
-	if (items.length < 2) return;
-
-	const INTERVAL = 4500;
-	let i = 0;
-
-	// The box is only as wide as the CURRENT phrase (the CSS animates the change), so
-	// "Meta-" plus the phrase stays centered as one unit. Re-measure once the web font
-	// lands and on resize, since the headline size is fluid.
-	const fit = (): void => {
-		rotator.style.width = `${items[i]!.offsetWidth}px`;
-	};
-	fit();
-	document.fonts?.ready.then(fit);
-	window.addEventListener('resize', fit);
-
-	if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-
-	function advance(): void {
-		const cur = items[i]!;
-		const nextIdx = (i + 1) % items.length;
-		const next = items[nextIdx]!;
-		// Snap the incoming phrase below the band with no transition, so it rises
-		// up into view rather than sweeping down through it.
-		next.classList.add('is-instant');
-		next.classList.remove('is-prev', 'is-current');
-		void next.offsetWidth; // commit the reset before re-enabling transitions
-		next.classList.remove('is-instant');
-		cur.classList.remove('is-current');
-		cur.classList.add('is-prev');
-		next.classList.add('is-current');
-		i = nextIdx;
-		fit();
-	}
-
-	let timer = window.setInterval(advance, INTERVAL);
-	rotator.addEventListener('pointerenter', () => clearInterval(timer));
-	rotator.addEventListener('pointerleave', () => {
-		timer = window.setInterval(advance, INTERVAL);
-	});
-}
-
 // ── Wisdom frieze: shared auto-drift + manual scroll ──────────────────────────
 // The frieze holds each quote exactly once, as a row of .wisdom__unit blocks. A rAF
 // loop nudges scrollLeft to give a slow ambient drift; because it's the same
