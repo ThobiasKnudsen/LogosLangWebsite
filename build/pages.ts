@@ -195,7 +195,12 @@ function notifyFormHtml(source: string): string {
 // spelling for how a Logos-written constructor builds a node's operand record
 // (9 September 2026): `tape[0]:dyad.type = +` first, which initializes the value so
 // `.operands` is valid, then `.operands.append(tape[-1] and tape[1])`, the and-group
-// distributing so both operands are appended. The slot names and their `=` (a slot
+// distributing so both operands are appended. The operand check is the membership
+// ruling of 8 September 2026: `is` is membership in a collection (`x is c`, a plain
+// boolean operator like `==`, no proof machinery), and `number` is the collection of
+// the numeric types the library defines, which is how a premise says "a is a number".
+// It is the spelling of "is a" in a language with no inheritance, where `==` on types
+// is identity. The slot names and their `=` (a slot
 // the type declared is filled, not redeclared) come from identities/type.logos,
 // which also dates `parse_rank`: it was spelled `precedence` until 10 September 2026.
 // The one invented value is the 4.0: DESIGN.md pins no table of ranks, only that the
@@ -210,7 +215,12 @@ const HOME_SAMPLE = `# \`+\` is not built into the language. It is a type, and t
 
     constructor = fn (tape := parsing_tape ?) -> void (
         # tape[0] is the \`+\` cell itself, tape[-1] and tape[1] the values
-        # either side of it, already constructed by the driver.
+        # either side of it, already constructed by the driver. \`number\`
+        # is not built in either: it is the collection of numeric types
+        # the library defines, and \`is\` asks whether a type is in it.
+        if not ((tape[-1] and tape[1]):dyad.type is number)
+            error «+ takes a number on each side»
+
         tape[0]:dyad.type = +
         tape[0]:dyad.value.operands.append(tape[-1] and tape[1])
         tape.remove(1)        # both operands live in the record now,
