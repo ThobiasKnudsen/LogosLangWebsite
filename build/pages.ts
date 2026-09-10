@@ -187,11 +187,24 @@ function notifyFormHtml(source: string): string {
     </form>`;
 }
 
-// ── Homepage code sample ──────────────────────────────────────────────────────
-// One operator, defined and then used: `+` as an ordinary type, with a real
-// constructor rather than a `?` body. The sample carries no comments of its own and
-// no prose around it (Thobias, 11 September 2026) — it is meant to be read as code,
-// so anything that needs saying has to be said by the code.
+// ── Homepage code listing ─────────────────────────────────────────────────────
+// One continuous file running the length of the page, numbered straight through, as
+// if the homepage were a single Logos source read top to bottom (Thobias, 11
+// September 2026). It carries no comments of its own and no prose around it — it is
+// meant to be read as code, so anything that needs saying has to be said by the code.
+//
+// The listing is the language defining itself, in the order that dependency demands:
+// the dyad, the self-classifying `logos`, `type` (which reads its own bracket), `(`
+// (the scope opener and the eager-segment driver), and finally `+`, an ordinary
+// operator built out of all of it. Every definition is lifted from a REAL file in the
+// sibling repo rather than written for the website — LogosLang/identities/dyad.logos,
+// type.logos and open_parenthesis.logos — with their comments stripped and the
+// alignment regularised. Two placeholders had to be filled: `(`'s parse_rank is
+// literally `…` in the source ("near the top of the axis; `,` sits above it") and
+// `+` has no source file at all. Those two numbers, 9.0 and 4.0, are the only
+// invented values here; DESIGN.md pins no table of ranks, only that the axis is an
+// f64 where higher binds tighter and fractional values let a new operator slot
+// between two existing ones.
 //
 // Sourced from LogosLang/DESIGN.md and LogosLang/identities/*.logos (September 2026):
 //   - `instance (…)` declaring the per-instance fields, and the filled slots written
@@ -212,7 +225,91 @@ function notifyFormHtml(source: string): string {
 // The one invented value is the 4.0. DESIGN.md pins no table of ranks, only that the
 // axis is an f64 where higher binds tighter and fractional values let a new operator
 // slot between two existing ones without renumbering.
-const HOME_SAMPLE = `+ := type (
+const HOME_SAMPLE = `dyad := type (instance (type := @dyad ?, value := @void ?))
+
+logos := logos (logos)
+
+type := type (
+    instance (
+        parse_rank    := f64 ?
+        lex_rank      := f64 ?
+        associativity := ?
+        constructor   := fn (tape := parsing_tape ?) -> void ?
+        destructor    := ?
+        code          := ?
+    )
+
+    parse_rank    = f64 2.0
+    associativity = left
+
+    constructor = fn (tape := parsing_tape ?) -> void (
+        if tape[1] != lex «(»[0]
+            error «type must be followed by (»
+
+        definition := scope ?
+        (.constructor(tape.recenter(1))
+        tape[0] = dyad (type, definition)
+        tape.remove(1)
+    )
+)
+
+scope := type (
+    constructor = fn (tape := parsing_tape ?) -> void ( ? )
+
+    instance (
+        self := array dyad ()
+    )
+)
+
+fn := type (
+    instance (
+        compile := fn () -> void ?
+        run     := fn () -> void ?
+        input   := type ?
+        output  := ?
+        body    := ?
+        bcode   := callable ?
+        frame   := u64 ?
+    )
+)
+
+( := type (
+    parse_rank    = f64 9.0
+    associativity = left
+
+    constructor = fn (tape := parsing_tape ?) -> void (
+        body  := array @dyad ()
+        first := 1
+        i     := 1
+
+        while true (
+            cell := tape[i]
+
+            if cell == lex «)»[0] or cell == lex «,»[0] (
+                while true (
+                    k := highest_unconstructed(tape, first, i)
+                    if k == ? break
+                    tape[k].constructor(tape.recenter(k))
+                )
+                for k in first..i (
+                    if not tape.is_constructed[k]
+                        error «unconstructed cell at a segment boundary»
+                    body.push(tape[k])
+                )
+                if cell == lex «)»[0] break
+                first = i + 1
+            ) else if cell.parse_rank >= (.parse_rank (
+                cell.constructor(tape.recenter(i))
+            )
+            i = i + 1
+        )
+
+        tape[0] = dyad (scope, body)
+        for k in 1..i+1 ( tape.remove(1) )
+    )
+)
+
++ := type (
     instance (
         lhs := @dyad ?
         rhs := @dyad ?
@@ -230,6 +327,19 @@ const HOME_SAMPLE = `+ := type (
         tape[0]:dyad.value.rhs = tape[1]
         tape.remove(1)
         tape.remove(-1)
+    )
+)
+
+proof := type (
+    constructor = fn (tape := parsing_tape ?) -> void ( ? )
+
+    instance (
+        holes       := array dyad ()
+        premises    := array dyad ()
+        pattern     := dyad ?
+        replacement := dyad ?
+        derivation  := ?
+        world       := array @proof ()
     )
 )
 
@@ -257,13 +367,15 @@ const LOGOS_KEYWORDS = new Set([
   "in",
   "break",
   "is",
+  "true",
+  "false",
 ]);
 // `@dyad` / `@void` tokenize as the `@` operator plus a bare identifier, so the
 // pointer type names appear here without their prefix.
 // `left` and `right` are the two associativity identities (ruled 9 September 2026),
 // keywords with nothing behind them, so they color like the other ground identities.
 const LOGOS_TYPES =
-  /^(?:[iu](?:8|16|32|64)|f32|f64|string|bool|void!?|dyad|logos|type|instance|exec|scope|proof|conjecture|parsing_tape|callable|number|generic_number|array|left|right)$/;
+  /^(?:[iu](?:8|16|32|64)|f32|f64|string|bool|void!?|dyad|logos|type|instance|lex|exec|scope|proof|conjecture|parsing_tape|callable|number|generic_number|array|left|right)$/;
 
 /** Minimal Logos highlighter for the fixed homepage sample: comments, «strings»,
  *  numbers, keywords, primitive types, and operators become spans; everything else
@@ -541,18 +653,17 @@ function structureHtml(): string {
 </section>`;
 }
 
-// The sample stands on its own: no card, no filename bar, no heading, no prose. It
-// is the hero's right-hand column, opposite the wordmark and the identity line, so
-// the first thing a visitor sees is the claim and the code side by side. Each line
-// is its own block so a CSS counter can number it; the numbers live in ::before, so
-// they are decoration the clipboard never picks up. The lines carry no "\n" between
-// them (a newline plus a block would render as a second, empty line), and an empty
-// source line keeps its height from .code-line's min-height.
-function heroCodeHtml(): string {
+// The listing stands on its own: no card, no filename bar, no heading, no prose. It
+// is the page's right-hand column, running beside every section from the wordmark to
+// the signup. Each line is its own block so a CSS counter can number it; the numbers
+// live in ::before, so they are decoration the clipboard never picks up. The lines
+// carry no "\n" between them (a newline plus a block would render as a second, empty
+// line), and an empty source line keeps its height from .code-line's min-height.
+function codeListingHtml(): string {
   const lines = highlightLogosLines(HOME_SAMPLE)
     .map((line) => `<span class="code-line">${line}</span>`)
     .join("");
-  return `<pre class="hero__code"><code>${lines}</code></pre>`;
+  return `<pre class="page-grid__code"><code>${lines}</code></pre>`;
 }
 
 // ── Comparison matrix ─────────────────────────────────────────────────────────
@@ -1092,6 +1203,14 @@ function compareHtml(): string {
 </section>`;
 }
 
+/** The matrix on its own page. It left the homepage when that became a two-column
+ *  read (11 September 2026): the table is 13 columns wide with an intrinsic floor of
+ *  82rem, so it cannot share a page with anything. It carries its own title and lead,
+ *  so the page is the section. */
+export function comparePage(): string {
+  return compareHtml();
+}
+
 // A short "large but tractable" section between the code card and the matrix: it
 // names the working precedent each part has, the small self-hosting seed the whole
 // thing bootstraps from, and points at the roadmap and vision. It frames the matrix
@@ -1207,29 +1326,35 @@ function notifySectionHtml(): string {
 </section>`;
 }
 
+// The homepage is one three-column grid (Thobias, 11 September 2026): every prose
+// section down the left, the quote rail as the page's spine, and one continuous code
+// listing down the right, all three running the full height of the document. The rail
+// is a scroller of its own — it drifts downwards under its own steam and a reader can
+// scroll it against that drift — so it is a sibling of the two columns, not a band
+// between sections. Below the grid's breakpoint the three columns become one and the
+// rail is dropped; see .page-grid.
 export function homePage(): string {
-  return `<section class="hero">
-  <div class="hero__split">
-    <div class="hero__copy">
+  return `<div class="page-grid">
+  <div class="page-grid__text">
+    <section class="hero">
       <h1 class="hero__headline">
         <span class="hero__brand" aria-hidden="true">Λόγος</span>
         <span class="hero__lead" aria-hidden="true">One language for everything</span>
         <span class="sr-only">Λόγος: one language for everything.</span>
       </h1>
       <p class="hero__sub">Logos is maximally meta. Its grammar, types, proofs, compiler and interpreter live in the same graph as your program, so your code can read and redefine any of them, and every change is checked. Meta used to mean unchecked and slow. Here it is neither.</p>
-    </div>
-    ${heroCodeHtml()}
-  </div>
-</section>
-<section class="wisdom" aria-label="On the Logos, voices across the ages">
-  <div class="wisdom__scroll"><div class="wisdom__track">${wisdomUnits()}</div></div>
-</section>
+    </section>
 ${metaLadderHtml()}
 ${structureHtml()}
 ${checkedHtml()}
 ${buildableHtml()}
-${compareHtml()}
-${notifySectionHtml()}`;
+${notifySectionHtml()}
+  </div>
+  <div class="wisdom" aria-label="On the Logos, voices across the ages">
+    <div class="wisdom__scroll"><div class="wisdom__track">${wisdomUnits()}</div></div>
+  </div>
+  ${codeListingHtml()}
+</div>`;
 }
 
 export function visionPage(): string {

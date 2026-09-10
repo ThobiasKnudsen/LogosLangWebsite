@@ -137,84 +137,74 @@ function initDockHide(): void {
 // re-centering jitter). Pure progressive enhancement: with JS off (or reduced
 // motion) the first phrase stays shown. Pauses while the pointer is over the
 // rotator so a reader can hold a phrase.
-// ── Wisdom frieze: shared auto-drift + manual scroll ──────────────────────────
-// The frieze holds each quote exactly once, as a row of .wisdom__unit blocks. A rAF
-// loop nudges scrollLeft to give a slow ambient drift; because it's the same
-// scrollLeft the visitor moves when they swipe or scroll, auto and manual share one
-// mechanism. The endless loop comes from rotating whole units instead of duplicating
-// them: when the first unit has fully scrolled out of view it moves to the end of
-// the track (and the reverse when scrolling back past the start), with scrollLeft
-// compensated by the unit's width so the visible content never jumps. Drift pauses
-// while the pointer is over the frieze or it holds focus, so a passage can be read
-// and selected. Pure progressive enhancement; with reduced motion there is no drift
-// and the frieze is a plain scroll strip that still rotates at its ends.
+// ── Wisdom rail: shared auto-drift + manual scroll ───────────────────────────
+// The rail holds each quote exactly once, as a column of .wisdom__unit blocks. A rAF
+// loop nudges scrollTop to give a slow downward drift, unrelated to the page's own
+// scrolling; because it's the same scrollTop the reader moves with the wheel over the
+// rail, a hand scroll overrides the drift's speed and direction rather than competing
+// with it (Thobias, 11 September 2026). The endless loop comes from rotating whole
+// units instead of duplicating them: when the first unit has fully scrolled out of
+// view it moves to the end of the track (and the reverse when scrolling back past the
+// top), with scrollTop compensated by the unit's height so the visible content never
+// jumps. Pure progressive enhancement; with reduced motion there is no drift and the
+// rail is a plain scroll strip that still rotates at its ends.
+//
+// Deliberately NOT paused on hover: the horizontal frieze paused so a passage could
+// be read mid-drift, but the rail's whole interaction is scrolling it by hand, and a
+// pause on pointer-enter would stop the drift the moment a reader reached for it.
 function initWisdom(): void {
-	const frieze = document.querySelector<HTMLElement>('.wisdom__scroll');
-	const track = frieze?.querySelector<HTMLElement>('.wisdom__track');
-	if (!frieze || !track) return;
+	const rail = document.querySelector<HTMLElement>('.wisdom__scroll');
+	const track = rail?.querySelector<HTMLElement>('.wisdom__track');
+	if (!rail || !track) return;
 
-	// Rotate units across the ends so the strip loops without any quote existing
-	// twice. Read widths live each time: fonts loading can change them after init.
+	// Rotate units across the ends so the column loops without any quote existing
+	// twice. Read heights live each time: fonts loading can change them after init.
 	const rotate = (): void => {
-		if (track.scrollWidth <= frieze.clientWidth) return; // nothing overflows
+		if (track.scrollHeight <= rail.clientHeight) return; // nothing overflows
 		let first = track.firstElementChild as HTMLElement | null;
-		// STRICTLY greater: after a backward rotation scrollLeft lands exactly on the
-		// new first unit's width, and `>=` would rotate that unit straight back,
-		// ping-ponging DOM moves on every scroll event when parked at the left edge.
-		while (first && first.offsetWidth > 0 && frieze.scrollLeft > first.offsetWidth) {
-			const w = first.offsetWidth;
+		// STRICTLY greater: after a backward rotation scrollTop lands exactly on the
+		// new first unit's height, and `>=` would rotate that unit straight back,
+		// ping-ponging DOM moves on every scroll event when parked at the top.
+		while (first && first.offsetHeight > 0 && rail.scrollTop > first.offsetHeight) {
+			const h = first.offsetHeight;
 			track.appendChild(first); // now the last unit
-			frieze.scrollLeft -= w;
+			rail.scrollTop -= h;
 			first = track.firstElementChild as HTMLElement | null;
 		}
 		let last = track.lastElementChild as HTMLElement | null;
-		while (last && last.offsetWidth > 0 && frieze.scrollLeft <= 0) {
-			const w = last.offsetWidth;
+		while (last && last.offsetHeight > 0 && rail.scrollTop <= 0) {
+			const h = last.offsetHeight;
 			track.prepend(last); // now the first unit
-			frieze.scrollLeft += w;
+			rail.scrollTop += h;
 			last = track.lastElementChild as HTMLElement | null;
 		}
 	};
-	// A hand scroll/swipe needs the rotation too, so it also loops endlessly.
-	frieze.addEventListener('scroll', rotate, { passive: true });
-	// Rotate once up front: from the pristine scrollLeft=0 state no scroll event can
-	// fire (the position cannot go below 0), so without this the strip would dead-end
-	// leftward until something first scrolled it right.
+	// A hand scroll needs the rotation too, so it also loops endlessly.
+	rail.addEventListener('scroll', rotate, { passive: true });
+	// Rotate once up front: from the pristine scrollTop=0 state no scroll event can
+	// fire (the position cannot go below 0), so without this the column would dead-end
+	// upward until something first scrolled it down.
 	rotate();
 
 	if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
-	const SPEED = 24; // px/second of ambient drift
-
-	let paused = false;
-	frieze.addEventListener('pointerenter', () => {
-		paused = true;
-	});
-	frieze.addEventListener('pointerleave', () => {
-		paused = false;
-	});
-	frieze.addEventListener('focusin', () => {
-		paused = true;
-	});
-	frieze.addEventListener('focusout', () => {
-		paused = false;
-	});
+	const SPEED = 24; // px/second of downward drift
 
 	// Sub-pixel nudges are DISCARDED, not accumulated: a scroll container snaps
-	// scrollLeft to whole pixels (device pixels, so whole CSS pixels at a 1x display),
+	// scrollTop to whole pixels (device pixels, so whole CSS pixels at a 1x display),
 	// and 24px/s is ~0.4px per frame, which snaps back to where it started every time.
-	// Read-modify-write against scrollLeft therefore never moves at all. So carry the
+	// Read-modify-write against scrollTop therefore never moves at all. So carry the
 	// fraction here and hand the element only whole pixels. Still read-modify-write,
 	// so a hand scroll in between is adopted rather than fought.
 	let carry = 0;
 	let last = 0;
 	const step = (t: number): void => {
-		if (last && !paused) {
+		if (last) {
 			carry += (SPEED * (t - last)) / 1000;
 			const whole = Math.trunc(carry);
 			if (whole !== 0) {
 				carry -= whole;
-				frieze.scrollLeft += whole;
+				rail.scrollTop += whole;
 				rotate();
 			}
 		}
