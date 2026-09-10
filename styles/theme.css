@@ -522,21 +522,19 @@ a {
     padding-top: clamp(4rem, 16vh, 5rem);
     text-align: left;
 }
-/* The hero reads as two halves facing the centre line: the claim on the left, ending
-   short of the middle and right-aligned against it, and the code that backs it
-   starting the same distance past the middle (Thobias, 11 September 2026). That
-   distance is the menu bar's own thickness doubled, so the hero is measured in the
-   dock's units rather than an invented number.
+/* The hero is two columns: the claim on the left, centred in its own column, and the
+   code that backs it starting one gutter past where that column ends (Thobias,
+   11 September 2026). The gutter is the menu bar's own thickness doubled, so the
+   hero is measured in the dock's units rather than an invented number.
 
    The code column is sized to the code (max-content) rather than to half the page.
    Two equal halves clipped the widest line: inside an 82rem container each half is
    616px, less the gutter leaves 472px, and the code wants 507px. Letting the column
-   take what it needs keeps both gutters exact and the code unclipped; the split
-   simply does not land on the page's midpoint.
+   take what it needs keeps the gutter exact and the code unclipped; the split simply
+   does not land on the page's midpoint.
 
-   Below 76rem there is not room for two columns, so they stack, and the gutters and
-   the right-alignment come off with them: a right-aligned column on a phone is a
-   ragged left edge for no gain. */
+   Below 76rem there is not room for two columns, so they stack and the gutter goes
+   to zero, leaving the copy centred over the code at full width. */
 .hero__split {
     --hero-gutter: calc(var(--nav-height) * 2);
     display: grid;
@@ -557,15 +555,11 @@ a {
 .hero__copy {
     display: flex;
     flex-direction: column;
-    align-items: flex-end;
-    text-align: right;
+    align-items: center;
+    text-align: center;
+    /* The column still stops one gutter short of the code; the copy centres inside
+       what is left of it rather than hugging that edge. */
     margin-inline-end: var(--hero-gutter);
-}
-@media (max-width: 76rem) {
-    .hero__copy {
-        align-items: flex-start;
-        text-align: left;
-    }
 }
 .hero__headline {
     font-family: var(--serif);
@@ -579,15 +573,10 @@ a {
        size, so they read as one two-line title. */
     display: flex;
     flex-direction: column;
-    align-items: flex-end;
+    align-items: center;
     max-width: 100%;
     margin: 0;
     color: var(--heading);
-}
-@media (max-width: 76rem) {
-    .hero__headline {
-        align-items: flex-start;
-    }
 }
 /* The wordmark leads the headline at the SAME size as the identity line, in the brand
    blue-purple, with a hair of separation beneath it. */
@@ -612,27 +601,6 @@ a {
     /* Air between the two-line title and the paragraph, so the title stands alone. */
     margin: 5rem 0 0;
 }
-/* The hero's actions: ghost links to the vision and roadmap, the honest CTAs while
-   no builds exist (the get-notified form lives at the bottom of the page). */
-.hero__actions {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: flex-end;
-    gap: 0.8rem;
-    margin-top: 2.2rem;
-}
-@media (max-width: 76rem) {
-    .hero__actions {
-        justify-content: flex-start;
-    }
-}
-/* One honest line under the actions: the language is designed, not yet running. */
-.hero__status {
-    font-size: 0.82rem;
-    color: var(--muted);
-    margin: 1.4rem 0 0;
-}
-
 /* ── Get-notified form ────────────────────────────────────────────────────────
    The intent-capture form in the hero and on the empty download page: an email
    field beside the download-styled submit button, with an inline status line the
