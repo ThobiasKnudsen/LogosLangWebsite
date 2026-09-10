@@ -541,19 +541,18 @@ function structureHtml(): string {
 </section>`;
 }
 
-// The sample stands on its own: no card, no filename bar, no prose around it. Each
-// line is its own block so a CSS counter can number it; the numbers live in
-// ::before, so they are decoration the clipboard never picks up. The lines carry no
-// "\n" between them (a newline plus a block would render as a second, empty line),
-// and an empty source line keeps its height from .code-line's min-height.
-function codePeekHtml(): string {
+// The sample stands on its own: no card, no filename bar, no heading, no prose. It
+// is the hero's right-hand column, opposite the wordmark and the identity line, so
+// the first thing a visitor sees is the claim and the code side by side. Each line
+// is its own block so a CSS counter can number it; the numbers live in ::before, so
+// they are decoration the clipboard never picks up. The lines carry no "\n" between
+// them (a newline plus a block would render as a second, empty line), and an empty
+// source line keeps its height from .code-line's min-height.
+function heroCodeHtml(): string {
   const lines = highlightLogosLines(HOME_SAMPLE)
     .map((line) => `<span class="code-line">${line}</span>`)
     .join("");
-  return `<section class="code-peek" aria-label="What Logos looks like">
-  <h2 class="code-peek__title">What Logos looks like</h2>
-  <pre class="code-peek__code"><code>${lines}</code></pre>
-</section>`;
+  return `<pre class="hero__code"><code>${lines}</code></pre>`;
 }
 
 // ── Comparison matrix ─────────────────────────────────────────────────────────
@@ -1210,24 +1209,26 @@ function notifySectionHtml(): string {
 
 export function homePage(): string {
   return `<section class="hero">
-  <div class="hero__copy">
-    <h1 class="hero__headline">
-      <span class="hero__brand" aria-hidden="true">Λόγος</span>
-      <span class="hero__lead" aria-hidden="true">One language for everything</span>
-      <span class="sr-only">Λόγος: one language for everything.</span>
-    </h1>
-    <p class="hero__sub">Logos is maximally meta. Its grammar, types, proofs, compiler and interpreter live in the same graph as your program, so your code can read and redefine any of them, and every change is checked. Meta used to mean unchecked and slow. Here it is neither.</p>
-    <div class="hero__actions">
-      <a class="logos-btn logos-btn--ghost" href="/vision/">Read the vision</a>
-      <a class="logos-btn logos-btn--ghost" href="/roadmap/">See the roadmap</a>
+  <div class="hero__split">
+    <div class="hero__copy">
+      <h1 class="hero__headline">
+        <span class="hero__brand" aria-hidden="true">Λόγος</span>
+        <span class="hero__lead" aria-hidden="true">One language for everything</span>
+        <span class="sr-only">Λόγος: one language for everything.</span>
+      </h1>
+      <p class="hero__sub">Logos is maximally meta. Its grammar, types, proofs, compiler and interpreter live in the same graph as your program, so your code can read and redefine any of them, and every change is checked. Meta used to mean unchecked and slow. Here it is neither.</p>
+      <div class="hero__actions">
+        <a class="logos-btn logos-btn--ghost" href="/vision/">Read the vision</a>
+        <a class="logos-btn logos-btn--ghost" href="/roadmap/">See the roadmap</a>
+      </div>
+      <p class="hero__status">Under development. A small Rust seed exists; nothing you can run yet.</p>
     </div>
-    <p class="hero__status">Under development. A small Rust seed exists; nothing you can run yet.</p>
+    ${heroCodeHtml()}
   </div>
 </section>
 <section class="wisdom" aria-label="On the Logos, voices across the ages">
   <div class="wisdom__scroll"><div class="wisdom__track">${wisdomUnits()}</div></div>
 </section>
-${codePeekHtml()}
 ${metaLadderHtml()}
 ${structureHtml()}
 ${checkedHtml()}

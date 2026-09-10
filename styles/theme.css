@@ -520,26 +520,46 @@ a {
     /* Room above the headline: it should sit clearly below the dock, not hug it.
        The frieze's own top margin (see .wisdom) sets the gap beneath the hero. */
     padding-top: clamp(4rem, 16vh, 5rem);
-    text-align: center;
+    text-align: left;
+}
+/* The hero reads as two columns: the claim on the left, the code that backs it on
+   the right (Thobias, 11 September 2026; left-aligned by his ruling, so the copy and
+   the code share one left-to-right rhythm). Below 62rem there is not room for both,
+   and the columns stack with the copy still leading. */
+.hero__split {
+    display: grid;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+    gap: clamp(2rem, 5vw, 4.5rem);
+    align-items: center;
+    max-width: 82rem;
+    margin-inline: auto;
+    padding-inline: clamp(1rem, 4vw, 2.5rem);
+}
+@media (max-width: 62rem) {
+    .hero__split {
+        grid-template-columns: minmax(0, 1fr);
+        gap: clamp(2.5rem, 7vw, 4rem);
+        align-items: start;
+    }
 }
 .hero__copy {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    padding-inline: 1rem;
+    align-items: flex-start;
 }
 .hero__headline {
     font-family: var(--serif);
-    /* 20% smaller than the original clamp(1.6rem, 8vw, 5.6rem). */
-    font-size: clamp(1.28rem, 6.4vw, 4.48rem);
+    /* Sized for half the page rather than all of it: the old full-width hero ran to
+       clamp(1.28rem, 6.4vw, 4.48rem), which cannot fit beside the code. */
+    font-size: clamp(1.28rem, 4.4vw, 3.4rem);
     line-height: 1.02;
     font-weight: 600;
     letter-spacing: -0.02em;
-    /* Stacked: the wordmark "Λόγος" and the identity line beneath it, both centered
-       and at the same size, so they read as one two-line title. */
+    /* Stacked: the wordmark "Λόγος" and the identity line beneath it, at the same
+       size, so they read as one two-line title. */
     display: flex;
     flex-direction: column;
-    align-items: center;
+    align-items: flex-start;
     max-width: 100%;
     margin: 0;
     color: var(--heading);
@@ -572,7 +592,7 @@ a {
 .hero__actions {
     display: flex;
     flex-wrap: wrap;
-    justify-content: center;
+    justify-content: flex-start;
     gap: 0.8rem;
     margin-top: 2.2rem;
 }
@@ -670,24 +690,6 @@ a {
     margin-top: 1.6rem;
 }
 
-/* ── Homepage code sample ─────────────────────────────────────────────────────
-   A single code window under the hero: an editor-style card with a filename bar.
-   Tokens are colored by the build's small highlighter (highlightLogos in
-   build/pages.ts) via the --tok-* vars. */
-.code-peek {
-    max-width: 46rem;
-    margin: clamp(4rem, 10vh, 7rem) auto 0;
-    padding-inline: 1.25rem;
-    text-align: center;
-}
-.code-peek__title {
-    font-family: var(--serif);
-    font-size: clamp(1.5rem, 3vw, 2.2rem);
-    font-weight: 600;
-    letter-spacing: -0.01em;
-    color: var(--heading);
-    margin: 0;
-}
 /* "Built from proven parts": the large-but-tractable section under the code. */
 .buildable {
     max-width: 46rem;
@@ -751,12 +753,15 @@ a {
     margin-bottom: 0;
 }
 
-/* The sample floats on the page: no card, no frame, no tinted ground, just the
-   numbered lines. The counter lives in ::before so the numbers are decoration and
-   never land in a copied selection. */
-.code-peek__code {
+/* ── The hero's code column ───────────────────────────────────────────────────
+   The sample floats on the page: no card, no frame, no tinted ground, no heading,
+   just the numbered lines, sitting opposite the wordmark. Tokens are colored by the
+   build's small highlighter (highlightLogosLines in build/pages.ts) via the --tok-*
+   vars. The counter lives in ::before so the numbers are decoration and never land
+   in a copied selection. */
+.hero__code {
     counter-reset: code-line;
-    margin: 1.8rem 0 0;
+    margin: 0;
     text-align: left;
     overflow-x: auto;
     font-family: var(--mono);
