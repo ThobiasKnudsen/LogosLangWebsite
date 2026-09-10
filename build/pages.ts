@@ -188,53 +188,38 @@ function notifyFormHtml(source: string): string {
 }
 
 // ── Homepage code sample ──────────────────────────────────────────────────────
-// Target syntax in DESIGN.md's ruled vocabulary, checked against LogosLang/DESIGN.md
-// and LogosLang/identities/*.logos (September 2026). The sample is built as an
-// argument rather than a feature tour: ordinary code first, so nothing reads as
-// alien; then the language itself edited from inside it (`^` is a type, and its
-// parse rank is written against `*`'s, so the very next line can use the operator);
-// then a law stated once that every rewriter shares; then a type computed while
-// parsing; then the ground both the card and the figure below it rest on, the dyad
-// and the self-classifying `logos`. Spellings follow the latest rulings: `parse_rank`
-// (the word `precedence` is superseded), `associativity = left|right` as identities
-// (not `left_to_right`), `tape := parsing_tape ?` (`:` as a declaration operator was
-// deleted 5 September 2026), `-> void`, and `type (…)` for an identity with a body
-// against `logos (X)` for a keyword with nothing behind it. Bodies left as `?` (the
-// typed unknown) are `?` in the source too.
-const HOME_SAMPLE = `# Ordinary code first. \`:=\` declares and infers the type, \`=\` writes
-# a name that already exists, and \`mut\` on the type is what makes a
-# value writable. A scope's last expression is its value.
-sum := fn (xs := array i32 ?, n := i32 ?) -> i32 (
-    total := mut i32 0
-    for i in 0..n ( total = total + xs[i] )
-    total
+// One operator, defined and then used: `+` as an ordinary type, with a real
+// constructor rather than a `?` body, so the card shows the mechanism instead of
+// gesturing at it. Everything here is checked against LogosLang/DESIGN.md and
+// LogosLang/identities/*.logos (September 2026). The constructor follows the ruled
+// spelling for how a Logos-written constructor builds a node's operand record
+// (9 September 2026): `tape[0]:dyad.type = +` first, which initializes the value so
+// `.operands` is valid, then `.operands.append(tape[-1] and tape[1])`, the and-group
+// distributing so both operands are appended. The slot names and their `=` (a slot
+// the type declared is filled, not redeclared) come from identities/type.logos,
+// which also dates `parse_rank`: it was spelled `precedence` until 10 September 2026.
+// The one invented value is the 4.0: DESIGN.md pins no table of ranks, only that the
+// axis is an f64 where higher binds tighter and fractional values let a new operator
+// slot between two existing ones, which is what the comment on that line says.
+const HOME_SAMPLE = `# \`+\` is not built into the language. It is a type, and this is all of
+# it: where it binds, which way it groups, and what it does to the
+# parsing tape when the parser reaches it.
++ := type (
+    parse_rank    = f64 4.0   # higher binds tighter, so \`*\` sits above this
+    associativity = left      # a + b + c groups as (a + b) + c
+
+    constructor = fn (tape := parsing_tape ?) -> void (
+        # tape[0] is the \`+\` cell itself, tape[-1] and tape[1] the values
+        # either side of it, already constructed by the driver.
+        tape[0]:dyad.type = +
+        tape[0]:dyad.value.operands.append(tape[-1] and tape[1])
+        tape.remove(1)        # both operands live in the record now,
+        tape.remove(-1)       # so their cells leave the tape
+    )
 )
 
-# \`^\` is not built in. It is a type, and its parse rank is written
-# against \`*\`'s, so a new operator slots between two existing ones
-# without renumbering anything. The line after it already uses it.
-^ := type (
-    parse_rank    = *.parse_rank + 1
-    associativity = right
-    constructor   = fn (tape := parsing_tape ?) -> void ( ? )
-)
-spread := fn (x := f64 ?, m := f64 ?) -> f64 ( (x - m) ^ 2 )
-
-# State a law once and everything that rewrites code may use it: the
-# optimizer, the computer-algebra system, your own passes. The trusted
-# core checks the derivation, and the rule is an ordinary value.
-double := conjecture ( a + a -> 2 * a ) where ( a:dyad.type is number ) proof ( ? )
-
-# A function that returns a type runs while the program is parsed, so
-# a declaration can take a type that was computed rather than written.
-precision := fn (n := i32 ?) -> type ( if (n > 1_000_000) (f64) else (f32) )
-sample := precision(2_000_000) ?
-
-# The bottom of it. Every node is a dyad, a type slot and a value slot,
-# and the classifier of all types is an ordinary value that classifies
-# itself: every chain of types ends at logos.
-dyad  := type (instance (type := @dyad ?, value := @void ?))
-logos := logos (logos)`;
+# And from here down it is simply an operator.
+total := 2 + 3 + 4`;
 
 
 const LOGOS_KEYWORDS = new Set([
@@ -544,7 +529,7 @@ function structureHtml(): string {
 function codePeekHtml(): string {
   return `<section class="code-peek" aria-label="What Logos looks like">
   <h2 class="code-peek__title">What Logos looks like</h2>
-  <p class="code-peek__lead">Ordinary code first, then the same file reaching up to change the language it is written in. The compiler that runs it is still being built.</p>
+  <p class="code-peek__lead">The <code>+</code> operator is not built in. It is a type: where it binds, which way it groups, and a constructor that runs when the parser reaches it. The compiler that runs this is still being built.</p>
   <figure class="code-card">
     <figcaption class="code-card__bar"><span class="code-card__name">syntax.logos</span></figcaption>
     <pre class="code-card__pre"><code>${highlightLogos(HOME_SAMPLE)}</code></pre>
@@ -1103,6 +1088,79 @@ function buildableHtml(): string {
 </section>`;
 }
 
+// ── The levels of meta ───────────────────────────────────────────────────────
+// The brand made concrete. "Maximally meta" is a ranking, so the page shows the
+// scale: how much of the language a program's own code can reach, from text macros
+// up to Logos, where the grammar, types, borrow rules, proofs, compiler and
+// interpreter are all nodes of the graph the program lives in. Each language sits
+// at the highest rung it reaches (a Lisp has code-as-data too, but tops out at
+// "live system"). Levels are listed bottom-up here and rendered top-down, so Logos,
+// the summit, is what a reader sees first. Kept honest: the Logos rung says it is
+// the design, not shipping software.
+interface MetaLevel {
+  name: string;
+  /** What a program's own code can reach at this level. */
+  what: string;
+  /** Languages whose highest rung this is. */
+  who: string;
+}
+const META_LEVELS: MetaLevel[] = [
+  {
+    name: "Text and token macros",
+    what: "Code rewrites code before the compiler understands any of it.",
+    who: "C preprocessor, Rust macros",
+  },
+  {
+    name: "Compile-time execution",
+    what: "Ordinary code runs while compiling and its results are baked in.",
+    who: "Zig, C++ constexpr, D",
+  },
+  {
+    name: "Code as data",
+    what: "Programs are values a program can build, inspect, and evaluate.",
+    who: "Clojure, Julia, Elixir",
+  },
+  {
+    name: "Redefinable grammar",
+    what: "The parser is code you can change, so whole languages become libraries.",
+    who: "Racket",
+  },
+  {
+    name: "Live system",
+    what: "Anything, including the compiler, can be redefined while it runs. Nothing checks the result.",
+    who: "Smalltalk, Forth, Common Lisp",
+  },
+  {
+    name: "Checked metaprogramming",
+    what: "Types and proofs are data, and metaprograms are themselves type-checked. Syntax, elaboration, and the kernel stay separate layers, on managed memory.",
+    who: "Lean 4, Agda, Coq",
+  },
+];
+const LOGOS_LEVEL: MetaLevel = {
+  name: "Everything in one checked graph",
+  what: "The program, its types, its borrow rules, its proofs, its grammar, its parser, its compiler and its interpreter are nodes in one graph, and the same operations that run code can read and redefine any of them. Every redefinition is borrow-checked, and proof-checked where you ask for it, before it runs. Still a systems language: no garbage collector, native speed.",
+  who: "Logos (designed; not yet running)",
+};
+
+function ladderRung(lvl: MetaLevel, n: number, extraClass = ""): string {
+  return `<li class="ladder__rung${extraClass}"><span class="ladder__num" aria-hidden="true">${n}</span><div class="ladder__text"><h3 class="ladder__name">${lvl.name}</h3><p class="ladder__what">${lvl.what}</p><p class="ladder__who">${lvl.who}</p></div></li>`;
+}
+
+function metaLadderHtml(): string {
+  const rungs = META_LEVELS.map((lvl, i) => ladderRung(lvl, i + 1))
+    .reverse()
+    .join("\n    ");
+  return `<section class="ladder" aria-label="The levels of metaprogramming">
+  <h2 class="ladder__title">The levels of meta</h2>
+  <p class="ladder__lead">Most languages have "metaprogramming". The word hides a ladder: how much of the language your own code can reach. Every language stops somewhere. Logos is designed so that nothing is out of reach.</p>
+  <ol class="ladder__list" reversed>
+    ${ladderRung(LOGOS_LEVEL, META_LEVELS.length + 1, " ladder__rung--logos")}
+    ${rungs}
+  </ol>
+  <p class="ladder__note">Each language sits at the highest level it reaches.</p>
+</section>`;
+}
+
 // ── Checked, not clever ───────────────────────────────────────────────────────
 // The objection every experienced programmer raises at "redefine the language":
 // Lisp, Forth and Smalltalk allowed exactly that, nothing checked the result, and
@@ -1151,6 +1209,7 @@ export function homePage(): string {
   <div class="wisdom__scroll"><div class="wisdom__track">${wisdomUnits()}</div></div>
 </section>
 ${codePeekHtml()}
+${metaLadderHtml()}
 ${structureHtml()}
 ${checkedHtml()}
 ${buildableHtml()}
