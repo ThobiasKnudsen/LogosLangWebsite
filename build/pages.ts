@@ -188,47 +188,54 @@ function notifyFormHtml(source: string): string {
 }
 
 // ── Homepage code sample ──────────────────────────────────────────────────────
-// Target syntax in DESIGN.md's vocabulary (dyad / .type / .value, ruled August 2026;
-// `logos` is the one ground identity and the definition keyword). The content is
-// lifted from LogosLang/identites/*.logos, the definitions the seed is being ported
-// toward: `dyad` and `logos` (the self-classifying ground, logos : logos), `(` as
-// an identity whose constructor reads the parsing tape (the whole macro mechanism),
-// and `proof` rules shared by the optimizer and the computer-algebra system. Bodies
-// left as `?` (the typed unknown) are `?` in the source too. The card labels it all
-// as target syntax so it never overclaims.
-const HOME_SAMPLE = `# Declare with \`:=\`, reassign with \`=\`. \`mut\` marks a mutable value.
-count := mut i32 0
-count = count + 1
-
-# Every node in the graph is a dyad: a type slot and a value slot.
-# The classifier of all types is itself an ordinary value, and it
-# classifies itself. Every chain of types ends at logos : logos.
-dyad  := logos (type := @dyad ?, value := @void ?)
-logos := logos (
-    shared precedence    := f64 2.0
-    shared associativity := u8 left_to_right
-    shared constructor   := fn (tape : parsing_tape) -> void! ( ? )
+// Target syntax in DESIGN.md's ruled vocabulary, checked against LogosLang/DESIGN.md
+// and LogosLang/identities/*.logos (September 2026). The sample is built as an
+// argument rather than a feature tour: ordinary code first, so nothing reads as
+// alien; then the language itself edited from inside it (`^` is a type, and its
+// parse rank is written against `*`'s, so the very next line can use the operator);
+// then a law stated once that every rewriter shares; then a type computed while
+// parsing; then the ground both the card and the figure below it rest on, the dyad
+// and the self-classifying `logos`. Spellings follow the latest rulings: `parse_rank`
+// (the word `precedence` is superseded), `associativity = left|right` as identities
+// (not `left_to_right`), `tape := parsing_tape ?` (`:` as a declaration operator was
+// deleted 5 September 2026), `-> void`, and `type (…)` for an identity with a body
+// against `logos (X)` for a keyword with nothing behind it. Bodies left as `?` (the
+// typed unknown) are `?` in the source too. The card labels the whole thing as target
+// syntax so it never overclaims.
+const HOME_SAMPLE = `# Ordinary code first. \`:=\` declares and infers the type, \`=\` writes
+# a name that already exists, and \`mut\` on the type is what makes a
+# value writable. A scope's last expression is its value.
+sum := fn (xs := array i32 ?, n := i32 ?) -> i32 (
+    total := mut i32 0
+    for i in 0..n ( total = total + xs[i] )
+    total
 )
 
-# Even \`(\` is an identity. Its constructor reads the parsing tape,
-# walks to the matching \`)\`, and leaves a scope where the token was.
-# That is the whole macro mechanism: there is no macro language.
-( := logos (
-    constructor = fn (tape : parsing_tape) -> void! (
-        new_scope := mut scope
-        for i in 1..10_000 (
-            if tape[i] == lex «)»
-                break
-        )
-        tape[0].value = new_scope
-    )
+# \`^\` is not built in. It is a type, and its parse rank is written
+# against \`*\`'s, so a new operator slots between two existing ones
+# without renumbering anything. The line after it already uses it.
+^ := type (
+    parse_rank    = *.parse_rank + 1
+    associativity = right
+    constructor   = fn (tape := parsing_tape ?) -> void ( ? )
 )
+spread := fn (x := f64 ?, m := f64 ?) -> f64 ( (x - m) ^ 2 )
 
-# Proofs are declarations too: a pattern, a replacement, a premise,
-# and a derivation the trusted core checks once. The optimizer and
-# the computer-algebra system run on the same rules.
-p1 := proof (a : generic_number, a + a) -> (2 * a) ( ? )
-p2 := proof (a : generic_number, a != 0, a / a) -> 1 ( ? )`;
+# State a law once and everything that rewrites code may use it: the
+# optimizer, the computer-algebra system, your own passes. The trusted
+# core checks the derivation, and the rule is an ordinary value.
+double := conjecture ( a + a -> 2 * a ) where ( a:dyad.type is number ) proof ( ? )
+
+# A function that returns a type runs while the program is parsed, so
+# a declaration can take a type that was computed rather than written.
+precision := fn (n := i32 ?) -> type ( if (n > 1_000_000) (f64) else (f32) )
+sample := precision(2_000_000) ?
+
+# The bottom of it. Every node is a dyad, a type slot and a value slot,
+# and the classifier of all types is an ordinary value that classifies
+# itself: every chain of types ends at logos.
+dyad  := type (instance (type := @dyad ?, value := @void ?))
+logos := logos (logos)`;
 
 
 const LOGOS_KEYWORDS = new Set([
@@ -251,11 +258,14 @@ const LOGOS_KEYWORDS = new Set([
   "undefined",
   "in",
   "break",
+  "is",
 ]);
 // `@dyad` / `@void` tokenize as the `@` operator plus a bare identifier, so the
 // pointer type names appear here without their prefix.
+// `left` and `right` are the two associativity identities (ruled 9 September 2026),
+// keywords with nothing behind them, so they color like the other ground identities.
 const LOGOS_TYPES =
-  /^(?:[iu](?:8|16|32|64)|f32|f64|string|bool|void!?|dyad|logos|exec|scope|proof|parsing_tape|callable|generic_number|array)$/;
+  /^(?:[iu](?:8|16|32|64)|f32|f64|string|bool|void!?|dyad|logos|exec|scope|proof|conjecture|parsing_tape|callable|number|generic_number|array|left|right)$/;
 
 /** Minimal Logos highlighter for the fixed homepage sample: comments, «strings»,
  *  numbers, keywords, primitive types, and operators become spans; everything else
@@ -1094,79 +1104,6 @@ function buildableHtml(): string {
 </section>`;
 }
 
-// ── The levels of meta ───────────────────────────────────────────────────────
-// The brand made concrete. "Maximally meta" is a ranking, so the page shows the
-// scale: how much of the language a program's own code can reach, from text macros
-// up to Logos, where the grammar, types, borrow rules, proofs, compiler and
-// interpreter are all nodes of the graph the program lives in. Each language sits
-// at the highest rung it reaches (a Lisp has code-as-data too, but tops out at
-// "live system"). Levels are listed bottom-up here and rendered top-down, so Logos,
-// the summit, is what a reader sees first. Kept honest: the Logos rung says it is
-// the design, not shipping software.
-interface MetaLevel {
-  name: string;
-  /** What a program's own code can reach at this level. */
-  what: string;
-  /** Languages whose highest rung this is. */
-  who: string;
-}
-const META_LEVELS: MetaLevel[] = [
-  {
-    name: "Text and token macros",
-    what: "Code rewrites code before the compiler understands any of it.",
-    who: "C preprocessor, Rust macros",
-  },
-  {
-    name: "Compile-time execution",
-    what: "Ordinary code runs while compiling and its results are baked in.",
-    who: "Zig, C++ constexpr, D",
-  },
-  {
-    name: "Code as data",
-    what: "Programs are values a program can build, inspect, and evaluate.",
-    who: "Clojure, Julia, Elixir",
-  },
-  {
-    name: "Redefinable grammar",
-    what: "The parser is code you can change, so whole languages become libraries.",
-    who: "Racket",
-  },
-  {
-    name: "Live system",
-    what: "Anything, including the compiler, can be redefined while it runs. Nothing checks the result.",
-    who: "Smalltalk, Forth, Common Lisp",
-  },
-  {
-    name: "Checked metaprogramming",
-    what: "Types and proofs are data, and metaprograms are themselves type-checked. Syntax, elaboration, and the kernel stay separate layers, on managed memory.",
-    who: "Lean 4, Agda, Coq",
-  },
-];
-const LOGOS_LEVEL: MetaLevel = {
-  name: "Everything in one checked graph",
-  what: "The program, its types, its borrow rules, its proofs, its grammar, its parser, its compiler and its interpreter are nodes in one graph, and the same operations that run code can read and redefine any of them. Every redefinition is borrow-checked, and proof-checked where you ask for it, before it runs. Still a systems language: no garbage collector, native speed.",
-  who: "Logos (designed; not yet running)",
-};
-
-function ladderRung(lvl: MetaLevel, n: number, extraClass = ""): string {
-  return `<li class="ladder__rung${extraClass}"><span class="ladder__num" aria-hidden="true">${n}</span><div class="ladder__text"><h3 class="ladder__name">${lvl.name}</h3><p class="ladder__what">${lvl.what}</p><p class="ladder__who">${lvl.who}</p></div></li>`;
-}
-
-function metaLadderHtml(): string {
-  const rungs = META_LEVELS.map((lvl, i) => ladderRung(lvl, i + 1))
-    .reverse()
-    .join("\n    ");
-  return `<section class="ladder" aria-label="The levels of metaprogramming">
-  <h2 class="ladder__title">The levels of meta</h2>
-  <p class="ladder__lead">Most languages have "metaprogramming". The word hides a ladder: how much of the language your own code can reach. Every language stops somewhere. Logos is designed so that nothing is out of reach.</p>
-  <ol class="ladder__list" reversed>
-    ${ladderRung(LOGOS_LEVEL, META_LEVELS.length + 1, " ladder__rung--logos")}
-    ${rungs}
-  </ol>
-  <p class="ladder__note">Each language sits at the highest level it reaches.</p>
-</section>`;
-}
-
 // ── Checked, not clever ───────────────────────────────────────────────────────
 // The objection every experienced programmer raises at "redefine the language":
 // Lisp, Forth and Smalltalk allowed exactly that, nothing checked the result, and
@@ -1181,37 +1118,6 @@ function checkedHtml(): string {
     <p>Logos keeps the freedom and adds the check. Redefining a type, the grammar, or the compiler itself is an ordinary write into the Logic Graph, governed by the same rule as every other write: many readers or one writer, never both. The type system sees the change, the borrow checker sees it, and where you have asked for proofs, the proof kernel sees it, all before it runs.</p>
     <p>That is the half each of Logos's ancestors misses. Smalltalk can rewrite itself but cannot prove a change right. Lean can prove a change right, but it is a prover built for mathematicians, on managed memory, with syntax, elaboration and kernel terms kept as separate layers, not a systems substrate a program rewrites and runs at native speed. Logos reaches for both in one structure: rewrite it as freely as Smalltalk, check it as strictly as Lean, run it as fast as Rust.</p>
     <p>This is the direction Logos is built toward, not a shipping feature. It does not run yet; the <a href="/roadmap/">roadmap</a> tracks what does.</p>
-  </div>
-</section>`;
-}
-
-// ── What maximum meta buys ────────────────────────────────────────────────────
-// The reason to care. Meta is the brand, not the goal; these four are what the
-// project is for, and each follows from the one graph rather than being a separate
-// feature. The first keeps the former headline, "one language for everything", as
-// the first consequence; the second and fourth are the two roads the about page
-// tells (AI memory, mathematics); the third is DESIGN.md's "why now".
-function payoffsHtml(): string {
-  return `<section class="payoff" aria-label="What being maximally meta makes possible">
-  <h2 class="payoff__title">What maximum meta buys</h2>
-  <p class="payoff__lead">Meta is not the goal. It is the one property the rest follows from.</p>
-  <div class="payoff__grid">
-    <div class="payoff__item">
-      <h3 class="payoff__name">One language for everything</h3>
-      <p>Systems code, GPU kernels, async, proofs, a new syntax, a hosted language, the compiler itself: each is a library over the same graph, not another language with another toolchain.</p>
-    </div>
-    <div class="payoff__item">
-      <h3 class="payoff__name">Human language you can run</h3>
-      <p>Grammar is ordinary code, so a human language can be given one and executed. An AI's memory then stops being text matched by similarity and becomes a structure it can query, prove things against, and correct.</p>
-    </div>
-    <div class="payoff__item">
-      <h3 class="payoff__name">Code machines can safely write</h3>
-      <p>An AI that edits text pushes a guess through a toolchain and hopes. An AI that edits the Logic Graph edits a structure carrying its own types, borrow states and proofs, and gets machine-checked feedback before anything runs.</p>
-    </div>
-    <div class="payoff__item">
-      <h3 class="payoff__name">Mathematics as values</h3>
-      <p>Formulas are values you build, reshape and prove things about. The rewriting engine that turns <code>x + 0</code> into <code>x</code> for the compiler is the one that turns <code>sin²θ + cos²θ</code> into <code>1</code> for you.</p>
-    </div>
   </div>
 </section>`;
 }
@@ -1246,10 +1152,8 @@ export function homePage(): string {
   <div class="wisdom__scroll"><div class="wisdom__track">${wisdomUnits()}</div></div>
 </section>
 ${codePeekHtml()}
-${metaLadderHtml()}
 ${structureHtml()}
 ${checkedHtml()}
-${payoffsHtml()}
 ${buildableHtml()}
 ${compareHtml()}
 ${notifySectionHtml()}`;
