@@ -189,46 +189,50 @@ function notifyFormHtml(source: string): string {
 
 // ── Homepage code sample ──────────────────────────────────────────────────────
 // One operator, defined and then used: `+` as an ordinary type, with a real
-// constructor rather than a `?` body, so the card shows the mechanism instead of
-// gesturing at it. Everything here is checked against LogosLang/DESIGN.md and
-// LogosLang/identities/*.logos (September 2026). The constructor follows the ruled
-// spelling for how a Logos-written constructor builds a node's operand record
-// (9 September 2026): `tape[0]:dyad.type = +` first, which initializes the value so
-// `.operands` is valid, then `.operands.append(tape[-1] and tape[1])`, the and-group
-// distributing so both operands are appended. The operand check is the membership
-// ruling of 8 September 2026: `is` is membership in a collection (`x is c`, a plain
-// boolean operator like `==`, no proof machinery), and `number` is the collection of
-// the numeric types the library defines, which is how a premise says "a is a number".
-// It is the spelling of "is a" in a language with no inheritance, where `==` on types
-// is identity. The slot names and their `=` (a slot
-// the type declared is filled, not redeclared) come from identities/type.logos,
-// which also dates `parse_rank`: it was spelled `precedence` until 10 September 2026.
-// The one invented value is the 4.0: DESIGN.md pins no table of ranks, only that the
+// constructor rather than a `?` body. The sample carries no comments of its own and
+// no prose around it (Thobias, 11 September 2026) — it is meant to be read as code,
+// so anything that needs saying has to be said by the code.
+//
+// Sourced from LogosLang/DESIGN.md and LogosLang/identities/*.logos (September 2026):
+//   - `instance (…)` declaring the per-instance fields, and the filled slots written
+//     with `=` (a slot the type declared is filled, not redeclared), from
+//     identities/type.logos, which also dates `parse_rank`: it was spelled
+//     `precedence` until 10 September 2026.
+//   - `tape[0]:dyad.type = +` first, which initializes the value so its fields are
+//     available to write (the constructor ruling of 9 September 2026).
+//   - The operand check is the membership ruling of 8 September 2026: `is` is
+//     membership in a collection (`x is c`, a plain boolean operator like `==`, no
+//     proof machinery), and `number` is the collection of the numeric types the
+//     library defines, so "a is a number" is `a:dyad.type is number`. That is the
+//     spelling of "is a" in a language with no inheritance, where `==` on types is
+//     identity. The and-group distributes, so one line covers both operands.
+//   - `lhs` / `rhs` rather than DESIGN.md's `.operands` collection: ruled for `+` by
+//     Thobias, 11 September 2026, and it keeps the card and the Logic Graph figure
+//     below it telling the same story.
+// The one invented value is the 4.0. DESIGN.md pins no table of ranks, only that the
 // axis is an f64 where higher binds tighter and fractional values let a new operator
-// slot between two existing ones, which is what the comment on that line says.
-const HOME_SAMPLE = `# \`+\` is not built into the language. It is a type, and this is all of
-# it: where it binds, which way it groups, and what it does to the
-# parsing tape when the parser reaches it.
-+ := type (
-    parse_rank    = f64 4.0   # higher binds tighter, so \`*\` sits above this
-    associativity = left      # a + b + c groups as (a + b) + c
+// slot between two existing ones without renumbering.
+const HOME_SAMPLE = `+ := type (
+    instance (
+        lhs := @dyad ?
+        rhs := @dyad ?
+    )
+
+    parse_rank    = f64 4.0
+    associativity = left
 
     constructor = fn (tape := parsing_tape ?) -> void (
-        # tape[0] is the \`+\` cell itself, tape[-1] and tape[1] the values
-        # either side of it, already constructed by the driver. \`number\`
-        # is not built in either: it is the collection of numeric types
-        # the library defines, and \`is\` asks whether a type is in it.
         if not ((tape[-1] and tape[1]):dyad.type is number)
             error «+ takes a number on each side»
 
         tape[0]:dyad.type = +
-        tape[0]:dyad.value.operands.append(tape[-1] and tape[1])
-        tape.remove(1)        # both operands live in the record now,
-        tape.remove(-1)       # so their cells leave the tape
+        tape[0]:dyad.value.lhs = tape[-1]
+        tape[0]:dyad.value.rhs = tape[1]
+        tape.remove(1)
+        tape.remove(-1)
     )
 )
 
-# And from here down it is simply an operator.
 total := 2 + 3 + 4`;
 
 
@@ -259,13 +263,13 @@ const LOGOS_KEYWORDS = new Set([
 // `left` and `right` are the two associativity identities (ruled 9 September 2026),
 // keywords with nothing behind them, so they color like the other ground identities.
 const LOGOS_TYPES =
-  /^(?:[iu](?:8|16|32|64)|f32|f64|string|bool|void!?|dyad|logos|exec|scope|proof|conjecture|parsing_tape|callable|number|generic_number|array|left|right)$/;
+  /^(?:[iu](?:8|16|32|64)|f32|f64|string|bool|void!?|dyad|logos|type|instance|exec|scope|proof|conjecture|parsing_tape|callable|number|generic_number|array|left|right)$/;
 
 /** Minimal Logos highlighter for the fixed homepage sample: comments, «strings»,
  *  numbers, keywords, primitive types, and operators become spans; everything else
  *  (including whitespace) is escaped verbatim. Not a general lexer; just enough for
  *  marketing snippets this file controls. */
-function highlightLogos(source: string): string {
+function highlightLogosLines(source: string): string[] {
   const TOKEN =
     /«[^»]*»|\d[\d_]*(?:\.\d+)?|[A-Za-z_][A-Za-z0-9_@]*!?|:=|->|==|!=|<=|>=|[:=+\-*/%^<>.&@()[\],?!]/g;
   const renderCode = (code: string): string => {
@@ -288,17 +292,18 @@ function highlightLogos(source: string): string {
     }
     return out + escapeHtml(code.slice(idx));
   };
-  return source
-    .split("\n")
-    .map((line) => {
-      const hash = line.indexOf("#");
-      if (hash < 0) return renderCode(line);
-      return (
-        renderCode(line.slice(0, hash)) +
-        `<span class="tok-comment">${escapeHtml(line.slice(hash))}</span>`
-      );
-    })
-    .join("\n");
+  return source.split("\n").map((line) => {
+    const hash = line.indexOf("#");
+    if (hash < 0) return renderCode(line);
+    return (
+      renderCode(line.slice(0, hash)) +
+      `<span class="tok-comment">${escapeHtml(line.slice(hash))}</span>`
+    );
+  });
+}
+
+function highlightLogos(source: string): string {
+  return highlightLogosLines(source).join("\n");
 }
 
 // ── "The program is the structure" figure ────────────────────────────────────
@@ -536,14 +541,18 @@ function structureHtml(): string {
 </section>`;
 }
 
+// The sample stands on its own: no card, no filename bar, no prose around it. Each
+// line is its own block so a CSS counter can number it; the numbers live in
+// ::before, so they are decoration the clipboard never picks up. The lines carry no
+// "\n" between them (a newline plus a block would render as a second, empty line),
+// and an empty source line keeps its height from .code-line's min-height.
 function codePeekHtml(): string {
+  const lines = highlightLogosLines(HOME_SAMPLE)
+    .map((line) => `<span class="code-line">${line}</span>`)
+    .join("");
   return `<section class="code-peek" aria-label="What Logos looks like">
   <h2 class="code-peek__title">What Logos looks like</h2>
-  <p class="code-peek__lead">The <code>+</code> operator is not built in. It is a type: where it binds, which way it groups, and a constructor that runs when the parser reaches it. The compiler that runs this is still being built.</p>
-  <figure class="code-card">
-    <figcaption class="code-card__bar"><span class="code-card__name">syntax.logos</span></figcaption>
-    <pre class="code-card__pre"><code>${highlightLogos(HOME_SAMPLE)}</code></pre>
-  </figure>
+  <pre class="code-peek__code"><code>${lines}</code></pre>
 </section>`;
 }
 

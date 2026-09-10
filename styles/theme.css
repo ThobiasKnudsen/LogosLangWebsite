@@ -688,12 +688,7 @@ a {
     color: var(--heading);
     margin: 0;
 }
-.code-peek__lead {
-    font-size: 0.95rem;
-    max-width: 56ch;
-    margin: 0.9rem auto 0;
-}
-/* "Built from proven parts": the large-but-tractable section under the code card. */
+/* "Built from proven parts": the large-but-tractable section under the code. */
 .buildable {
     max-width: 46rem;
     margin: clamp(4rem, 10vh, 7rem) auto 0;
@@ -756,38 +751,35 @@ a {
     margin-bottom: 0;
 }
 
-.code-card {
+/* The sample floats on the page: no card, no frame, no tinted ground, just the
+   numbered lines. The counter lives in ::before so the numbers are decoration and
+   never land in a copied selection. */
+.code-peek__code {
+    counter-reset: code-line;
     margin: 1.8rem 0 0;
     text-align: left;
-    border: 1px solid var(--hairline);
-    border-radius: 12px;
-    background: var(--code-bg);
-    overflow: hidden;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-}
-.code-card__bar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.75rem;
-    flex-wrap: wrap;
-    padding: 0.55rem 0.95rem;
-    background: var(--surface);
-    border-bottom: 1px solid var(--hairline);
-}
-.code-card__name {
-    font-family: var(--mono);
-    font-size: 0.78rem;
-    color: var(--muted);
-}
-.code-card__pre {
-    margin: 0;
-    padding: 1.1rem 1.2rem;
     overflow-x: auto;
     font-family: var(--mono);
     font-size: 0.82rem;
     line-height: 1.65;
     color: var(--text);
+}
+.code-line {
+    counter-increment: code-line;
+    display: block;
+    /* A blank source line has no content to give it height. */
+    min-height: 1.65em;
+}
+.code-line::before {
+    content: counter(code-line);
+    display: inline-block;
+    width: 2ch;
+    margin-right: 1.6rem;
+    text-align: right;
+    color: var(--muted);
+    opacity: 0.55;
+    user-select: none;
+    -webkit-user-select: none;
 }
 .tok-kw {
     color: var(--tok-kw);
