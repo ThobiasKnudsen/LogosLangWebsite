@@ -13,6 +13,13 @@
       "dueOn": null,
       "state": "open",
       "url": "https://github.com/ThobiasKnudsen/LogosLang/milestone/2"
+    },
+    {
+      "number": 3,
+      "title": "v0.1.0",
+      "dueOn": null,
+      "state": "open",
+      "url": "https://github.com/ThobiasKnudsen/LogosLang/milestone/3"
     }
   ],
   "stations": [
@@ -295,11 +302,11 @@
       "title": "Token",
       "blurb": "A token is the pending, not-yet-reduced unit on the parsing tape. There is no separate \"lexer creates tokens, parser consumes tokens\" two-pass flow; lexing and parsing are one constructor-driven pass.",
       "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/36",
-      "state": "open",
+      "state": "closed",
       "blockedBy": [
         29
       ],
-      "status": "ready",
+      "status": "done",
       "tier": 1,
       "milestone": 1,
       "labels": [
@@ -371,11 +378,11 @@
       "title": "Review the Parser and the ConstructFn protocol — and grow it toward tape-ops-as-identities",
       "blurb": "Context",
       "url": "https://github.com/ThobiasKnudsen/LogosLang/issues/48",
-      "state": "open",
+      "state": "closed",
       "blockedBy": [
         29
       ],
-      "status": "ready",
+      "status": "done",
       "tier": 1,
       "milestone": 1,
       "labels": [
