@@ -181,37 +181,60 @@ function initWisdom(): void {
 	};
 	// A hand scroll needs the rotation too, so it also loops endlessly.
 	rail.addEventListener('scroll', rotate, { passive: true });
-	// Rotate once up front: from the pristine scrollTop=0 state no scroll event can
-	// fire (the position cannot go below 0), so without this the column would dead-end
-	// upward until something first scrolled it down.
-	rotate();
-
-	if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-
-	const SPEED = 24; // px/second of downward drift
 
 	// Sub-pixel nudges are DISCARDED, not accumulated: a scroll container snaps
 	// scrollTop to whole pixels (device pixels, so whole CSS pixels at a 1x display),
 	// and 24px/s is ~0.4px per frame, which snaps back to where it started every time.
 	// Read-modify-write against scrollTop therefore never moves at all. So carry the
-	// fraction here and hand the element only whole pixels. Still read-modify-write,
-	// so a hand scroll in between is adopted rather than fought.
+	// fraction here and hand the element only whole pixels. Both the page-sync and the
+	// drift feed this one accumulator; a frame flushes whatever whole pixels it holds.
+	// Still read-modify-write, so a hand scroll on the rail is adopted, not fought.
 	let carry = 0;
 	let last = 0;
-	const step = (t: number): void => {
-		if (last) {
-			carry += (SPEED * (t - last)) / 1000;
-			const whole = Math.trunc(carry);
-			if (whole !== 0) {
-				carry -= whole;
-				rail.scrollTop += whole;
-				rotate();
-			}
-		}
-		last = t;
-		requestAnimationFrame(step);
+	const flush = (): void => {
+		const whole = Math.trunc(carry);
+		if (whole === 0) return;
+		carry -= whole;
+		rail.scrollTop += whole;
+		rotate();
 	};
-	requestAnimationFrame(step);
+	const pump = (): void => {
+		flush();
+		requestAnimationFrame(pump);
+	};
+	requestAnimationFrame(pump);
+	// Rotate once up front: from the pristine scrollTop=0 state no scroll event can
+	// fire (the position cannot go below 0), so without this the column would dead-end
+	// upward until something first scrolled it down.
+	rotate();
+
+	// The rail is sticky, so without help its quotes would hold still while the page
+	// moved behind them. Feeding the page's own scroll delta into the rail gives back
+	// the movement a document-tall column would have had, and the drift rides on top:
+	// the rail reads as part of the page, plus a life of its own. This runs even under
+	// reduced motion, since it is the page's movement, not an animation of ours.
+	let pageY = window.scrollY;
+	window.addEventListener(
+		'scroll',
+		() => {
+			const y = window.scrollY;
+			carry += y - pageY;
+			pageY = y;
+		},
+		{ passive: true },
+	);
+
+	if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+	// Negative: scrollTop falling walks the track backwards, which carries the quotes
+	// DOWN the rail. Positive would run them up it.
+	const SPEED = -24; // px/second of drift
+	const drift = (t: number): void => {
+		if (last) carry += (SPEED * (t - last)) / 1000;
+		last = t;
+		requestAnimationFrame(drift);
+	};
+	requestAnimationFrame(drift);
 }
 
 // ── Comparison matrix: scroll hints + floating header ─────────────────────────

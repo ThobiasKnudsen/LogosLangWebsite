@@ -760,22 +760,9 @@ a {
     counter-reset: code-line;
     margin: 0;
     text-align: left;
-    /* The listing spans the page rather than stopping partway down it: the column
-       stretches to the grid row's height and the lines share out what is left over.
-       Tuning a line-height to today's prose length would only hold until the next
-       section was written; letting the gaps do it keeps the two columns level
-       whatever either of them grows into. */
-    align-self: stretch;
-    display: flex;
-    flex-direction: column;
-}
-/* The lines live inside <code>, not directly in the <pre>, so the <pre> has exactly
-   one flex item and nothing to distribute. The <code> is the real column. */
-.page-grid__code > code {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
+    /* An ordinary code pitch: stretching the listing to the prose column's full
+       height spread the lines far too wide to read as a file (Thobias, 11 September
+       2026). It ends where it ends.  */
     overflow-x: auto;
     font-family: var(--mono);
     font-size: 0.82rem;
@@ -1055,9 +1042,9 @@ a {
    and bottom fade to the page (mask) so quotes surface and dissolve like
    half-remembered text. The Greek is real, copyable text, not an image. */
 .wisdom {
-    /* Two dock-thicknesses wide, the measure the whole grid is built from. Narrow
-       enough to be a margin, wide enough to read a line of verse in. */
-    width: calc(var(--nav-height) * 2);
+    /* Wide enough to read a line of verse without hyphen-thin wrapping: 1.8x the
+       two dock-thicknesses it started at (Thobias, 11 September 2026). */
+    width: calc(var(--nav-height) * 3.6);
     /* As tall as the grid row, which is as tall as the longest column: the rail runs
        the whole document, top to bottom. */
     align-self: stretch;
@@ -1081,20 +1068,6 @@ a {
     /* initWisdom rotates units between the track's ends and compensates scrollTop
        itself; browser scroll anchoring would fight that compensation. */
     overflow-anchor: none;
-    -webkit-mask-image: linear-gradient(
-        180deg,
-        transparent,
-        #000 12%,
-        #000 88%,
-        transparent
-    );
-    mask-image: linear-gradient(
-        180deg,
-        transparent,
-        #000 12%,
-        #000 88%,
-        transparent
-    );
 }
 .wisdom__scroll::-webkit-scrollbar {
     display: none; /* WebKit/Blink */
@@ -1147,16 +1120,6 @@ a {
     color: var(--logo);
     opacity: 0.55;
 }
-/* No motion: initWisdom skips the auto-drift, so the rail just holds still and the
-   reader scrolls it by hand. Drop the edge fade, which only exists to serve the
-   drifting loop. */
-@media (prefers-reduced-motion: reduce) {
-    .wisdom__scroll {
-        -webkit-mask-image: none;
-        mask-image: none;
-    }
-}
-
 /* ── Comparison matrix ────────────────────────────────────────────────────────
    "Next to its neighbors" on the homepage: Logos against eleven other languages.
    One glyph per cell (has it / partial / no), colored green / yellow / red; the
