@@ -1234,7 +1234,7 @@ export function homePage(): string {
       <span class="hero__lead" aria-hidden="true">One language for everything</span>
       <span class="sr-only">Λόγος: one language for everything.</span>
     </h1>
-    <p class="hero__sub">Logos is written in itself. Its grammar, types, proofs, compiler and interpreter live in the same graph as your program, so your code can read and redefine any of them, and every change is checked. Meta used to mean unchecked and slow. Here it is neither.</p>
+    <p class="hero__sub">Logos is maximally meta. Its grammar, types, proofs, compiler and interpreter live in the same graph as your program, so your code can read and redefine any of them, and every change is checked. Meta used to mean unchecked and slow. Here it is neither.</p>
     <div class="hero__actions">
       <a class="logos-btn logos-btn--ghost" href="/vision/">Read the vision</a>
       <a class="logos-btn logos-btn--ghost" href="/roadmap/">See the roadmap</a>

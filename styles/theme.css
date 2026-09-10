@@ -549,7 +549,7 @@ a {
 .hero__brand {
     color: var(--logo);
     white-space: nowrap;
-    margin-bottom: 0.1em;
+    margin-bottom: 0.3em;
 }
 /* The identity line, the one sentence a first-time visitor should read, at 80% of
    the wordmark above it (Thobias, 2026-08-26). */
@@ -565,7 +565,7 @@ a {
     color: var(--download-fg);
     max-width: 56ch;
     /* Air between the two-line title and the paragraph, so the title stands alone. */
-    margin: 4.5rem 0 0;
+    margin: 5rem 0 0;
 }
 /* The hero's actions: ghost links to the vision and roadmap, the honest CTAs while
    no builds exist (the get-notified form lives at the bottom of the page). */
