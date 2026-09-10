@@ -200,11 +200,23 @@ function initWisdom(): void {
 		paused = false;
 	});
 
+	// Sub-pixel nudges are DISCARDED, not accumulated: a scroll container snaps
+	// scrollLeft to whole pixels (device pixels, so whole CSS pixels at a 1x display),
+	// and 24px/s is ~0.4px per frame, which snaps back to where it started every time.
+	// Read-modify-write against scrollLeft therefore never moves at all. So carry the
+	// fraction here and hand the element only whole pixels. Still read-modify-write,
+	// so a hand scroll in between is adopted rather than fought.
+	let carry = 0;
 	let last = 0;
 	const step = (t: number): void => {
 		if (last && !paused) {
-			frieze.scrollLeft += (SPEED * (t - last)) / 1000;
-			rotate();
+			carry += (SPEED * (t - last)) / 1000;
+			const whole = Math.trunc(carry);
+			if (whole !== 0) {
+				carry -= whole;
+				frieze.scrollLeft += whole;
+				rotate();
+			}
 		}
 		last = t;
 		requestAnimationFrame(step);
