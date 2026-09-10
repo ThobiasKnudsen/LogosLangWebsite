@@ -74,7 +74,7 @@
     --line-proofs: #6f5de0;
     --line-interop: #c8466f;
     --line-tooling: #1a9088;
-    /* Code tokens for the homepage target-syntax card, in the roadmap line hues
+    /* Code tokens for the homepage code card, in the roadmap line hues
        darkened where needed to clear WCAG AA 4.5:1 on the cream --code-bg. */
     --tok-kw: var(--accent);
     --tok-type: #247a44;
@@ -671,10 +671,9 @@ a {
 }
 
 /* ── Homepage code sample ─────────────────────────────────────────────────────
-   A single code window of target syntax under the hero: an editor-style card with
-   a filename bar and an explicit "target syntax" badge so it never reads as a
-   shipped feature. Tokens are colored by the build's small highlighter
-   (highlightLogos in build/pages.ts) via the --tok-* vars. */
+   A single code window under the hero: an editor-style card with a filename bar.
+   Tokens are colored by the build's small highlighter (highlightLogos in
+   build/pages.ts) via the --tok-* vars. */
 .code-peek {
     max-width: 46rem;
     margin: clamp(4rem, 10vh, 7rem) auto 0;
@@ -780,16 +779,6 @@ a {
     font-family: var(--mono);
     font-size: 0.78rem;
     color: var(--muted);
-}
-.code-card__badge {
-    font-size: 0.7rem;
-    font-weight: 600;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--hero-note);
-    border: 1px solid var(--hero-note);
-    border-radius: 999px;
-    padding: 0.15rem 0.6rem;
 }
 .code-card__pre {
     margin: 0;

@@ -200,8 +200,7 @@ function notifyFormHtml(source: string): string {
 // (not `left_to_right`), `tape := parsing_tape ?` (`:` as a declaration operator was
 // deleted 5 September 2026), `-> void`, and `type (…)` for an identity with a body
 // against `logos (X)` for a keyword with nothing behind it. Bodies left as `?` (the
-// typed unknown) are `?` in the source too. The card labels the whole thing as target
-// syntax so it never overclaims.
+// typed unknown) are `?` in the source too.
 const HOME_SAMPLE = `# Ordinary code first. \`:=\` declares and infers the type, \`=\` writes
 # a name that already exists, and \`mut\` on the type is what makes a
 # value writable. A scope's last expression is its value.
@@ -545,9 +544,9 @@ function structureHtml(): string {
 function codePeekHtml(): string {
   return `<section class="code-peek" aria-label="What Logos looks like">
   <h2 class="code-peek__title">What Logos looks like</h2>
-  <p class="code-peek__lead">Target syntax from the language design; the compiler that runs it is still being built.</p>
+  <p class="code-peek__lead">Ordinary code first, then the same file reaching up to change the language it is written in. The compiler that runs it is still being built.</p>
   <figure class="code-card">
-    <figcaption class="code-card__bar"><span class="code-card__name">target-syntax.logos</span><span class="code-card__badge">target syntax, not yet runnable</span></figcaption>
+    <figcaption class="code-card__bar"><span class="code-card__name">syntax.logos</span></figcaption>
     <pre class="code-card__pre"><code>${highlightLogos(HOME_SAMPLE)}</code></pre>
   </figure>
 </section>`;
