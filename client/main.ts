@@ -137,17 +137,22 @@ function initDockHide(): void {
 // re-centering jitter). Pure progressive enhancement: with JS off (or reduced
 // motion) the first phrase stays shown. Pauses while the pointer is over the
 // rotator so a reader can hold a phrase.
-// ── Wisdom rail: shared auto-drift + manual scroll ───────────────────────────
-// The rail holds each quote exactly once, as a column of .wisdom__unit blocks. A rAF
-// loop nudges scrollTop to give a slow downward drift, unrelated to the page's own
-// scrolling; because it's the same scrollTop the reader moves with the wheel over the
-// rail, a hand scroll overrides the drift's speed and direction rather than competing
-// with it (Thobias, 11 September 2026). The endless loop comes from rotating whole
-// units instead of duplicating them: when the first unit has fully scrolled out of
-// view it moves to the end of the track (and the reverse when scrolling back past the
-// top), with scrollTop compensated by the unit's height so the visible content never
-// jumps. Pure progressive enhancement; with reduced motion there is no drift and the
-// rail is a plain scroll strip that still rotates at its ends.
+// ── Wisdom rail: auto-drift over a natively scrolling column ─────────────────
+// The rail carries TWO movements and only one of them is ours.
+//
+// Travelling with the page is the browser's: the rail is an ordinary in-flow column
+// as tall as the document, so its quotes scroll with everything beside them, on the
+// compositor, in perfect step. An earlier version made the rail sticky and fed it the
+// page's scroll delta from JS; that is a main-thread answer to a compositor question
+// and it visibly lagged and stalled against the columns next to it (Thobias, 11
+// September 2026). Deleted rather than tuned.
+//
+// The drift is ours: a rAF loop nudges scrollTop so the quotes travel slowly DOWN the
+// rail on top of the page's own movement. It is the same scrollTop a reader moves
+// with the wheel over the rail, so a hand scroll overrides the drift's speed and
+// direction rather than competing with it. The endless loop comes from rotating whole
+// units across the track's ends, with scrollTop compensated by the unit's height so
+// the visible content never jumps.
 //
 // Deliberately NOT paused on hover: the horizontal frieze paused so a passage could
 // be read mid-drift, but the rail's whole interaction is scrolling it by hand, and a
@@ -179,6 +184,17 @@ function initWisdom(): void {
 			last = track.lastElementChild as HTMLElement | null;
 		}
 	};
+	// The rail is as tall as the whole document, so the quotes as authored do not
+	// overflow it — and with nothing to scroll there is nothing to drift. Repeat the
+	// set until the track is comfortably taller than the rail. Cloning here rather
+	// than in the markup keeps the page's HTML one quote per quote, and the count
+	// follows whatever the page's real height turns out to be.
+	const seed = [...track.children].map((unit) => unit.cloneNode(true));
+	let guard = 0;
+	while (track.scrollHeight < rail.clientHeight * 1.6 && guard++ < 20) {
+		for (const unit of seed) track.appendChild(unit.cloneNode(true));
+	}
+
 	// A hand scroll needs the rotation too, so it also loops endlessly.
 	rail.addEventListener('scroll', rotate, { passive: true });
 
@@ -191,15 +207,13 @@ function initWisdom(): void {
 	// Still read-modify-write, so a hand scroll on the rail is adopted, not fought.
 	let carry = 0;
 	let last = 0;
-	const flush = (): void => {
-		const whole = Math.trunc(carry);
-		if (whole === 0) return;
-		carry -= whole;
-		rail.scrollTop += whole;
-		rotate();
-	};
 	const pump = (): void => {
-		flush();
+		const whole = Math.trunc(carry);
+		if (whole !== 0) {
+			carry -= whole;
+			rail.scrollTop += whole;
+			rotate();
+		}
 		requestAnimationFrame(pump);
 	};
 	requestAnimationFrame(pump);
@@ -207,22 +221,6 @@ function initWisdom(): void {
 	// fire (the position cannot go below 0), so without this the column would dead-end
 	// upward until something first scrolled it down.
 	rotate();
-
-	// The rail is sticky, so without help its quotes would hold still while the page
-	// moved behind them. Feeding the page's own scroll delta into the rail gives back
-	// the movement a document-tall column would have had, and the drift rides on top:
-	// the rail reads as part of the page, plus a life of its own. This runs even under
-	// reduced motion, since it is the page's movement, not an animation of ours.
-	let pageY = window.scrollY;
-	window.addEventListener(
-		'scroll',
-		() => {
-			const y = window.scrollY;
-			carry += y - pageY;
-			pageY = y;
-		},
-		{ passive: true },
-	);
 
 	if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 

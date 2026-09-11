@@ -524,15 +524,15 @@ a {
    a gutter of one either side, so the distance from prose to code is four — the same
    288px the two-column hero used before the rail moved in between them.
 
-   The code column is max-content rather than a fraction. A fractional column clipped
-   the widest line: the listing's intrinsic width has to be granted, not negotiated.
-   That leaves the prose column as the only elastic one, which is why three columns
-   need a genuinely wide window; below 88rem they become one and the rail is dropped
-   rather than squeezed. A drifting scroll-trap on a phone is worse than no rail. */
+   The two side columns are equal fractions so the rail lands on the page's centre
+   line; the listing is indented two spaces rather than four so that it fits one of
+   them without scrolling. Below 88rem there is no room for three, so they become one
+   and the rail is dropped rather than squeezed: a drifting scroll-trap on a phone is
+   worse than no rail. */
 .page-grid {
     --rail-gutter: var(--nav-height);
     display: grid;
-    grid-template-columns: minmax(0, 1fr) max-content max-content;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
     column-gap: var(--rail-gutter);
     align-items: start;
     max-width: 96rem;
@@ -752,13 +752,13 @@ a {
 
 /* ── The page's code column ───────────────────────────────────────────────────
    The listing floats on the page: no card, no frame, no tinted ground, no heading,
-   just the numbered lines beside every section. Tokens are colored by the
-   build's small highlighter (highlightLogosLines in build/pages.ts) via the --tok-*
-   vars. The counter lives in ::before so the numbers are decoration and never land
-   in a copied selection. */
+   just the lines beside every section. Tokens are colored by the build's small
+   highlighter (highlightLogosLines in build/pages.ts) via the --tok-* vars. */
 .page-grid__code {
-    counter-reset: code-line;
     margin: 0;
+    /* Clear the dock the way the hero's headline does, so the first line is not
+       tucked against the menu. */
+    padding-top: clamp(4rem, 16vh, 5rem);
     text-align: left;
     /* An ordinary code pitch: stretching the listing to the prose column's full
        height spread the lines far too wide to read as a file (Thobias, 11 September
@@ -770,21 +770,9 @@ a {
     color: var(--text);
 }
 .code-line {
-    counter-increment: code-line;
     display: block;
     /* A blank source line has no content to give it height. */
     min-height: 1.65em;
-}
-.code-line::before {
-    content: counter(code-line);
-    display: inline-block;
-    width: 2ch;
-    margin-right: 1.6rem;
-    text-align: right;
-    color: var(--muted);
-    opacity: 0.55;
-    user-select: none;
-    -webkit-user-select: none;
 }
 .tok-kw {
     color: var(--tok-kw);
@@ -1046,19 +1034,29 @@ a {
        two dock-thicknesses it started at (Thobias, 11 September 2026). */
     width: calc(var(--nav-height) * 3.6);
     /* As tall as the grid row, which is as tall as the longest column: the rail runs
-       the whole document, top to bottom. */
+       the whole document, top to bottom. The negative margin pulls it up through
+       .page-main's dock allowance so it reaches the very top of the page and passes
+       behind the menu rather than starting below it. */
     align-self: stretch;
+    margin-top: calc(var(--nav-height) * -1);
+    /* The scroller inside is absolutely positioned against this box. Without that,
+       the rail's own content would set the grid row's height, the row would set the
+       rail's height, and filling the rail would grow it forever. */
+    position: relative;
     background: var(--surface);
     border-inline: 1px solid var(--hairline);
 }
-/* The scroller: vertically scrollable by hand (the drift shares the same scrollTop,
-   see initWisdom); the scrollbar itself is hidden, since the drift would otherwise
-   keep it visible. Sticky so the visible window of quotes follows the reader down a
-   very long rail instead of being a band they scroll past once. */
+/* The scroller is as tall as the rail, which is as tall as the document, and it sits
+   in the ordinary flow. That is what makes the quotes travel with the page: the
+   browser scrolls them natively, on the compositor, so they cannot lag behind the
+   columns beside them the way a JS-synced sticky panel does. The rail's OWN scroll is
+   then a second, independent movement on top: the drift nudges scrollTop (see
+   initWisdom), and a wheel over the rail moves the same scrollTop, so a reader
+   overrides the drift rather than fighting it. The scrollbar is hidden, since the
+   drift would otherwise keep it permanently visible. */
 .wisdom__scroll {
-    position: sticky;
-    top: var(--nav-height);
-    height: calc(100vh - var(--nav-height));
+    position: absolute;
+    inset: 0;
     overflow-y: auto;
     overflow-x: hidden;
     scrollbar-width: none; /* Firefox */
@@ -1101,8 +1099,7 @@ a {
     margin: 0;
     font-family: var(--serif);
     font-style: italic;
-    /* Smaller than the old band: this is a margin rail, not the main event. */
-    font-size: 0.92rem;
+    font-size: 1.04rem;
     line-height: 1.45;
     color: var(--heading);
 }

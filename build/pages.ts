@@ -230,117 +230,117 @@ const HOME_SAMPLE = `dyad := type (instance (type := @dyad ?, value := @void ?))
 logos := logos (logos)
 
 type := type (
-    instance (
-        parse_rank    := f64 ?
-        lex_rank      := f64 ?
-        associativity := ?
-        constructor   := fn (tape := parsing_tape ?) -> void ?
-        destructor    := ?
-        code          := ?
-    )
+  instance (
+    parse_rank    := f64 ?
+    lex_rank      := f64 ?
+    associativity := ?
+    constructor   := fn (tape := parsing_tape ?) -> void ?
+    destructor    := ?
+    code          := ?
+  )
 
-    parse_rank    = f64 2.0
-    associativity = left
+  parse_rank    = f64 2.0
+  associativity = left
 
-    constructor = fn (tape := parsing_tape ?) -> void (
-        if tape[1] != lex «(»[0]
-            error «type must be followed by (»
+  constructor = fn (tape := parsing_tape ?) -> void (
+    if tape[1] != lex «(»[0]
+      error «type must be followed by (»
 
-        definition := scope ?
-        (.constructor(tape.recenter(1))
-        tape[0] = dyad (type, definition)
-        tape.remove(1)
-    )
+    definition := scope ?
+    (.constructor(tape.recenter(1))
+    tape[0] = dyad (type, definition)
+    tape.remove(1)
+  )
 )
 
 scope := type (
-    constructor = fn (tape := parsing_tape ?) -> void ( ? )
+  constructor = fn (tape := parsing_tape ?) -> void ( ? )
 
-    instance (
-        self := array dyad ()
-    )
+  instance (
+    self := array dyad ()
+  )
 )
 
 fn := type (
-    instance (
-        compile := fn () -> void ?
-        run     := fn () -> void ?
-        input   := type ?
-        output  := ?
-        body    := ?
-        bcode   := callable ?
-        frame   := u64 ?
-    )
+  instance (
+    compile := fn () -> void ?
+    run     := fn () -> void ?
+    input   := type ?
+    output  := ?
+    body    := ?
+    bcode   := callable ?
+    frame   := u64 ?
+  )
 )
 
 ( := type (
-    parse_rank    = f64 9.0
-    associativity = left
+  parse_rank    = f64 9.0
+  associativity = left
 
-    constructor = fn (tape := parsing_tape ?) -> void (
-        body  := array @dyad ()
-        first := 1
-        i     := 1
+  constructor = fn (tape := parsing_tape ?) -> void (
+    body  := array @dyad ()
+    first := 1
+    i     := 1
 
+    while true (
+      cell := tape[i]
+
+      if cell == lex «)»[0] or cell == lex «,»[0] (
         while true (
-            cell := tape[i]
-
-            if cell == lex «)»[0] or cell == lex «,»[0] (
-                while true (
-                    k := highest_unconstructed(tape, first, i)
-                    if k == ? break
-                    tape[k].constructor(tape.recenter(k))
-                )
-                for k in first..i (
-                    if not tape.is_constructed[k]
-                        error «unconstructed cell at a segment boundary»
-                    body.push(tape[k])
-                )
-                if cell == lex «)»[0] break
-                first = i + 1
-            ) else if cell.parse_rank >= (.parse_rank (
-                cell.constructor(tape.recenter(i))
-            )
-            i = i + 1
+          k := highest_unconstructed(tape, first, i)
+          if k == ? break
+          tape[k].constructor(tape.recenter(k))
         )
-
-        tape[0] = dyad (scope, body)
-        for k in 1..i+1 ( tape.remove(1) )
+        for k in first..i (
+          if not tape.is_constructed[k]
+            error «unconstructed cell at a segment boundary»
+          body.push(tape[k])
+        )
+        if cell == lex «)»[0] break
+        first = i + 1
+      ) else if cell.parse_rank >= (.parse_rank (
+        cell.constructor(tape.recenter(i))
+      )
+      i = i + 1
     )
+
+    tape[0] = dyad (scope, body)
+    for k in 1..i+1 ( tape.remove(1) )
+  )
 )
 
 + := type (
-    instance (
-        lhs := @dyad ?
-        rhs := @dyad ?
-    )
+  instance (
+    lhs := @dyad ?
+    rhs := @dyad ?
+  )
 
-    parse_rank    = f64 4.0
-    associativity = left
+  parse_rank    = f64 4.0
+  associativity = left
 
-    constructor = fn (tape := parsing_tape ?) -> void (
-        if not ((tape[-1] and tape[1]):dyad.type is number)
-            error «+ takes a number on each side»
+  constructor = fn (tape := parsing_tape ?) -> void (
+    if not ((tape[-1] and tape[1]):dyad.type is number)
+      error «+ takes a number on each side»
 
-        tape[0]:dyad.type = +
-        tape[0]:dyad.value.lhs = tape[-1]
-        tape[0]:dyad.value.rhs = tape[1]
-        tape.remove(1)
-        tape.remove(-1)
-    )
+    tape[0]:dyad.type = +
+    tape[0]:dyad.value.lhs = tape[-1]
+    tape[0]:dyad.value.rhs = tape[1]
+    tape.remove(1)
+    tape.remove(-1)
+  )
 )
 
 proof := type (
-    constructor = fn (tape := parsing_tape ?) -> void ( ? )
+  constructor = fn (tape := parsing_tape ?) -> void ( ? )
 
-    instance (
-        holes       := array dyad ()
-        premises    := array dyad ()
-        pattern     := dyad ?
-        replacement := dyad ?
-        derivation  := ?
-        world       := array @proof ()
-    )
+  instance (
+    holes       := array dyad ()
+    premises    := array dyad ()
+    pattern     := dyad ?
+    replacement := dyad ?
+    derivation  := ?
+    world       := array @proof ()
+  )
 )
 
 total := 2 + 3 + 4`;
