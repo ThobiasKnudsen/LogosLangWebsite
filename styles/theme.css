@@ -756,15 +756,25 @@ a {
    (Thobias, 11 September 2026). Tokens are colored by the build's small highlighter
    (highlightLogosLines in build/pages.ts) via the --tok-* vars. */
 .page-grid__code {
-    /* The bracket's arm length, which is also the air between its stem and the code. */
+    /* The bracket's arm length, which is also the air it keeps on all four sides:
+       from the stem to the first character, and from each arm to the line nearest it
+       (Thobias, 11 September 2026). */
     --bracket: 1.1rem;
+    /* A line box is taller than the glyphs inside it, by half the leading at the top
+       and half at the bottom. Padding measured to the line box would therefore set
+       the arms a quarter again further from the text than the stem is, so the
+       half-leading comes back off: (line-height - 1) / 2, in the element's own em. */
+    --half-leading: 0.325em;
     /* Dock clearance as a margin rather than padding, the way the hero's headline
        clears it, so the bracket starts at the first line instead of up under the
-       menu. The negative inline start cancels the padding below: the stem hangs in
-       the rail's gutter and the lines stay exactly where they were, at the column's
-       full width. */
-    margin: clamp(4rem, 16vh, 5rem) 0 0 calc(var(--bracket) * -1);
-    padding-left: var(--bracket);
+       menu. The block padding below is taken back off it, which keeps the first line
+       of code exactly level with the headline beside it and moves only the arm. The
+       negative inline start likewise cancels the inline padding: the stem hangs in
+       the rail's gutter and the lines keep the column's full width. */
+    margin: calc(clamp(4rem, 16vh, 5rem) - var(--bracket) + var(--half-leading)) 0 0
+        calc(var(--bracket) * -1);
+    padding: calc(var(--bracket) - var(--half-leading)) 0
+        calc(var(--bracket) - var(--half-leading)) var(--bracket);
     text-align: left;
     /* An ordinary code pitch: stretching the listing to the prose column's full
        height spread the lines far too wide to read as a file (Thobias, 11 September
