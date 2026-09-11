@@ -752,22 +752,51 @@ a {
 
 /* ── The page's code column ───────────────────────────────────────────────────
    The listing floats on the page: no card, no frame, no tinted ground, no heading,
-   just the lines beside every section. Tokens are colored by the build's small
-   highlighter (highlightLogosLines in build/pages.ts) via the --tok-* vars. */
+   just the lines beside every section, held by one open bracket down its left side
+   (Thobias, 11 September 2026). Tokens are colored by the build's small highlighter
+   (highlightLogosLines in build/pages.ts) via the --tok-* vars. */
 .page-grid__code {
-    margin: 0;
-    /* Clear the dock the way the hero's headline does, so the first line is not
-       tucked against the menu. */
-    padding-top: clamp(4rem, 16vh, 5rem);
+    /* The bracket's arm length, which is also the air between its stem and the code. */
+    --bracket: 1.1rem;
+    /* Dock clearance as a margin rather than padding, the way the hero's headline
+       clears it, so the bracket starts at the first line instead of up under the
+       menu. The negative inline start cancels the padding below: the stem hangs in
+       the rail's gutter and the lines stay exactly where they were, at the column's
+       full width. */
+    margin: clamp(4rem, 16vh, 5rem) 0 0 calc(var(--bracket) * -1);
+    padding-left: var(--bracket);
     text-align: left;
     /* An ordinary code pitch: stretching the listing to the prose column's full
        height spread the lines far too wide to read as a file (Thobias, 11 September
        2026). It ends where it ends.  */
     overflow-x: auto;
+    /* The open bracket: the stem is the left border, the two arms are background
+       strips at the top and bottom of it. Both live on the border box, so neither
+       slides out of place when a long line scrolls the listing sideways, which is
+       exactly what an absolutely positioned pseudo-element would do. */
+    border-left: 1px solid var(--hairline);
+    background-image:
+        linear-gradient(var(--hairline), var(--hairline)),
+        linear-gradient(var(--hairline), var(--hairline));
+    background-repeat: no-repeat;
+    background-size: var(--bracket) 1px;
+    background-position:
+        left top,
+        left bottom;
+    background-origin: border-box;
     font-family: var(--mono);
     font-size: 0.82rem;
     line-height: 1.65;
     color: var(--text);
+}
+/* One column: with the rail gone there is no gutter to hang the bracket in, and
+   hanging it outside the page's own padding would give a phone a sideways scroll. It
+   sits inside instead, and the lines move over by its width. This has to come AFTER
+   the rule above, whose margin shorthand would otherwise beat it. */
+@media (max-width: 88rem) {
+    .page-grid__code {
+        margin-left: 0;
+    }
 }
 .code-line {
     display: block;
