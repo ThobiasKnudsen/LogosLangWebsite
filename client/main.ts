@@ -137,102 +137,101 @@ function initDockHide(): void {
 // re-centering jitter). Pure progressive enhancement: with JS off (or reduced
 // motion) the first phrase stays shown. Pauses while the pointer is over the
 // rotator so a reader can hold a phrase.
-// ── Wisdom rail: auto-drift over a natively scrolling column ─────────────────
-// The rail carries TWO movements and only one of them is ours.
+// ── Wisdom banner: a drifting frieze pinned to the top of the home page ──────
+// One movement, and it is ours: a rAF loop nudges scrollLeft so the quotes travel
+// slowly leftwards across the band. It is the same scrollLeft a reader moves by
+// swiping or dragging, so a hand scroll adopts the drift's position rather than
+// competing with it. The endless loop comes from rotating whole units across the
+// track's ends, with scrollLeft compensated by the unit's width so the visible
+// content never jumps.
 //
-// Travelling with the page is the browser's: the rail is an ordinary in-flow column
-// as tall as the document, so its quotes scroll with everything beside them, on the
-// compositor, in perfect step. An earlier version made the rail sticky and fed it the
-// page's scroll delta from JS; that is a main-thread answer to a compositor question
-// and it visibly lagged and stalled against the columns next to it (Thobias, 11
-// September 2026). Deleted rather than tuned.
+// The frieze was a vertical rail down the page's middle for a day (Thobias, 11
+// September 2026). That version had to carry a SECOND movement, travelling with the
+// page, and the accumulator pump it needed is gone with it: a band pinned to the
+// screen does not travel with the page at all. It is the simpler of the two.
 //
-// The drift is ours: a rAF loop nudges scrollTop so the quotes travel slowly DOWN the
-// rail on top of the page's own movement. It is the same scrollTop a reader moves
-// with the wheel over the rail, so a hand scroll overrides the drift's speed and
-// direction rather than competing with it. The endless loop comes from rotating whole
-// units across the track's ends, with scrollTop compensated by the unit's height so
-// the visible content never jumps.
-//
-// Deliberately NOT paused on hover: the horizontal frieze paused so a passage could
-// be read mid-drift, but the rail's whole interaction is scrolling it by hand, and a
-// pause on pointer-enter would stop the drift the moment a reader reached for it.
+// Hover and focus pause the drift so a passage can be read and selected. That was
+// wrong on the rail, where scrolling it by hand WAS the interaction and a pause on
+// pointer-enter stopped the drift the moment a reader reached for it. On a band
+// across the top of the screen a pointer is usually on its way somewhere else, and
+// stopping under one is what lets a quote be finished.
 function initWisdom(): void {
-	const rail = document.querySelector<HTMLElement>('.wisdom__scroll');
-	const track = rail?.querySelector<HTMLElement>('.wisdom__track');
-	if (!rail || !track) return;
+	const frieze = document.querySelector<HTMLElement>('.wisdom__scroll');
+	const track = frieze?.querySelector<HTMLElement>('.wisdom__track');
+	if (!frieze || !track) return;
 
-	// Rotate units across the ends so the column loops without any quote existing
-	// twice. Read heights live each time: fonts loading can change them after init.
+	// Rotate units across the ends so the strip loops without any quote existing
+	// twice. Read widths live each time: fonts loading can change them after init.
 	const rotate = (): void => {
-		if (track.scrollHeight <= rail.clientHeight) return; // nothing overflows
+		if (track.scrollWidth <= frieze.clientWidth) return; // nothing overflows
 		let first = track.firstElementChild as HTMLElement | null;
-		// STRICTLY greater: after a backward rotation scrollTop lands exactly on the
-		// new first unit's height, and `>=` would rotate that unit straight back,
-		// ping-ponging DOM moves on every scroll event when parked at the top.
-		while (first && first.offsetHeight > 0 && rail.scrollTop > first.offsetHeight) {
-			const h = first.offsetHeight;
+		// STRICTLY greater: after a backward rotation scrollLeft lands exactly on the
+		// new first unit's width, and `>=` would rotate that unit straight back,
+		// ping-ponging DOM moves on every scroll event when parked at the left edge.
+		while (first && first.offsetWidth > 0 && frieze.scrollLeft > first.offsetWidth) {
+			const w = first.offsetWidth;
 			track.appendChild(first); // now the last unit
-			rail.scrollTop -= h;
+			frieze.scrollLeft -= w;
 			first = track.firstElementChild as HTMLElement | null;
 		}
 		let last = track.lastElementChild as HTMLElement | null;
-		while (last && last.offsetHeight > 0 && rail.scrollTop <= 0) {
-			const h = last.offsetHeight;
+		while (last && last.offsetWidth > 0 && frieze.scrollLeft <= 0) {
+			const w = last.offsetWidth;
 			track.prepend(last); // now the first unit
-			rail.scrollTop += h;
+			frieze.scrollLeft += w;
 			last = track.lastElementChild as HTMLElement | null;
 		}
 	};
-	// The rail is as tall as the whole document, so the quotes as authored do not
-	// overflow it — and with nothing to scroll there is nothing to drift. Repeat the
-	// set until the track is comfortably taller than the rail. Cloning here rather
-	// than in the markup keeps the page's HTML one quote per quote, and the count
-	// follows whatever the page's real height turns out to be.
-	const seed = [...track.children].map((unit) => unit.cloneNode(true));
-	let guard = 0;
-	while (track.scrollHeight < rail.clientHeight * 1.6 && guard++ < 20) {
-		for (const unit of seed) track.appendChild(unit.cloneNode(true));
-	}
-
-	// A hand scroll needs the rotation too, so it also loops endlessly.
-	rail.addEventListener('scroll', rotate, { passive: true });
-
-	// Sub-pixel nudges are DISCARDED, not accumulated: a scroll container snaps
-	// scrollTop to whole pixels (device pixels, so whole CSS pixels at a 1x display),
-	// and 24px/s is ~0.4px per frame, which snaps back to where it started every time.
-	// Read-modify-write against scrollTop therefore never moves at all. So carry the
-	// fraction here and hand the element only whole pixels. Both the page-sync and the
-	// drift feed this one accumulator; a frame flushes whatever whole pixels it holds.
-	// Still read-modify-write, so a hand scroll on the rail is adopted, not fought.
-	let carry = 0;
-	let last = 0;
-	const pump = (): void => {
-		const whole = Math.trunc(carry);
-		if (whole !== 0) {
-			carry -= whole;
-			rail.scrollTop += whole;
-			rotate();
-		}
-		requestAnimationFrame(pump);
-	};
-	requestAnimationFrame(pump);
-	// Rotate once up front: from the pristine scrollTop=0 state no scroll event can
-	// fire (the position cannot go below 0), so without this the column would dead-end
-	// upward until something first scrolled it down.
+	// A hand scroll or a swipe needs the rotation too, so it also loops endlessly.
+	frieze.addEventListener('scroll', rotate, { passive: true });
+	// Rotate once up front: from the pristine scrollLeft=0 state no scroll event can
+	// fire (the position cannot go below 0), so without this the strip would dead-end
+	// leftward until something first scrolled it right.
 	rotate();
+	// The quotes as authored run many screens wide, so the track always overflows the
+	// band and there is always something to rotate. The rail had to clone the set to
+	// fill a column as tall as the document; sideways, the set fills itself.
 
 	if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
-	// Negative: scrollTop falling walks the track backwards, which carries the quotes
-	// DOWN the rail. Positive would run them up it.
-	const SPEED = -24; // px/second of drift
-	const drift = (t: number): void => {
-		if (last) carry += (SPEED * (t - last)) / 1000;
-		last = t;
-		requestAnimationFrame(drift);
+	// Positive: scrollLeft rising walks the track forwards, which carries the quotes
+	// leftwards across the band. Negative would run them the other way.
+	const SPEED = 24; // px/second of drift
+
+	let paused = false;
+	const pause = (): void => {
+		paused = true;
 	};
-	requestAnimationFrame(drift);
+	const resume = (): void => {
+		paused = false;
+	};
+	frieze.addEventListener('pointerenter', pause);
+	frieze.addEventListener('pointerleave', resume);
+	frieze.addEventListener('focusin', pause);
+	frieze.addEventListener('focusout', resume);
+
+	// Sub-pixel nudges are DISCARDED, not accumulated: a scroll container snaps
+	// scrollLeft to whole pixels (device pixels, so whole CSS pixels at a 1x display),
+	// and 24px/s is ~0.4px per frame, which snaps back to where it started every time.
+	// Read-modify-write against scrollLeft therefore never moves at all. So carry the
+	// fraction here and hand the element only whole pixels. Still read-modify-write,
+	// so a hand scroll in between is adopted rather than fought.
+	let carry = 0;
+	let last = 0;
+	const step = (t: number): void => {
+		if (last && !paused) {
+			carry += (SPEED * (t - last)) / 1000;
+			const whole = Math.trunc(carry);
+			if (whole !== 0) {
+				carry -= whole;
+				frieze.scrollLeft += whole;
+				rotate();
+			}
+		}
+		last = t;
+		requestAnimationFrame(step);
+	};
+	requestAnimationFrame(step);
 }
 
 // ── Comparison matrix: scroll hints + floating header ─────────────────────────

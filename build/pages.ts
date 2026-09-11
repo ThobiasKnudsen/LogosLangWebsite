@@ -190,15 +190,15 @@ function notifyFormHtml(source: string): string {
 // ── Homepage code listing ─────────────────────────────────────────────────────
 // One continuous file running the length of the page, numbered straight through, as
 // if the homepage were a single Logos source read top to bottom (Thobias, 11
-// September 2026). It carries no comments of its own and no prose around it — it is
+// September 2026). It carries no comments of its own and no prose around it: it is
 // meant to be read as code, so anything that needs saying has to be said by the code.
 //
 // The listing is the language defining itself, in the order that dependency demands:
 // the dyad, the self-classifying `logos`, `type` (which reads its own bracket), `(`
 // (the scope opener and the eager-segment driver), and finally `+`, an ordinary
 // operator built out of all of it. Every definition is lifted from a REAL file in the
-// sibling repo rather than written for the website — LogosLang/identities/dyad.logos,
-// type.logos and open_parenthesis.logos — with their comments stripped and the
+// sibling repo rather than written for the website (LogosLang/identities/dyad.logos,
+// type.logos and open_parenthesis.logos) with their comments stripped and the
 // alignment regularised. Two placeholders had to be filled: `(`'s parse_rank is
 // literally `…` in the source ("near the top of the axis; `,` sits above it") and
 // `+` has no source file at all. Those two numbers, 9.0 and 4.0, are the only
@@ -653,12 +653,14 @@ function structureHtml(): string {
 </section>`;
 }
 
-// The listing stands on its own: no card, no filename bar, no heading, no prose. It
-// is the page's right-hand column, running beside every section from the wordmark to
-// the signup. Each line is its own block so a CSS counter can number it; the numbers
-// live in ::before, so they are decoration the clipboard never picks up. The lines
-// carry no "\n" between them (a newline plus a block would render as a second, empty
-// line), and an empty source line keeps its height from .code-line's min-height.
+// The listing stands on its own: no card, no filename bar, no heading, no prose, just
+// an open bracket down its left side (see .page-grid__code). It is the page's
+// right-hand column, running beside every section from the wordmark to the signup.
+// Each line is its own block so that a blank source line still takes a line's height,
+// from .code-line's min-height; the lines carry no "\n" between them, since a newline
+// plus a block would render as a second, empty line. The blocks were also what a CSS
+// counter numbered the listing through until the numbers were dropped (commit
+// ef4d3d4); nothing numbers them now.
 function codeListingHtml(): string {
   const lines = highlightLogosLines(HOME_SAMPLE)
     .map((line) => `<span class="code-line">${line}</span>`)
@@ -1326,15 +1328,22 @@ function notifySectionHtml(): string {
 </section>`;
 }
 
-// The homepage is one three-column grid (Thobias, 11 September 2026): every prose
-// section down the left, the quote rail as the page's spine, and one continuous code
-// listing down the right, all three running the full height of the document. The rail
-// is a scroller of its own — it drifts downwards under its own steam and a reader can
-// scroll it against that drift — so it is a sibling of the two columns, not a band
-// between sections. Below the grid's breakpoint the three columns become one and the
-// rail is dropped; see .page-grid.
+// The homepage is the quote banner plus one two-column grid (Thobias, 11 September
+// 2026): the frieze pinned across the top of the screen with the dock beneath it,
+// then every prose section down the left and one continuous code listing down the
+// right, both running the full height of the document.
+//
+// The banner is fixed, so it is out of flow and its position in this markup does not
+// matter to the layout; it leads because it leads the page. `body.home` is what gives
+// the dock, the theme toggle and .page-main their clearance below it, so the banner
+// and that class travel together: the banner belongs to the home page alone. Below
+// the grid's breakpoint the two columns become one and the banner stays; see
+// .page-grid and .wisdom.
 export function homePage(): string {
-  return `<div class="page-grid">
+  return `<section class="wisdom" aria-label="On the Logos, voices across the ages">
+  <div class="wisdom__scroll"><div class="wisdom__track">${wisdomUnits()}</div></div>
+</section>
+<div class="page-grid">
   <div class="page-grid__text">
     <section class="hero">
       <h1 class="hero__headline">
@@ -1349,9 +1358,6 @@ ${structureHtml()}
 ${checkedHtml()}
 ${buildableHtml()}
 ${notifySectionHtml()}
-  </div>
-  <div class="wisdom" aria-label="On the Logos, voices across the ages">
-    <div class="wisdom__scroll"><div class="wisdom__track">${wisdomUnits()}</div></div>
   </div>
   ${codeListingHtml()}
 </div>`;

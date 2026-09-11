@@ -21,6 +21,13 @@
 	   #fff/#ffffff anywhere on the site. */
     --white: #fdf8e3;
     --nav-height: 4.5rem;
+    /* The homepage's pinned quote banner (.wisdom). Everything the page hangs off the
+	   top of the screen is measured from it: the dock, the theme toggle and the main
+	   column all start below it on the home page. Tall enough for the longest stanza
+	   in the frieze, which runs to four lines plus its author, at the band's own type
+	   size; the band is a fixed height rather than an auto one so a four-line quote
+	   scrolling past a one-line quote never changes what the page sits under. */
+    --banner-height: 7.25rem;
     /* Corner reserved for the fixed theme toggle: its right inset (1.15rem) + track
 	   width (3.6rem) + a matching 1.15rem margin on its LEFT, so the gap between the
 	   dock and the toggle is exactly the toggle's own margin to the screen edge. */
@@ -190,10 +197,22 @@ a {
     box-shadow: 0 10px 30px -18px rgba(22, 22, 15, 0.4);
     transition: transform 0.28s ease;
 }
+/* On the home page the dock hangs under the pinned quote banner rather than at the
+   top of the screen. */
+body.home .dock {
+    inset-block-start: calc(var(--banner-height) + 0.85rem);
+}
 /* Scrolling down tucks the dock away (initDockHide); scrolling up brings it back.
    The offset covers the dock's own top inset plus its shadow. */
 .dock.is-hidden {
     transform: translateY(calc(-100% - 1.35rem));
+}
+/* The same tuck, lengthened by the banner it now sits under: the dock has to clear
+   the band's full height, or it would stop halfway and leave its shadow smudging the
+   band's lower edge. The banner is opaque and stacked above the dock, so the dock
+   passes behind it on the way out. */
+body.home .dock.is-hidden {
+    transform: translateY(calc(-100% - var(--banner-height) - 1.35rem));
 }
 @media (prefers-reduced-motion: reduce) {
     .dock {
@@ -444,6 +463,11 @@ a {
     align-items: center;
     cursor: pointer;
 }
+/* Down past the banner on the home page, so it keeps its own inset from the dock's
+   row rather than floating over the quotes. */
+body.home .theme-switch {
+    inset-block-start: calc(var(--banner-height) + 1.15rem);
+}
 .theme-switch__input {
     position: absolute;
     width: 1px;
@@ -514,26 +538,28 @@ a {
 .page-main {
     padding-top: var(--nav-height);
 }
+/* The home page carries the pinned quote banner above the dock, so its content
+   clears both. Only the home page: every other page keeps the dock at the top of the
+   screen, which is why this is a body class and not a change to .page-main itself
+   (Thobias, 11 September 2026). */
+body.home .page-main {
+    padding-top: calc(var(--banner-height) + var(--nav-height));
+}
 
 /* ── The homepage grid ────────────────────────────────────────────────────────
-   Three columns running the full height of the document (Thobias, 11 September
-   2026): every prose section down the left, the quote rail as the page's spine, and
-   one continuous code listing down the right.
+   Two columns running the full height of the document: every prose section down the
+   left, one continuous code listing down the right. The quotes ran between them as a
+   third column for a day; they are a pinned banner across the top of the screen now,
+   so the two survivors close up (Thobias, 11 September 2026).
 
-   The measure is the dock's own thickness. The rail is two of them wide and sits in
-   a gutter of one either side, so the distance from prose to code is four — the same
-   288px the two-column hero used before the rail moved in between them.
-
-   The two side columns are equal fractions so the rail lands on the page's centre
-   line; the listing is indented two spaces rather than four so that it fits one of
-   them without scrolling. Below 88rem there is no room for three, so they become one
-   and the rail is dropped rather than squeezed: a drifting scroll-trap on a phone is
-   worse than no rail. */
+   The measure is still the dock's own thickness. Prose to code is two of them, half
+   the four the rail needed to sit in the middle with a gutter either side. The two
+   columns are equal fractions, and the listing is indented two spaces rather than
+   four so that it fits one of them without scrolling. Below 88rem they become one. */
 .page-grid {
-    --rail-gutter: var(--nav-height);
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-    column-gap: var(--rail-gutter);
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    column-gap: calc(var(--nav-height) * 2);
     align-items: start;
     max-width: 96rem;
     margin-inline: auto;
@@ -546,11 +572,6 @@ a {
     .page-grid {
         grid-template-columns: minmax(0, 1fr);
         row-gap: clamp(3rem, 8vw, 5rem);
-    }
-    /* The rail is a scroller with no end; on one column it would swallow the page
-       scroll with nothing to show for it. */
-    .page-grid .wisdom {
-        display: none;
     }
 }
 
@@ -770,7 +791,8 @@ a {
        menu. The block padding below is taken back off it, which keeps the first line
        of code exactly level with the headline beside it and moves only the arm. The
        negative inline start likewise cancels the inline padding: the stem hangs in
-       the rail's gutter and the lines keep the column's full width. */
+       the gutter between the two columns and the lines keep the column's full
+       width. */
     margin: calc(clamp(4rem, 16vh, 5rem) - var(--bracket) + var(--half-leading)) 0 0
         calc(var(--bracket) * -1);
     padding: calc(var(--bracket) - var(--half-leading)) 0
@@ -799,10 +821,10 @@ a {
     line-height: 1.65;
     color: var(--text);
 }
-/* One column: with the rail gone there is no gutter to hang the bracket in, and
-   hanging it outside the page's own padding would give a phone a sideways scroll. It
-   sits inside instead, and the lines move over by its width. This has to come AFTER
-   the rule above, whose margin shorthand would otherwise beat it. */
+/* One column: there is no gutter left to hang the bracket in, and hanging it outside
+   the page's own padding would give a phone a sideways scroll. It sits inside
+   instead, and the lines move over by its width. This has to come AFTER the rule
+   above, whose margin shorthand would otherwise beat it. */
 @media (max-width: 88rem) {
     .page-grid__code {
         margin-left: 0;
@@ -1056,95 +1078,108 @@ a {
 #dyad-arrow path {
     fill: var(--muted);
 }
-/* ── Wisdom rail ──────────────────────────────────────────────────────────────
-   The page's spine: a slow DOWNWARD drift of reflections on the Logos, running the
-   full height of the document between the prose and the code (Thobias, 11 September
-   2026; it was a horizontal band under the hero until then).
+/* ── Wisdom banner ────────────────────────────────────────────────────────────
+   The home page's top edge: a slow right-to-left drift of reflections on the Logos,
+   pinned across the screen with the dock hanging beneath it, so the quotes are there
+   at every scroll position (Thobias, 11 September 2026). It was a vertical rail
+   between the prose and the code for a day, and a band under the hero before that.
 
    Each quote exists exactly ONCE in the track. The drift is driven in JS by nudging
-   scrollTop (see initWisdom), which is the same scrollTop a reader moves with the
-   wheel over the rail, so the drift and the hand share one mechanism and a reader
-   can push against the drift or run with it. Rotating whole units across the track's
-   ends keeps either direction seamless without duplicating a quote. The rail's top
-   and bottom fade to the page (mask) so quotes surface and dissolve like
-   half-remembered text. The Greek is real, copyable text, not an image. */
+   scrollLeft (see initWisdom), which is the same scrollLeft a reader moves by
+   swiping or dragging the band, so the drift and the hand share one mechanism.
+   Rotating whole units across the track's ends keeps either direction seamless
+   without duplicating a quote. The band's two ends fade to the page (mask) so quotes
+   surface and dissolve like half-remembered text. Hover and focus pause the drift so
+   a passage can be read and selected. The Greek is real, copyable text, not an
+   image. */
 .wisdom {
-    /* Wide enough to read a line of verse without hyphen-thin wrapping: 1.8x the
-       two dock-thicknesses it started at (Thobias, 11 September 2026). */
-    width: calc(var(--nav-height) * 3.6);
-    /* As tall as the grid row, which is as tall as the longest column: the rail runs
-       the whole document, top to bottom. The negative margin pulls it up through
-       .page-main's dock allowance so it reaches the very top of the page and passes
-       behind the menu rather than starting below it. */
-    align-self: stretch;
-    margin-top: calc(var(--nav-height) * -1);
-    /* The scroller inside is absolutely positioned against this box. Without that,
-       the rail's own content would set the grid row's height, the row would set the
-       rail's height, and filling the rail would grow it forever. */
-    position: relative;
+    position: fixed;
+    inset-block-start: 0;
+    inset-inline: 0;
+    /* Over the dock (z-index 50), which tucks up behind this band when the page
+       scrolls down, and under the theme toggle (60), which clears the band anyway. */
+    z-index: 55;
+    /* Fixed, not auto: see --banner-height. Everything below is centred in it. */
+    height: var(--banner-height);
+    display: flex;
+    align-items: center;
     background: var(--surface);
-    border-inline: 1px solid var(--hairline);
+    /* One hairline, along the bottom. There is nothing above the band to divide it
+       from, since it sits on the top edge of the screen. */
+    border-block-end: 1px solid var(--hairline);
 }
-/* The scroller is as tall as the rail, which is as tall as the document, and it sits
-   in the ordinary flow. That is what makes the quotes travel with the page: the
-   browser scrolls them natively, on the compositor, so they cannot lag behind the
-   columns beside them the way a JS-synced sticky panel does. The rail's OWN scroll is
-   then a second, independent movement on top: the drift nudges scrollTop (see
-   initWisdom), and a wheel over the rail moves the same scrollTop, so a reader
-   overrides the drift rather than fighting it. The scrollbar is hidden, since the
-   drift would otherwise keep it permanently visible. */
+/* The scroller: horizontally scrollable by hand, and by the drift, which shares the
+   same scrollLeft (see initWisdom). The scrollbar itself is hidden, since the drift
+   would otherwise keep it permanently visible. */
 .wisdom__scroll {
-    position: absolute;
-    inset: 0;
-    overflow-y: auto;
-    overflow-x: hidden;
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
     scrollbar-width: none; /* Firefox */
-    /* The drift owns this scroller: a reader's wheel moves the quotes, and must not
+    /* The band owns this scroller: a swipe across it moves the quotes, and must not
        fall through to the page once the (endless) track reaches a boundary. */
-    overscroll-behavior-y: contain;
-    /* initWisdom rotates units between the track's ends and compensates scrollTop
+    overscroll-behavior-x: contain;
+    /* initWisdom rotates units between the track's ends and compensates scrollLeft
        itself; browser scroll anchoring would fight that compensation. */
     overflow-anchor: none;
+    /* Fade the two ends into the band so text emerges from and returns to nothing
+       rather than being hard-clipped. */
+    -webkit-mask-image: linear-gradient(
+        90deg,
+        transparent,
+        #000 12%,
+        #000 88%,
+        transparent
+    );
+    mask-image: linear-gradient(
+        90deg,
+        transparent,
+        #000 12%,
+        #000 88%,
+        transparent
+    );
 }
 .wisdom__scroll::-webkit-scrollbar {
     display: none; /* WebKit/Blink */
 }
 .wisdom__track {
     display: flex;
-    flex-direction: column;
-    height: max-content;
+    width: max-content;
 }
 .wisdom__unit {
     display: flex;
-    flex-direction: column;
     align-items: center;
     flex: none;
 }
 .wisdom__quote {
     flex: none;
     margin: 0;
-    padding-block: 2.25rem;
-    padding-inline: 1.1rem;
+    padding-inline: 2.2rem;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.6rem;
-    /* Honor the explicit line breaks baked into each quote (multi-line stanza), while
-	   still wrapping if a line is too wide for the rail. */
-    white-space: pre-line;
+    gap: 0.3rem;
+    /* `pre`, not `pre-line`: each stanza keeps exactly the lines it was written with
+	   and never wraps. In a strip that scrolls sideways there is no width to wrap to,
+	   and a quote that gained a line on a narrow screen would grow taller than the
+	   band's fixed height and be clipped. */
+    white-space: pre;
     text-align: center;
 }
 .wisdom__text {
     margin: 0;
     font-family: var(--serif);
     font-style: italic;
-    font-size: 1.04rem;
-    line-height: 1.45;
+    /* Sized so the longest stanza, four lines and an author, fits the pinned band.
+       The band is permanent chrome now, so it has to be quiet: this is two thirds of
+       the size it read at when it was a band the page scrolled past. */
+    font-size: clamp(0.8rem, 1vw, 0.92rem);
+    line-height: 1.3;
     color: var(--heading);
 }
 .wisdom__author {
     font-family: var(--serif);
-    font-size: 0.7rem;
+    font-size: 0.64rem;
     letter-spacing: 0.14em;
     text-transform: uppercase;
     color: var(--muted);
