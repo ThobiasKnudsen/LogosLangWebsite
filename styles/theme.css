@@ -740,12 +740,13 @@ a {
     margin-bottom: 0;
 }
 
-/* ── The page's code column ───────────────────────────────────────────────────
-   The listing floats on the page: no card, no frame, no tinted ground, no heading,
-   just the lines beside every section, held by one open bracket down its left side
-   (Thobias, 11 September 2026). Tokens are colored by the build's small highlighter
-   (highlightLogosLines in build/pages.ts) via the --tok-* vars. */
-.page-grid__code {
+/* ── Listings ─────────────────────────────────────────────────────────────────
+   Code floats on the page: no card, no frame, no tinted ground, no heading, just the
+   lines held by one open bracket down their left side (Thobias, 11 September 2026).
+   Tokens are colored by the build's small highlighter (highlightLogosLines in
+   build/pages.ts) via the --tok-* vars. The homepage's code column and the examples
+   page share this look; each places it below. */
+.listing {
     /* The bracket's arm length, which is also the air it keeps on all four sides:
        from the stem to the first character, and from each arm to the line nearest it
        (Thobias, 11 September 2026). */
@@ -755,15 +756,6 @@ a {
        the arms a quarter again further from the text than the stem is, so the
        half-leading comes back off: (line-height - 1) / 2, in the element's own em. */
     --half-leading: 0.325em;
-    /* Dock clearance as a margin rather than padding, the way the hero's headline
-       clears it, so the bracket starts at the first line instead of up under the
-       menu. The block padding below is taken back off it, which keeps the first line
-       of code exactly level with the headline beside it and moves only the arm. The
-       negative inline start likewise cancels the inline padding: the stem hangs in
-       the gutter between the two columns and the lines keep the column's full
-       width. */
-    margin: calc(clamp(4rem, 16vh, 5rem) - var(--bracket) + var(--half-leading)) 0 0
-        calc(var(--bracket) * -1);
     padding: calc(var(--bracket) - var(--half-leading)) 0
         calc(var(--bracket) - var(--half-leading)) var(--bracket);
     text-align: left;
@@ -789,6 +781,17 @@ a {
     font-size: 0.82rem;
     line-height: 1.65;
     color: var(--text);
+}
+/* The homepage's code column. Dock clearance as a margin rather than padding, the
+   way the hero's headline clears it, so the bracket starts at the first line instead
+   of up under the menu. The listing's block padding is taken back off it, which
+   keeps the first line of code exactly level with the headline beside it and moves
+   only the arm. The negative inline start likewise cancels the inline padding: the
+   stem hangs in the gutter between the two columns and the lines keep the column's
+   full width. */
+.page-grid__code {
+    margin: calc(clamp(4rem, 16vh, 5rem) - var(--bracket) + var(--half-leading)) 0 0
+        calc(var(--bracket) * -1);
 }
 /* One column: there is no gutter left to hang the bracket in, and hanging it outside
    the page's own padding would give a phone a sideways scroll. It sits inside
@@ -1541,6 +1544,51 @@ a {
 }
 .placeholder p {
     color: var(--muted);
+}
+
+/* ── Examples ─────────────────────────────────────────────────────────────────
+   The homepage listing divided at its blank lines: one definition per article, the
+   identifier as a mono title, a line of prose, and the code held by the same open
+   bracket as on the homepage, here inside the column rather than hung in a gutter
+   (Thobias, 15 September 2026). */
+.examples {
+    max-width: 48rem;
+    margin-inline: auto;
+    padding: clamp(2rem, 6vw, 4rem) 1.5rem 5rem;
+    font-size: 1.05rem;
+    line-height: 1.7;
+}
+.examples__title {
+    font-family: var(--serif);
+    font-size: clamp(2rem, 5vw, 3rem);
+    color: var(--heading);
+    margin: 0 0 1.25rem;
+}
+.examples__lead {
+    font-size: 1.3rem;
+    line-height: 1.6;
+    color: var(--heading);
+}
+/* Prose only: the listings' <code> keeps the listing's own size. */
+.examples p code {
+    font-family: var(--mono);
+    font-size: 0.9em;
+}
+.example {
+    margin-top: clamp(2.5rem, 6vw, 4rem);
+}
+.example__title {
+    font-family: var(--mono);
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--heading);
+    margin: 0 0 0.5rem;
+}
+.example__lead {
+    margin: 0;
+}
+.example__code {
+    margin: 1.25rem 0 0;
 }
 
 /* ── Roadmap ──────────────────────────────────────────────────────────────── */

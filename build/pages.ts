@@ -187,11 +187,14 @@ function notifyFormHtml(source: string): string {
     </form>`;
 }
 
-// ── Homepage code listing ─────────────────────────────────────────────────────
-// One continuous file running the length of the page, numbered straight through, as
-// if the homepage were a single Logos source read top to bottom (Thobias, 11
-// September 2026). It carries no comments of its own and no prose around it: it is
-// meant to be read as code, so anything that needs saying has to be said by the code.
+// ── The code listing and the examples page ────────────────────────────────────
+// On the homepage, one continuous file running the length of the page, as if the
+// homepage were a single Logos source read top to bottom (Thobias, 11 September
+// 2026). It carries no comments of its own and no prose around it: it is meant to be
+// read as code, so anything that needs saying has to be said by the code. The same
+// definitions, divided at their blank lines, are the examples page, where each one
+// gets a title and a line of prose (Thobias, 15 September 2026). EXAMPLES is the one
+// source of both: the listing is its `code` fields joined by blank lines.
 //
 // The listing is the language defining itself, in the order that dependency demands:
 // the dyad, the self-classifying `logos`, `type` (which reads its own bracket), `(`
@@ -225,11 +228,35 @@ function notifyFormHtml(source: string): string {
 // The one invented value is the 4.0. DESIGN.md pins no table of ranks, only that the
 // axis is an f64 where higher binds tighter and fractional values let a new operator
 // slot between two existing ones without renumbering.
-const HOME_SAMPLE = `dyad := type (instance (type := @dyad ?, value := @void ?))
+interface Example {
+  /** The anchor on the examples page. */
+  id: string;
+  /** The identifier being defined; shown in mono, so `(` and `+` read as code. */
+  title: string;
+  /** A line or two on what the definition does, from the source file's own comments
+   *  (LogosLang/identities/*.logos). Build-controlled HTML: may carry <code>. */
+  lead: string;
+  code: string;
+}
 
-logos := logos (logos)
-
-type := type (
+const EXAMPLES: Example[] = [
+  {
+    id: "dyad",
+    title: "dyad",
+    lead: "The one node the Logic Graph is made of: a type and a value. Its <code>type</code> field is itself a dyad, so the first definition already refers to itself.",
+    code: `dyad := type (instance (type := @dyad ?, value := @void ?))`,
+  },
+  {
+    id: "logos",
+    title: "logos",
+    lead: "The language, defined as an instance of itself. There is nothing above it in the graph.",
+    code: `logos := logos (logos)`,
+  },
+  {
+    id: "type",
+    title: "type",
+    lead: "What every type carries, declared once as slots, and the same slots filled for <code>type</code> itself. Its constructor reads its own bracket: it opens the definition scope, drives the bracket's parse the way <code>(</code> does, and replaces its own cell with the finished type.",
+    code: `type := type (
   instance (
     parse_rank    := f64 ?
     lex_rank      := f64 ?
@@ -251,17 +278,25 @@ type := type (
     tape[0] = dyad (type, definition)
     tape.remove(1)
   )
-)
-
-scope := type (
+)`,
+  },
+  {
+    id: "scope",
+    title: "scope",
+    lead: "A scope is an array of dyads: the expressions constructed inside one bracket. Its constructor is still a hole; <code>(</code> is what fills a scope.",
+    code: `scope := type (
   constructor = fn (tape := parsing_tape ?) -> void ( ? )
 
   instance (
     self := array dyad ()
   )
-)
-
-fn := type (
+)`,
+  },
+  {
+    id: "fn",
+    title: "fn",
+    lead: "A function is a type like any other: an input type, an output, the body the graph can read, the compiled code it lowers to, and the size of its frame. <code>run</code> jumps to the compiled code when there is some and walks the body when there is not, so interpretation is not a second machine.",
+    code: `fn := type (
   instance (
     compile := fn () -> void ?
     run     := fn () -> void ?
@@ -271,9 +306,13 @@ fn := type (
     bcode   := callable ?
     frame   := u64 ?
   )
-)
-
-( := type (
+)`,
+  },
+  {
+    id: "open-parenthesis",
+    title: "(",
+    lead: "The scope opener is the driver of the parse. Constructed the moment it is lexed, it reads its interior one cell at a time: a cell that binds at least as tightly as <code>(</code> is constructed on the spot, and at each <code>,</code> or the closing <code>)</code> the rest of the segment is constructed highest rank first. The constructed cells, in order, become the scope.",
+    code: `( := type (
   parse_rank    = f64 9.0
   associativity = left
 
@@ -307,9 +346,13 @@ fn := type (
     tape[0] = dyad (scope, body)
     for k in 1..i+1 ( tape.remove(1) )
   )
-)
-
-+ := type (
+)`,
+  },
+  {
+    id: "plus",
+    title: "+",
+    lead: "An ordinary operator, built out of everything above it. Its constructor checks that the cell on each side is a number, fills its own dyad with them as <code>lhs</code> and <code>rhs</code>, and removes both from the tape.",
+    code: `+ := type (
   instance (
     lhs := @dyad ?
     rhs := @dyad ?
@@ -328,9 +371,13 @@ fn := type (
     tape.remove(1)
     tape.remove(-1)
   )
-)
-
-proof := type (
+)`,
+  },
+  {
+    id: "proof",
+    title: "proof",
+    lead: "A proof is a rewrite rule together with its evidence: the holes it quantifies over, the premises that must hold, a pattern and its replacement, the derivation from one to the other, and the world of axioms it rests on. Its constructor is still a hole.",
+    code: `proof := type (
   constructor = fn (tape := parsing_tape ?) -> void ( ? )
 
   instance (
@@ -341,9 +388,18 @@ proof := type (
     derivation  := ?
     world       := array @proof ()
   )
-)
+)`,
+  },
+  {
+    id: "total",
+    title: "total",
+    lead: "With <code>+</code> defined, this is ordinary code: three numbers and two operators, parsed by the machinery above.",
+    code: `total := 2 + 3 + 4`,
+  },
+];
 
-total := 2 + 3 + 4`;
+// The homepage listing: every example's code, joined by one blank line.
+const HOME_SAMPLE = EXAMPLES.map((e) => e.code).join("\n\n");
 
 
 const LOGOS_KEYWORDS = new Set([
@@ -653,19 +709,44 @@ function structureHtml(): string {
 </section>`;
 }
 
-// The listing stands on its own: no card, no filename bar, no heading, no prose, just
-// an open bracket down its left side (see .page-grid__code). It is the page's
-// right-hand column, running beside every section from the wordmark to the signup.
-// Each line is its own block so that a blank source line still takes a line's height,
-// from .code-line's min-height; the lines carry no "\n" between them, since a newline
-// plus a block would render as a second, empty line. The blocks were also what a CSS
-// counter numbered the listing through until the numbers were dropped (commit
-// ef4d3d4); nothing numbers them now.
-function codeListingHtml(): string {
-  const lines = highlightLogosLines(HOME_SAMPLE)
+/** A listing's lines as blocks: each line is its own block so that a blank source
+ *  line still takes a line's height, from .code-line's min-height; the lines carry
+ *  no "\n" between them, since a newline plus a block would render as a second,
+ *  empty line. The blocks were also what a CSS counter numbered the homepage listing
+ *  through until the numbers were dropped (commit ef4d3d4); nothing numbers them
+ *  now. */
+function codeLinesHtml(source: string): string {
+  return highlightLogosLines(source)
     .map((line) => `<span class="code-line">${line}</span>`)
     .join("");
-  return `<pre class="page-grid__code"><code>${lines}</code></pre>`;
+}
+
+// The listing stands on its own: no card, no filename bar, no heading, no prose, just
+// an open bracket down its left side (see .listing and .page-grid__code). It is the
+// page's right-hand column, running beside every section from the wordmark to the
+// signup.
+function codeListingHtml(): string {
+  return `<pre class="listing page-grid__code"><code>${codeLinesHtml(HOME_SAMPLE)}</code></pre>`;
+}
+
+// ── Examples page ─────────────────────────────────────────────────────────────
+// The homepage listing divided at its blank lines (Thobias, 15 September 2026): one
+// article per definition, in the same order, with the identifier as its title, a line
+// or two of prose from the source file's own comments, and the code held by the same
+// open bracket as on the homepage.
+export function examplesPage(): string {
+  const items = EXAMPLES.map(
+    (e) => `  <article class="example" id="${e.id}">
+    <h2 class="example__title">${escapeHtml(e.title)}</h2>
+    <p class="example__lead">${e.lead}</p>
+    <pre class="listing example__code"><code>${codeLinesHtml(e.code)}</code></pre>
+  </article>`,
+  ).join("\n");
+  return `<section class="examples">
+  <h1 class="examples__title">Examples</h1>
+  <p class="examples__lead">The language defining itself, one definition at a time, in the order that dependency demands: the dyad, the self-classifying <code>logos</code>, <code>type</code>, the scope opener <code>(</code>, and <code>+</code>, an ordinary operator built out of all of it. The definitions come from the language's own <a href="${GITHUB}" target="_blank" rel="noopener noreferrer">source files</a> with their comments stripped, except <code>+</code>, which has no file yet. None of it runs yet; the <a href="/roadmap/">roadmap</a> says where things stand.</p>
+${items}
+</section>`;
 }
 
 // ── Comparison matrix ─────────────────────────────────────────────────────────
@@ -1421,10 +1502,6 @@ export function aboutPage(): string {
   <p class="about__coda">Sometimes I suspect that a complete meta-language, where each word is defined using all other words, is the closest one can get to reflecting on how God works.</p>
   <p class="about__cta">If it interests you, you are welcome to follow along on GitHub: star the <a href="https://github.com/ThobiasKnudsen/LogosLang" target="_blank" rel="noopener noreferrer">seed</a>, watch the language take shape, and word of the first build will come there.</p>
 </article>`;
-}
-
-export function placeholderPage(title: string, body: string): string {
-  return `<section class="placeholder"><h1>${title}</h1><p>${body}</p></section>`;
 }
 
 /** The 404 page. Emitted to `dist/404.html`; Cloudflare serves it with a 404 status. */

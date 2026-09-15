@@ -18,10 +18,10 @@ import {
 import { renderMarkdown, parseFrontmatter } from "./markdown.ts";
 import { page, SITE_URL, absUrl, setAssetUrls } from "./templates.ts";
 import {
+  examplesPage,
   homePage,
   visionPage,
   roadmapPage,
-  placeholderPage,
   downloadPage,
   playgroundPage,
   privacyPage,
@@ -442,7 +442,7 @@ export async function build(): Promise<void> {
   const roadmapDesc =
     "Where Logos actually stands: an honest map of what runs today versus the still-planned pieces of the vision, from the self-hosting seed to dependent-type proofs.";
   const examplesDesc =
-    "Worked Logos examples are on the way, showing the one structure carrying real programs, types, proofs, and rewrites.";
+    "Logos defining itself, one definition at a time: the dyad, the self-classifying logos, type, the scope opener and an ordinary operator built out of all of it, each with a line of prose and lifted from the language's own source.";
   const playgroundDesc =
     "An in-browser Logos playground is on the way: evaluate expressions and watch the same engine the compiler uses rewrite them live.";
   const downloadDesc =
@@ -520,10 +520,7 @@ export async function build(): Promise<void> {
       active: "examples",
       path: "/examples/",
       description: examplesDesc,
-      main: placeholderPage(
-        "Examples",
-        "Worked examples are on the way, showing the one structure carrying real programs, types, proofs, and rewrites.",
-      ),
+      main: examplesPage(),
     }),
   );
   await writePage(
