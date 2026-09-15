@@ -137,7 +137,7 @@ function initDockHide(): void {
 // re-centering jitter). Pure progressive enhancement: with JS off (or reduced
 // motion) the first phrase stays shown. Pauses while the pointer is over the
 // rotator so a reader can hold a phrase.
-// ── Wisdom banner: a drifting frieze pinned to the top of the home page ──────
+// ── Wisdom band: a drifting frieze under the hero on the home page ───────────
 // One movement, and it is ours: a rAF loop nudges scrollLeft so the quotes travel
 // slowly leftwards across the band. It is the same scrollLeft a reader moves by
 // swiping or dragging, so a hand scroll adopts the drift's position rather than
@@ -147,14 +147,14 @@ function initDockHide(): void {
 //
 // The frieze was a vertical rail down the page's middle for a day (Thobias, 11
 // September 2026). That version had to carry a SECOND movement, travelling with the
-// page, and the accumulator pump it needed is gone with it: a band pinned to the
-// screen does not travel with the page at all. It is the simpler of the two.
+// page, and the accumulator pump it needed is gone with it: a horizontal band, in
+// flow or pinned, has only the one drift. It is the simpler of the two.
 //
 // Hover and focus pause the drift so a passage can be read and selected. That was
 // wrong on the rail, where scrolling it by hand WAS the interaction and a pause on
-// pointer-enter stopped the drift the moment a reader reached for it. On a band
-// across the top of the screen a pointer is usually on its way somewhere else, and
-// stopping under one is what lets a quote be finished.
+// pointer-enter stopped the drift the moment a reader reached for it. On a
+// horizontal band a pointer is usually on its way somewhere else, and stopping under
+// one is what lets a quote be finished.
 function initWisdom(): void {
 	const frieze = document.querySelector<HTMLElement>('.wisdom__scroll');
 	const track = frieze?.querySelector<HTMLElement>('.wisdom__track');

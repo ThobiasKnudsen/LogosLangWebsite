@@ -1328,22 +1328,17 @@ function notifySectionHtml(): string {
 </section>`;
 }
 
-// The homepage is the quote banner plus one two-column grid (Thobias, 11 September
-// 2026): the frieze pinned across the top of the screen with the dock beneath it,
-// then every prose section down the left and one continuous code listing down the
-// right, both running the full height of the document.
+// The homepage is one two-column grid (Thobias, 11 September 2026): every prose
+// section down the left and one continuous code listing down the right, both running
+// the full height of the document. Below the grid's breakpoint the two columns become
+// one; see .page-grid.
 //
-// The banner is fixed, so it is out of flow and its position in this markup does not
-// matter to the layout; it leads because it leads the page. `body.home` is what gives
-// the dock, the theme toggle and .page-main their clearance below it, so the banner
-// and that class travel together: the banner belongs to the home page alone. Below
-// the grid's breakpoint the two columns become one and the banner stays; see
-// .page-grid and .wisdom.
+// The quote band sits in the left column directly under the hero, the "Logos is
+// maximally meta" paragraph (Thobias, 15 September 2026). It was pinned across the
+// top of the screen for four days before that, and a vertical rail between the two
+// columns for a day before that; in flow under the hero is where it began.
 export function homePage(): string {
-  return `<section class="wisdom" aria-label="On the Logos, voices across the ages">
-  <div class="wisdom__scroll"><div class="wisdom__track">${wisdomUnits()}</div></div>
-</section>
-<div class="page-grid">
+  return `<div class="page-grid">
   <div class="page-grid__text">
     <section class="hero">
       <h1 class="hero__headline">
@@ -1352,6 +1347,9 @@ export function homePage(): string {
         <span class="sr-only">Λόγος: one language for everything.</span>
       </h1>
       <p class="hero__sub">Logos is maximally meta. Its grammar, types, proofs, compiler and interpreter live in the same graph as your program, so your code can read and redefine any of them, and every change is checked. Meta used to mean unchecked and slow. Here it is neither.</p>
+    </section>
+    <section class="wisdom" aria-label="On the Logos, voices across the ages">
+      <div class="wisdom__scroll"><div class="wisdom__track">${wisdomUnits()}</div></div>
     </section>
 ${metaLadderHtml()}
 ${structureHtml()}

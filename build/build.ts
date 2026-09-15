@@ -465,7 +465,6 @@ export async function build(): Promise<void> {
     page({
       title: "Λόγος",
       active: "",
-      bodyClass: "home",
       path: "/",
       description: homeDesc,
       jsonLd: [

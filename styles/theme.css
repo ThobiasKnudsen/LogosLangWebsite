@@ -21,13 +21,6 @@
 	   #fff/#ffffff anywhere on the site. */
     --white: #fdf8e3;
     --nav-height: 4.5rem;
-    /* The homepage's pinned quote banner (.wisdom). Everything the page hangs off the
-	   top of the screen is measured from it: the dock, the theme toggle and the main
-	   column all start below it on the home page. Tall enough for the longest stanza
-	   in the frieze, which runs to four lines plus its author, at the band's own type
-	   size; the band is a fixed height rather than an auto one so a four-line quote
-	   scrolling past a one-line quote never changes what the page sits under. */
-    --banner-height: 7.25rem;
     /* Corner reserved for the fixed theme toggle: its right inset (1.15rem) + track
 	   width (3.6rem) + a matching 1.15rem margin on its LEFT, so the gap between the
 	   dock and the toggle is exactly the toggle's own margin to the screen edge. */
@@ -197,22 +190,10 @@ a {
     box-shadow: 0 10px 30px -18px rgba(22, 22, 15, 0.4);
     transition: transform 0.28s ease;
 }
-/* On the home page the dock hangs under the pinned quote banner rather than at the
-   top of the screen. */
-body.home .dock {
-    inset-block-start: calc(var(--banner-height) + 0.85rem);
-}
 /* Scrolling down tucks the dock away (initDockHide); scrolling up brings it back.
    The offset covers the dock's own top inset plus its shadow. */
 .dock.is-hidden {
     transform: translateY(calc(-100% - 1.35rem));
-}
-/* The same tuck, lengthened by the banner it now sits under: the dock has to clear
-   the band's full height, or it would stop halfway and leave its shadow smudging the
-   band's lower edge. The banner is opaque and stacked above the dock, so the dock
-   passes behind it on the way out. */
-body.home .dock.is-hidden {
-    transform: translateY(calc(-100% - var(--banner-height) - 1.35rem));
 }
 @media (prefers-reduced-motion: reduce) {
     .dock {
@@ -463,11 +444,6 @@ body.home .dock.is-hidden {
     align-items: center;
     cursor: pointer;
 }
-/* Down past the banner on the home page, so it keeps its own inset from the dock's
-   row rather than floating over the quotes. */
-body.home .theme-switch {
-    inset-block-start: calc(var(--banner-height) + 1.15rem);
-}
 .theme-switch__input {
     position: absolute;
     width: 1px;
@@ -538,19 +514,12 @@ body.home .theme-switch {
 .page-main {
     padding-top: var(--nav-height);
 }
-/* The home page carries the pinned quote banner above the dock, so its content
-   clears both. Only the home page: every other page keeps the dock at the top of the
-   screen, which is why this is a body class and not a change to .page-main itself
-   (Thobias, 11 September 2026). */
-body.home .page-main {
-    padding-top: calc(var(--banner-height) + var(--nav-height));
-}
 
 /* ── The homepage grid ────────────────────────────────────────────────────────
    Two columns running the full height of the document: every prose section down the
    left, one continuous code listing down the right. The quotes ran between them as a
-   third column for a day; they are a pinned banner across the top of the screen now,
-   so the two survivors close up (Thobias, 11 September 2026).
+   third column for a day (Thobias, 11 September 2026); they are a band inside the
+   left column now, under the hero (see .wisdom), so the two survivors close up.
 
    The measure is still the dock's own thickness. Prose to code is two of them, half
    the four the rail needed to sit in the middle with a gutter either side. The two
@@ -1078,11 +1047,12 @@ body.home .page-main {
 #dyad-arrow path {
     fill: var(--muted);
 }
-/* ── Wisdom banner ────────────────────────────────────────────────────────────
-   The home page's top edge: a slow right-to-left drift of reflections on the Logos,
-   pinned across the screen with the dock hanging beneath it, so the quotes are there
-   at every scroll position (Thobias, 11 September 2026). It was a vertical rail
-   between the prose and the code for a day, and a band under the hero before that.
+/* ── Wisdom band ──────────────────────────────────────────────────────────────
+   A slow right-to-left drift of reflections on the Logos, framed by two hairlines
+   like an inscription, directly under the hero in the prose column (Thobias, 15
+   September 2026). It was pinned across the top of the screen for four days before
+   that, a vertical rail between the prose and the code for a day before that, and a
+   band under the hero, where it began, before that.
 
    Each quote exists exactly ONCE in the track. The drift is driven in JS by nudging
    scrollLeft (see initWisdom), which is the same scrollLeft a reader moves by
@@ -1093,20 +1063,16 @@ body.home .page-main {
    a passage can be read and selected. The Greek is real, copyable text, not an
    image. */
 .wisdom {
-    position: fixed;
-    inset-block-start: 0;
-    inset-inline: 0;
-    /* Over the dock (z-index 50), which tucks up behind this band when the page
-       scrolls down, and under the theme toggle (60), which clears the band anyway. */
-    z-index: 55;
-    /* Fixed, not auto: see --banner-height. Everything below is centred in it. */
-    height: var(--banner-height);
+    /* The same air above it that the ladder and the signup keep above themselves. */
+    margin-top: clamp(4rem, 10vh, 7rem);
+    /* A fixed height, not an auto one: tall enough for the longest stanza, four lines
+       plus its author, so a four-line quote drifting past a one-line quote never
+       moves the sections below. Everything inside is centred in it. */
+    height: 7.25rem;
     display: flex;
     align-items: center;
     background: var(--surface);
-    /* One hairline, along the bottom. There is nothing above the band to divide it
-       from, since it sits on the top edge of the screen. */
-    border-block-end: 1px solid var(--hairline);
+    border-block: 1px solid var(--hairline);
 }
 /* The scroller: horizontally scrollable by hand, and by the drift, which shares the
    same scrollLeft (see initWisdom). The scrollbar itself is hidden, since the drift
@@ -1170,9 +1136,9 @@ body.home .page-main {
     margin: 0;
     font-family: var(--serif);
     font-style: italic;
-    /* Sized so the longest stanza, four lines and an author, fits the pinned band.
-       The band is permanent chrome now, so it has to be quiet: this is two thirds of
-       the size it read at when it was a band the page scrolled past. */
+    /* Sized so the longest stanza, four lines and an author, fits the band's fixed
+       height. Kept at the quiet size it took as pinned chrome, two thirds of what it
+       read at before that, since the band now shares a column with the prose. */
     font-size: clamp(0.8rem, 1vw, 0.92rem);
     line-height: 1.3;
     color: var(--heading);
