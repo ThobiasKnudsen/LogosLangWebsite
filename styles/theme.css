@@ -1235,6 +1235,7 @@ a {
 .compare__chips {
     display: flex;
     flex-wrap: wrap;
+    justify-content: center;
     align-items: center;
     gap: 0.4rem;
     margin-top: 1.2rem;
@@ -1264,10 +1265,19 @@ a {
    bands over each scrollable edge, shown/hidden by initCompare via .show-left /
    .show-right. Pointer-events off so they never block scrolling or clicks. The
    left hint starts AFTER the pinned capability column (which is opaque and would
-   swallow an edge-anchored fade). */
+   swallow an edge-anchored fade).
+
+   The wrapper is as wide as the table wants to be and no wider, centred, so a
+   short table (the homepage's five columns) is a compact block rather than five
+   columns stretched across the page (Thobias, 21 September 2026); a table wider
+   than the page is capped at the page and scrolls inside .compare__scroll as
+   before. The hints and the floating header both measure this box, so they
+   follow it. */
 .compare__shadows {
     position: relative;
-    margin-top: 1.2rem;
+    width: fit-content;
+    max-width: 100%;
+    margin: 1.2rem auto 0;
 }
 .compare__shadows::before,
 .compare__shadows::after {
@@ -1354,9 +1364,10 @@ a {
 .compare__table tbody tr:last-child td {
     border-bottom: 0;
 }
-/* Each language column has a floor, so the table is as wide as the columns it
-   shows: all eleven come to the 82rem the table used to be pinned at, and the
-   homepage's five fit a laptop without scrolling. A hidden column takes nothing. */
+/* Each language column has a floor and otherwise takes its content, so the table
+   is as wide as the columns it shows: all eleven come to the 82rem the table used
+   to be pinned at, and the homepage's five make a block around 55rem wide that
+   fits a laptop without scrolling. A hidden column takes nothing. */
 .compare__lang {
     min-width: 6.1rem;
 }
