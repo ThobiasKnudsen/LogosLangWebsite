@@ -652,7 +652,9 @@ a {
    being buttons. */
 .showcase {
     max-width: none;
-    margin: clamp(2.5rem, 6vh, 4rem) auto 0;
+    /* Twice the air it first had under the heading (Thobias, 22 September 2026;
+       clamp(2.5rem, 6vh, 4rem) before). */
+    margin: clamp(5rem, 12vh, 8rem) auto 0;
     padding-inline: var(--gutter);
 }
 .showcase__box {

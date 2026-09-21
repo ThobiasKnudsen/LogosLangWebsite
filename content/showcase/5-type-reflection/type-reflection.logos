@@ -2,8 +2,8 @@
 # and types compare by identity
 x := i32 5,
 
-same := x:dyad.type == i32,     # true
-cross := x:dyad.type == f64,    # false
-meta := i32:dyad.type == type,  # true: the root type
+same := x:type == i32,     # true
+cross := x:type == f64,    # false
+meta := i32:type == type,  # true: the root type
 
 print «{same and meta and not (cross)}»   # true
