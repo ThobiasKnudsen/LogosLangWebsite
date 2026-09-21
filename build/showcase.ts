@@ -12,7 +12,8 @@
 // value and is printed, which is why the Logos versions end in a bare expression
 // where the others print. The other languages are written as their idiomatic
 // equivalents, and where a language cannot do what the tab shows its pane says
-// so instead of showing a workaround (Thobias, 22 September 2026).
+// so instead of showing a workaround (Thobias, 22 September 2026; Zig and C
+// free by hand but track no ownership, so they say so on that tab).
 //
 // Every tab x language pair is rendered at build time (Shiki for the other
 // languages, the site's own tokenizer for Logos) and shipped hidden; the client
@@ -170,7 +171,7 @@ sum_to(1000000)`,
   {
     id: "own",
     label: "Ownership",
-    none: ["python", "ts"],
+    none: ["zig", "c", "python", "ts"],
     code: {
       logos: `# alloc returns an owning pointer and writes the
 # teardown into this scope itself: \`defer free a\`
@@ -183,30 +184,6 @@ fn main() {
     let a = Box::new(40);
     let b = a; // ownership moves to b; a is gone
     println!("{}", *b); // 40
-}`,
-      zig: `// nothing is freed for you; \`defer\` writes the free
-// beside the allocation that needs it
-const std = @import("std");
-
-pub fn main() !void {
-    const gpa = std.heap.page_allocator;
-    const a = try gpa.create(i32);
-    defer gpa.destroy(a);
-    a.* = 40;
-    const b = a; // another name for the same place
-    std.debug.print("{d}\\n", .{b.*}); // 40
-}`,
-      c: `// malloc returns a pointer; nothing frees it but you
-#include <stdio.h>
-#include <stdlib.h>
-
-int main(void) {
-    int *a = malloc(sizeof *a);
-    *a = 40;
-    int *b = a; /* a second name; a is still live */
-    printf("%d\\n", *b); /* 40 */
-    free(b);
-    return 0;
 }`,
     },
   },

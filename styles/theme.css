@@ -707,17 +707,25 @@ a {
     display: grid;
 }
 /* The message for a language that cannot do what the tab shows: alone in the
-   middle of its pane, in the muted colour, no code. */
+   middle of its pane, both ways, in a rounded box outlined in the theme's
+   orange (Thobias, 22 September 2026), no code. The wrapper stretches to the
+   pane and centres the box; the box's auto margins centre it again should the
+   wrapper ever fall short of the pane. */
 .showcase__none {
     display: grid;
     place-items: center;
+    align-self: stretch;
+    min-height: 100%;
     padding: 2rem 1.5rem;
     text-align: center;
-    color: var(--muted);
     font-size: 0.9rem;
 }
 .showcase__none p {
-    margin: 0;
+    margin: auto;
+    padding: 0.55rem 1.1rem;
+    border: 1px solid var(--warn-border);
+    border-radius: 0.6rem;
+    color: var(--warn-text);
 }
 .showcase__pane--other {
     border-inline-start: 1px solid var(--hairline);
