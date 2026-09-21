@@ -38,6 +38,8 @@ const LOGOS_KEYWORDS = new Set([
   "defer",
   "share",
   "take",
+  // Output (the designed spelling; the seed has no I/O yet).
+  "print",
 ]);
 // `@dyad` / `@void` tokenize as the `@` operator plus a bare identifier, so the
 // pointer type names appear here without their prefix.

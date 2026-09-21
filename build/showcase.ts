@@ -8,9 +8,12 @@
 // loops, `-> type` functions resolved at parse time, the drop model (alloc, own,
 // `@`), `.compile()`, and the dyad view (`x:dyad.type`). The one liberty is `mut`
 // on reassigned locals, the spelling the newest examples use though the seed does
-// not yet enforce it. There is no I/O in the seed: a file's tail expression is its
-// value and is printed, which is why the Logos versions end in a bare expression
-// where the others print. The other languages are written as their idiomatic
+// not yet enforce it, and `print`, the designed spelling for output (Thobias, 22
+// September 2026: `print «…»` for a string, `print value` for a value), which the
+// seed does not have yet; there a file's tail expression is its value and is
+// printed. The proof tab follows language_sketch.logos's conjectures (p1, p3, p4)
+// and DESIGN.md's ruling that a proof applies as a rewrite. The other languages
+// are written as their idiomatic
 // equivalents, and where a language cannot do what the tab shows its pane says
 // so instead of showing a workaround (Thobias, 22 September 2026; Zig and C
 // free by hand but track no ownership, so they say so on that tab).
@@ -35,6 +38,7 @@ const LANGS: Lang[] = [
   { id: "c", name: "C", shiki: "c" },
   { id: "python", name: "Python", shiki: "python" },
   { id: "ts", name: "TypeScript", shiki: "typescript" },
+  { id: "lean", name: "Lean 4", shiki: "lean4" },
 ];
 
 interface Example {
@@ -59,7 +63,7 @@ const EXAMPLES: Example[] = [
 double := fn (x := i32 ?) -> i32 ( x + x ),
 mut sum := i32 0,
 for i in 0..7 ( sum = sum + i ),
-double(sum)     # 42, the file's value`,
+print double(sum)   # 42`,
       rust: `// the answer, computed the long way
 fn double(x: i32) -> i32 {
     x + x
@@ -111,6 +115,14 @@ const double = (x: number): number => x + x;
 let sum = 0;
 for (let i = 0; i < 7; i++) sum += i;
 console.log(double(sum)); // 42`,
+      lean: `-- the answer, computed the long way
+def double (x : Int) : Int := x + x
+
+def main : IO Unit := do
+  let mut sum : Int := 0
+  for i in [0:7] do
+    sum := sum + i
+  IO.println (double sum) -- 42`,
     },
   },
   {
@@ -126,7 +138,7 @@ pick := fn (i := i32 ?) -> type (
 
 mut a := pick(1) ?,   # a is declared as an f64
 a = 9.9,
-pick(0) == i32        # true`,
+print (pick(0) == i32)   # true`,
       zig: `// a function can return a type, run at compile time
 const std = @import("std");
 
@@ -146,12 +158,18 @@ def pick(i: int) -> type:
 
 a = pick(1)(9.9)       # an ordinary float
 print(pick(0) is int)  # True`,
+      lean: `-- a definition can return a type; types are terms
+def pick (i : Nat) : Type :=
+  if i = 0 then Int else Float
+
+def a : pick 1 := (9.9 : Float) -- a is a Float
+example : pick 0 = Int := rfl`,
     },
   },
   {
     id: "compile",
     label: "Compile on request",
-    none: ["rust", "zig", "c", "python", "ts"],
+    none: ["rust", "zig", "c", "python", "ts", "lean"],
     code: {
       logos: `# interpreted by default; the source asks for machine
 # code, and the next call jumps to it
@@ -165,19 +183,19 @@ sum_to := fn (n := i64 ?) -> i64 (
     s
 ),
 sum_to.compile(),
-sum_to(1000000)`,
+print sum_to(1000000)`,
     },
   },
   {
     id: "own",
     label: "Ownership",
-    none: ["zig", "c", "python", "ts"],
+    none: ["zig", "c", "python", "ts", "lean"],
     code: {
       logos: `# alloc returns an owning pointer and writes the
 # teardown into this scope itself: \`defer free a\`
 a := alloc i32 40,
 b := own a,   # moves ownership; a's free no-ops
-b@            # 40`,
+print b@      # 40`,
       rust: `// a Box owns its heap value and frees it when the
 // owner goes out of scope; a move hands that duty on
 fn main() {
@@ -200,7 +218,7 @@ same := x:dyad.type == i32,     # true
 cross := x:dyad.type == f64,    # false
 meta := i32:dyad.type == type,  # true: the root type
 
-same and meta and not (cross)`,
+print (same and meta and not (cross))   # true`,
       rust: `// a value's type has an identity at run time,
 // though nothing more of it can be read back
 use std::any::{Any, TypeId};
@@ -237,6 +255,48 @@ const x = 5;
 const same = typeof x === "number"; // true
 const cross = typeof x === "string"; // false
 console.log(same && !cross);`,
+      lean: `-- types are terms; a metaprogram reads a value's type
+import Lean
+open Lean Meta
+
+def x : Int := 5
+
+#eval show MetaM Bool from do
+  let t ← inferType (mkConst \`\`x)
+  return t == mkConst \`\`Int -- true`,
+    },
+  },
+  {
+    id: "proof",
+    label: "A proof",
+    none: ["rust", "zig", "c", "python", "ts"],
+    code: {
+      logos: `# a conjecture states a rewrite; its proof is the
+# chain of steps that gets there, each citing a rule
+twice := conjecture ( a + a -> 2 * a )
+    where ( a:dyad.type is number ),
+cancel := conjecture ( a / a -> 1 )
+    where ( a:dyad.type is number and a != 0 ),
+half := conjecture ( (a + a) / a -> 2 )
+    where ( a:dyad.type is number and a != 0 )
+    proof (
+        (a + a) / a
+        -> twice(a + a) / a
+        -> mul_div_assoc((2 * a) / a)
+        -> 2 * cancel(a / a)
+        -> mul_one(2 * 1)
+        -> 2
+    ),
+print half((3 + 3) / 3)   # 2`,
+      lean: `-- a theorem is a type and its proof a term the kernel
+-- checks; the rewrites are the same steps
+import Mathlib
+
+theorem half (a : ℚ) (h : a ≠ 0) :
+    (a + a) / a = 2 := by
+  rw [← two_mul, mul_div_assoc, div_self h, mul_one]
+
+#print axioms half -- the world it rests on`,
     },
   },
 ];
