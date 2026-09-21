@@ -1,0 +1,28 @@
+# the language defines itself: a power operator `^`,
+# written in ordinary Logos and used in the same file
+^ := type (
+    instance = (
+        lhs := ?,
+        rhs := i32 ?,
+        output := type ?,
+        shared run = (
+            mut r := this.output 1,
+            for 0..this.rhs ( r = r * this.lhs ),
+            r
+        )
+    ),
+
+    parse_rank = *.parse_rank + 1,
+    associativity = right,
+    parse = (
+        this.lhs = tape[-1],
+        this.rhs = tape[1],
+        this.output = tape[-1]:dyad.type,
+        tape[0] = this,
+        tape.is_constructed[0] = true,
+        tape.remove(1),
+        tape.remove(-1)
+    )
+),
+f := fn (x := i32 ?) -> i32 ( x ^ 3 + 1 ),
+print «{f(2)}»   # 9

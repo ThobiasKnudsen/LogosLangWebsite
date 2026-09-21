@@ -64,6 +64,7 @@ const LANGS: Lang[] = [
   { id: "c", name: "C", ext: ".c", shiki: "c" },
   { id: "python", name: "Python", ext: ".py", shiki: "python" },
   { id: "ts", name: "TypeScript", ext: ".ts", shiki: "typescript" },
+  { id: "racket", name: "Racket", ext: ".rkt", shiki: "racket" },
   { id: "lean", name: "Lean 4", ext: ".lean", shiki: "lean4" },
 ];
 

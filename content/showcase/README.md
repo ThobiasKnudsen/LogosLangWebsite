@@ -19,6 +19,7 @@ Edit the files here; `npm run dev` rebuilds on save.
   | `.c`      | C          |
   | `.py`     | Python     |
   | `.ts`     | TypeScript |
+  | `.rkt`    | Racket     |
   | `.lean`   | Lean 4     |
 
 - **A language with no file** in a folder is shown as "does not support this"

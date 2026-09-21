@@ -50,6 +50,7 @@ const KEYWORDS = new Set([
   "is",
   "break",
   "self",
+  "this",
   "undefined",
   "true",
   "false",
@@ -138,6 +139,8 @@ function classify(
     return escapeHtml(t);
   }
   if (t === "?") return span("tok-hole", "?");
+  // An operator's own spelling being defined, as in `^ := type (…)`.
+  if (next === ":=") return span("tok-def", escapeHtml(t));
   return span("tok-op", escapeHtml(t));
 }
 
