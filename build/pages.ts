@@ -350,13 +350,14 @@ ${items}
 // ── Comparison matrix ─────────────────────────────────────────────────────────
 // Logos next to the languages a PL-literate visitor reaches for first. The Logos
 // column describes the design Logos is built toward, not software that runs today;
-// the "Usable today" row says so in the table's own terms, and the ladder's Logos
-// rung says it in words. The table keeps the rows where OTHER languages beat Logos
-// (content-addressed code, ecosystem, tooling, being usable at all). It had a lead
-// paragraph saying all this until Thobias cut it (21 September 2026): title,
-// legend, chips, table, notes. Verdicts for the other columns were researched and
-// adversarially fact-checked per language (July 2026); the numbered footnotes carry
-// the nuance a one-glyph cell cannot.
+// the "Usable today" row says so in the table's own terms. The table keeps the rows
+// where OTHER languages beat Logos (content-addressed code, ecosystem, tooling,
+// being usable at all). It had a lead paragraph saying all this until Thobias cut
+// it (21 September 2026): title, legend, chips, table. Verdicts for the other
+// columns were researched and adversarially fact-checked per language (July 2026);
+// the numbered notes carry the nuance a one-glyph cell cannot, and each opens from
+// its number in the cell (a popover; they were a list under the table until 21
+// September 2026).
 //
 // On the homepage the reader chooses the columns (Thobias, 21 September 2026): a ×
 // in each language header hides that column, a chip row above the table adds it
@@ -900,17 +901,22 @@ function compareHtml(toggles?: { hidden: readonly string[] }): string {
   const rows = COMPARE_ROWS.map((row) => {
     const cells = row.cells
       .map((cell, i) => {
+        // The note opens from its number (a native popover; initCompare places it
+        // by the cell, and without JS it opens centred).
         const sup = cell.note
-          ? `<sup class="compare__ref"><a href="#compare-note-${cell.note}" aria-label="Note ${cell.note}">${cell.note}</a></sup>`
+          ? `<button type="button" class="compare__ref" popovertarget="compare-note-${cell.note}" aria-label="Note ${cell.note}">${cell.note}</button>`
           : "";
         return `<td class="compare__cell is-${cell.v}${i === 0 ? " compare__cell--logos" : ""}${off(i)}"${colAttrs(i)}><span aria-hidden="true">${VERDICT_GLYPH[cell.v]}</span><span class="sr-only">${VERDICT_TEXT[cell.v]}</span>${sup}</td>`;
       })
       .join("");
     return `<tr><th scope="row" class="compare__cap">${row.label}<span class="compare__sub">${row.sub}</span></th>${cells}</tr>`;
   }).join("");
+  // One popover per note, after the table; a number in a cell opens its note
+  // (Thobias, 21 September 2026: the notes were a numbered list under the table).
   const notes = COMPARE_NOTES.map(
-    (note, i) => `<li id="compare-note-${i + 1}">${note}</li>`,
-  ).join("");
+    (note, i) =>
+      `<div class="compare__note" id="compare-note-${i + 1}" popover><span class="compare__note-num" aria-hidden="true">${i + 1}</span>${note}</div>`,
+  ).join("\n  ");
   // One chip per language, in column order; a chip is .is-off while its column
   // shows, and the row is .is-empty when nothing is hidden.
   const chips = toggles
@@ -936,7 +942,7 @@ function compareHtml(toggles?: { hidden: readonly string[] }): string {
       </table>
     </div>
   </div>
-  <ol class="compare__notes">${notes}</ol>
+  ${notes}
 </section>`;
 }
 
@@ -1203,7 +1209,6 @@ export function privacyPage(): string {
     <li><code>theme</code> cookie: remembers your light/dark choice (strictly necessary). ~180 days.</li>
     <li><code>localStorage</code> visitor id and <code>sessionStorage</code> session id: the anonymous analytics ids described above. No advertising or third-party cookies are set.</li>
     <li><code>localStorage</code> <code>compareHidden</code>: which columns you have hidden in the homepage's comparison table. A convenience, nothing personal; it stays until you clear site data.</li>
-    <li><code>sessionStorage</code> <code>wisdomIndex</code>: which of the quotes in the page margins comes up next, so you keep meeting new ones as you browse. A single number; it disappears when you close the tab.</li>
   </ul>
 
   <h2>Legal basis and your choices</h2>

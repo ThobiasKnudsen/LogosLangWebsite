@@ -1,9 +1,10 @@
-// The reflections on the Logos across the ages, shown as marginalia: hidden in the
-// page's two outer margins on every page and surfaced one at a time where the
-// pointer rests (see .margin in theme.css and initMarginalia in client/main.ts).
-// They ran as a slow frieze under the homepage hero from 26 August to 21 September
-// 2026 (with a few days pinned across the top of the screen, and one as a vertical
-// rail); Thobias moved them into the margins on 21 September 2026.
+// The reflections on the Logos across the ages, shown as marginalia: spread down
+// the page's two outer margins on every page, invisible until the pointer rests on
+// one, and scrolling with the page like glosses in a manuscript (see .margin in
+// theme.css; no client code). They ran as a slow frieze under the homepage hero
+// from 26 August to 21 September 2026 (with a few days pinned across the top of the
+// screen, and one as a vertical rail); Thobias moved them into the margins on 21
+// September 2026.
 import { escapeHtml } from "./templates.ts";
 
 // Rendered in English (italic, EB Garamond) so visitors actually
@@ -134,16 +135,23 @@ const WISDOM: { text: string; author: string }[] = [
   },
 ];
 
-/** The quotes as a hidden source list in every page's shell: real, crawlable HTML
- *  that the client copies into a margin one quote at a time. Nothing shows without
- *  JS, so it is `hidden` rather than visually parked off-screen. */
-export function wisdomListHtml(): string {
-  return `<div class="wisdom" hidden>${WISDOM.map(
-    (q) =>
-      `<figure class="wisdom__quote"><blockquote class="wisdom__text">${escapeHtml(
-        q.text,
-      )}</blockquote><figcaption class="wisdom__author">- ${escapeHtml(
-        q.author,
-      )}</figcaption></figure>`,
-  ).join("")}</div>`;
+/** The two margins of a page, each a column of quotes spread evenly down the whole
+ *  page height (flex, theme.css). Consecutive quotes alternate sides, so reading
+ *  down the page zigzags through them in the authored order. Each figure is its
+ *  own hover box, the size of its stanza, and fades in after a short pause on it.
+ *  Decorative and hover-only, so hidden from assistive tech. */
+export function wisdomMarginsHtml(): string {
+  const figure = (q: { text: string; author: string }): string =>
+    `<figure class="margin__quote"><blockquote class="wisdom__text">${escapeHtml(
+      q.text,
+    )}</blockquote><figcaption class="wisdom__author">- ${escapeHtml(
+      q.author,
+    )}</figcaption></figure>`;
+  const side = (name: string, parity: number): string =>
+    `<aside class="margin margin--${name}" aria-hidden="true">${WISDOM.filter(
+      (_, i) => i % 2 === parity,
+    )
+      .map(figure)
+      .join("")}</aside>`;
+  return `${side("left", 0)}\n${side("right", 1)}`;
 }

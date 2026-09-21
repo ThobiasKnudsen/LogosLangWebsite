@@ -22,7 +22,6 @@ import type { Roadmap } from '../build/roadmap.ts';
 initThemeToggle();
 initNavMenu();
 initDockHide();
-initMarginalia();
 initScrollbars();
 initAnalytics();
 initNotify();
@@ -130,113 +129,6 @@ function initDockHide(): void {
 	);
 }
 
-// ── Marginalia: the quotes in the page margins ───────────────────────────────
-// The two outer margins (.margin, fixed and click-through) each hold one empty
-// figure. When the pointer rests in a margin for a moment, the next quote from the
-// hidden list (.wisdom, build/wisdom.ts) is copied into that side's figure, placed
-// at the pointer's height, and faded in. It fades out when the pointer leaves the
-// margin, or once it has moved well away from where the quote appeared, and then a
-// fresh quote surfaces at the new resting place after the same pause: the margins
-// are full of them, and wherever the reader lingers one comes up (warp.dev does
-// this with glyphs; Thobias asked for it with the quotes, 21 September 2026). The
-// quotes come in their authored order, and the place in it survives page loads
-// within the visit (sessionStorage), so browsing the site keeps meeting new ones.
-// Touch never hovers, so touch pointers are ignored; the margins are gone on small
-// screens anyway. Nothing shows without JS, and the list itself stays hidden.
-function initMarginalia(): void {
-	const quotes = [...document.querySelectorAll<HTMLElement>('.wisdom .wisdom__quote')];
-	const sides = [...document.querySelectorAll<HTMLElement>('.margin')];
-	if (quotes.length === 0 || sides.length === 0) return;
-
-	const KEY = 'wisdomIndex';
-	const DELAY = 500; // ms the pointer rests in a margin before a quote appears
-	const DRIFT = 160; // px of vertical travel after which a shown quote gives way
-	const MIN_WIDTH = 160; // px; a narrower margin cannot hold a readable quote
-	const PAD = 16; // px kept between a quote and the menu bar / the window's bottom
-
-	let index = 0;
-	try {
-		index = Number(sessionStorage.getItem(KEY)) || 0;
-	} catch {
-		/* ignore */
-	}
-
-	let timer = 0;
-	let shown: HTMLElement | null = null;
-	let shownY = 0;
-	let x = 0;
-	let y = 0;
-
-	const hide = (): void => {
-		clearTimeout(timer);
-		timer = 0;
-		shown?.classList.remove('is-shown');
-		shown = null;
-	};
-
-	// The menu bar's bottom edge on screen (0 while it is tucked away).
-	const barBottom = (): number => {
-		const bar = document.querySelector<HTMLElement>('.dock');
-		return Math.max(bar ? bar.getBoundingClientRect().bottom : 0, 0);
-	};
-
-	// The margin under the pointer: wide enough for a quote, and not under the bar.
-	const sideAt = (): HTMLElement | null => {
-		if (y < barBottom()) return null;
-		for (const side of sides) {
-			const r = side.getBoundingClientRect();
-			if (r.width >= MIN_WIDTH && x >= r.left && x < r.right) return side;
-		}
-		return null;
-	};
-
-	const show = (side: HTMLElement): void => {
-		const fig = side.querySelector<HTMLElement>('.margin__quote');
-		const src = quotes[index % quotes.length];
-		if (!fig || !src) return;
-		fig.innerHTML = src.innerHTML;
-		index = (index + 1) % quotes.length;
-		try {
-			sessionStorage.setItem(KEY, String(index));
-		} catch {
-			/* ignore */
-		}
-		// Centred on the pointer's height, kept clear of the bar and the bottom edge.
-		const h = fig.offsetHeight;
-		const top = barBottom() + PAD;
-		const bottom = window.innerHeight - h - PAD;
-		fig.style.top = `${Math.round(Math.min(Math.max(y - h / 2, top), bottom))}px`;
-		side.classList.add('is-shown');
-		shown = side;
-		shownY = y;
-	};
-
-	document.addEventListener(
-		'pointermove',
-		(e) => {
-			if (e.pointerType === 'touch') return;
-			x = e.clientX;
-			y = e.clientY;
-			const side = sideAt();
-			if (!side) {
-				hide();
-				return;
-			}
-			// Lingering near the quote that is up: leave it to be read.
-			if (shown === side && Math.abs(y - shownY) < DRIFT) return;
-			if (shown) hide();
-			if (!timer) {
-				timer = window.setTimeout(() => {
-					timer = 0;
-					if (sideAt() === side) show(side);
-				}, DELAY);
-			}
-		},
-		{ passive: true },
-	);
-	document.documentElement.addEventListener('pointerleave', hide);
-}
-
 // ── Comparison matrix: scroll hints + floating header ─────────────────────────
 // Two enhancements for a table bigger than most viewports. (1) Edge fade + chevron
 // overlays (.compare__shadows::before/::after) show in which direction more
@@ -247,7 +139,8 @@ function initMarginalia(): void {
 // mirroring scrollLeft onto its own overflow:hidden clip box, which also keeps the
 // capability corner pinned via the same sticky rule as the real header. All of it
 // re-checks on scroll, resize, and font load (which changes column widths). (3) On
-// the homepage, column toggles: see the block at the end.
+// the homepage, column toggles, and (4) the notes' popovers: the two blocks at the
+// end.
 function initCompare(): void {
 	const wrap = document.querySelector<HTMLElement>('[data-compare]');
 	const scroll = wrap?.querySelector<HTMLElement>('.compare__scroll');
@@ -389,6 +282,45 @@ function initCompare(): void {
 				/* ignore */
 			}
 		});
+	}
+
+	// ── Notes (both pages; the markup is compareHtml's)
+	// A number in a cell opens its note, a native popover: light-dismissed, one at
+	// a time. Parked under the number that opened it (above it when there is no
+	// room below) and kept inside the window; the browser's own placement, centred
+	// on the screen, is what a JS-off reader gets. Scrolling the table or the page
+	// closes an open note, since it would otherwise stay put while its cell moved
+	// away. Browsers without popovers show the notes as plain text under the table
+	// (see .compare__note in theme.css) and get none of this.
+	if ('showPopover' in HTMLElement.prototype) {
+		let opener: HTMLElement | null = null;
+		document.addEventListener('click', (e) => {
+			const ref = (e.target as HTMLElement | null)?.closest<HTMLElement>('.compare__ref');
+			if (ref) opener = ref;
+		});
+		const notes = [...document.querySelectorAll<HTMLElement>('.compare__note')];
+		for (const note of notes) {
+			note.addEventListener('toggle', (e) => {
+				if ((e as ToggleEvent).newState !== 'open' || !opener) return;
+				const r = opener.getBoundingClientRect();
+				const w = note.offsetWidth;
+				const h = note.offsetHeight;
+				const GAP = 6;
+				const EDGE = 8;
+				const left = Math.min(Math.max(r.left + r.width / 2 - w / 2, EDGE), window.innerWidth - w - EDGE);
+				const below = r.bottom + GAP;
+				const top = below + h > window.innerHeight - EDGE ? r.top - GAP - h : below;
+				note.style.inset = 'auto';
+				note.style.margin = '0';
+				note.style.left = `${Math.round(left)}px`;
+				note.style.top = `${Math.round(Math.max(top, EDGE))}px`;
+			});
+		}
+		const closeNotes = (): void => {
+			for (const note of notes) if (note.matches(':popover-open')) note.hidePopover();
+		};
+		scroll.addEventListener('scroll', closeNotes, { passive: true });
+		window.addEventListener('scroll', closeNotes, { passive: true });
 	}
 
 	rebuild();

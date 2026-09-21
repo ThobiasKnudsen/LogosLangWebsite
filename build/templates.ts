@@ -1,6 +1,6 @@
 // Static HTML templates shared by every page: the top menu bar, the page margins,
 // the footer, the pre-paint theme script, and the full-document shell.
-import { wisdomListHtml } from './wisdom.ts';
+import { wisdomMarginsHtml } from './wisdom.ts';
 
 const GITHUB = 'https://github.com/ThobiasKnudsen/LogosLang';
 
@@ -95,9 +95,9 @@ function dockHtml(active: string): string {
 	// The dock's styled button is GitHub while no public builds exist (a Download
 	// button would lead to an empty page); it returns to Download with the first
 	// release. At phone widths the styled button hides and the dropdown's GitHub
-	// row takes over (see theme.css). The bar spans the window with one line under
-	// it; its row is the page column, between the two margin lines (Thobias, 21
-	// September 2026; it floated as a rounded frosted dock before that).
+	// row takes over (see theme.css). The bar is the page column's width, between
+	// the two margin lines, with one line under it (Thobias, 21 September 2026; it
+	// floated as a rounded frosted dock before that).
 	return `<header class="dock">
   <div class="dock__row">
     <a class="wordmark" href="/" aria-label="Logos home">Λόγος</a>
@@ -114,14 +114,11 @@ function dockHtml(active: string): string {
 </header>`;
 }
 
-// The two outer margins beside the page column, each drawn by one hairline, on
-// every page with a menu bar. They are fixed, click-through, and hidden on narrow
-// windows (theme.css). Each holds one empty figure that initMarginalia fills with
-// the next quote from the hidden list and fades in where the pointer rests.
+// The two outer margins beside the page column, each drawn by one hairline the
+// full height of the page, on every page with a menu bar, hidden on narrow windows
+// (theme.css). They hold the quotes (build/wisdom.ts).
 function marginsHtml(): string {
-	return `${wisdomListHtml()}
-<aside class="margin margin--left" aria-hidden="true"><figure class="margin__quote"></figure></aside>
-<aside class="margin margin--right" aria-hidden="true"><figure class="margin__quote"></figure></aside>`;
+	return wisdomMarginsHtml();
 }
 
 function footerHtml(): string {

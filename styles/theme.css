@@ -22,17 +22,17 @@
     --white: #fdf8e3;
     /* The menu bar's height: the page content starts under it. */
     --nav-height: 3.5rem;
-    /* The page column. Everything on a page with a menu bar (the bar's row, the
-       sections, the footer's contents) sits inside it, and two hairlines frame it,
-       one down each side, running the full height of the window (the margins were
-       Thobias's ask on 21 September 2026, after zed.dev and warp.dev). --margin is
-       what is left over on each side, zero once the window is narrower than the
-       column; it resolves its 100% against whatever box uses it, and the bar
-       (fixed, so the window) and the page (the body) are the same width. */
-    --column: 64rem;
+    /* The page column. Everything on a page with a menu bar (the bar, the
+       sections, the footer) sits inside it, and two hairlines frame it, one down
+       each side, running the full height of the page (the margins were Thobias's
+       ask on 21 September 2026, after zed.dev and warp.dev; a quarter wider than
+       the 64rem column's the same evening, which this width gives at 1440px).
+       --margin is what is left over on each side, zero once the window is narrower
+       than the column; it resolves its 100% against whatever box uses it, and the
+       bar (fixed, so the window) and the page (the body) are the same width. */
+    --column: 57.5rem;
     --margin: max(0px, calc((100% - var(--column)) / 2));
-    /* Windows narrower than this hide the margin lines: the margins are under 6rem
-       there, too thin to be a frame. Kept in sync with the .margin media query. */
+    /* The side padding a section keeps inside the column. */
     --gutter: 1.25rem;
 
     /* Light theme */
@@ -150,6 +150,7 @@ html {
 }
 body {
     margin: 0;
+    position: relative; /* the margins (.margin) span the body's full height */
     background: var(--bg);
     color: var(--text);
     font-family: var(--sans);
@@ -173,18 +174,17 @@ a {
 }
 
 /* ── Menu bar ───────────────────────────────────────────────────────────────
-   A flat bar across the very top of the window with one hairline under it and
-   nothing else drawn: no box, no corners, no shadow (Thobias, 21 September 2026;
-   it was a rounded frosted dock floating below the top edge before that). Its row
-   is the page column, so the wordmark and the theme toggle sit just inside the two
-   margin lines; the bar itself paints over the lines while it is on screen. */
+   A flat bar at the very top of the window, exactly the page column wide, with
+   one hairline under it and nothing else drawn: no box, no corners, no shadow
+   (Thobias, 21 September 2026; it was a rounded frosted dock floating below the
+   top edge before that, and for a few hours a bar across the whole window). It
+   sits between the two margin lines, which run on past it to the top edge. */
 .dock {
     position: fixed;
     inset-block-start: 0;
-    inset-inline: 0;
+    inset-inline: var(--margin);
     z-index: 50;
     height: var(--nav-height);
-    padding-inline: var(--margin);
     background: var(--bg);
     border-bottom: 1px solid var(--hairline);
     transition: transform 0.28s ease;
@@ -270,6 +270,7 @@ a {
     display: none; /* shown below 60rem, together with the button */
 }
 .nav-toggle {
+    border-radius: 8px;
     display: none;
     position: relative; /* lets the open state stack the button above the menu */
     align-items: center;
@@ -287,6 +288,8 @@ a {
     color: var(--btn-hover);
 }
 .nav-menu {
+    border-radius: 12px;
+    border-start-start-radius: 0; /* squared where it continues the button's edge */
     position: absolute;
     /* Tucked 1px under the button's bottom edge: the open button paints over the
 	   shared edge, so the two boxes merge into a single shape. */
@@ -306,11 +309,13 @@ a {
     display: none;
 }
 /* Open state: button and dropdown read as ONE shape. The button takes the menu's
-   surface and opens the border between them (it sits
+   surface, squares its bottom corners, and opens the border between them (it sits
    above the menu's tucked-under top edge, so it owns the seam). Hovering the
    button then outlines the whole merged shape: the button's own hover recolours
    its border, and the :has() rule recolours the menu's border in the same move. */
 .nav-toggle[aria-expanded="true"] {
+    border-end-start-radius: 0;
+    border-end-end-radius: 0;
     background: var(--surface);
     border-block-end-color: transparent;
     z-index: 56;
@@ -381,6 +386,8 @@ a {
     /* The burger sits at the dock's right edge here, so there is no room to the
 	   right: the menu hangs left (right edges aligned) to stay on screen. */
     .nav-menu {
+        border-start-start-radius: 12px;
+        border-start-end-radius: 0;
         inset-inline-start: auto;
         inset-inline-end: 0;
     }
@@ -391,6 +398,7 @@ a {
 
 /* ── Buttons ──────────────────────────────────────────────────────────────── */
 .logos-btn {
+    border-radius: 999px;
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
@@ -410,6 +418,7 @@ a {
     transform: translateY(-1px);
 }
 .logos-btn--download {
+    border-radius: 7px;
     background: var(--download-bg);
     color: var(--download-fg);
     border-color: var(--download-fg);
@@ -419,6 +428,7 @@ a {
     filter: brightness(1.05);
 }
 .logos-btn--ghost {
+    border-radius: 7px;
     background: var(--surface);
     color: var(--heading);
     border-color: var(--hairline);
@@ -451,6 +461,7 @@ a {
     pointer-events: none;
 }
 .theme-switch__track {
+    border-radius: 999px;
     position: relative;
     width: 3.6rem;
     height: 1.9rem;
@@ -459,6 +470,7 @@ a {
     transition: background 0.18s ease;
 }
 .theme-switch__thumb {
+    border-radius: 50%;
     position: absolute;
     top: 50%;
     inset-inline-start: 0.2rem;
@@ -516,17 +528,26 @@ a {
 
 /* ── Margins ──────────────────────────────────────────────────────────────────
    The two outer margins beside the page column, each drawn as one hairline the
-   full height of the window, fixed so they never scroll away, and click-through
-   so nothing under them is ever blocked. Each holds one quote figure the client
-   fills and fades in where the pointer rests (initMarginalia): the reflections
-   on the Logos wait in the margins, like glosses in a manuscript, and surface
-   one at a time after a short pause. The quotes used to drift as a band under the
-   hero; Thobias moved them here on 21 September 2026, after warp.dev's margins. */
+   full height of the page, in the page (not fixed) so they and everything in them
+   scroll with it, and click-through so nothing beside them is ever blocked. Each
+   is a column of the quotes on the Logos, spread evenly from the top of the page
+   to its foot like glosses in a manuscript, every one invisible until the pointer
+   has rested on it for a moment. The hover box is the stanza's own box, a hair
+   larger than the text (Thobias, 21 September 2026; earlier that day one quote
+   surfaced wherever the pointer rested, anywhere in the margin, and the band
+   under the hero drifted them past before that). A page shorter than its column
+   of quotes shows as many as fit and clips the rest. */
 .margin {
-    position: fixed;
+    position: absolute;
     inset-block: 0;
     width: var(--margin);
     z-index: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+    align-items: center;
+    padding-block: 4rem;
+    overflow: hidden;
     pointer-events: none;
 }
 .margin--left {
@@ -544,24 +565,30 @@ a {
     }
 }
 .margin__quote {
-    position: absolute;
-    inset-inline: 0.75rem;
+    flex: none;
+    max-width: calc(100% - 1.5rem);
     margin: 0;
+    padding: 0.3rem 0.45rem;
     text-align: center;
+    pointer-events: auto;
     opacity: 0;
     transition: opacity 0.45s ease;
 }
-.margin.is-shown .margin__quote {
+/* The pause before a quote surfaces is the transition's delay on the way in
+   only: leaving fades it out at once. */
+.margin__quote:hover {
     opacity: 1;
+    transition-delay: 0.5s;
 }
-/* The stanza, wrapped as prose: the margin is too narrow for the authored lines,
-   so the "\n" breaks collapse and the text fills the width it has. */
+/* The stanza keeps its authored lines where they fit the margin and wraps only
+   a line that does not, so its box is the shape it was written in. */
 .margin__quote .wisdom__text {
     margin: 0;
     font-family: var(--serif);
     font-style: italic;
     font-size: 0.88rem;
     line-height: 1.35;
+    white-space: pre-line;
     color: var(--heading);
 }
 .margin__quote .wisdom__author {
@@ -652,6 +679,7 @@ a {
     flex-wrap: wrap;
 }
 .notify__email {
+    border-radius: 7px;
     font: inherit;
     font-size: 0.9rem;
     padding: 0.6rem 0.95rem;
@@ -795,8 +823,9 @@ a {
     /* The pinned capability column's exact width; the left scroll hint starts
        where it ends. Referenced by .compare__cap and .compare__shadows::before. */
     --compare-cap: 15rem;
-    /* The whole page column (the section's own gutter is the ordinary one), so
-       the table has the column's full width before it has to scroll. */
+    /* The whole page column: with the margin lines showing, the table runs from
+       line to line with no gutter and no side borders of its own (Thobias, 21
+       September 2026); narrower windows keep the ordinary gutter and frame. */
     max-width: none;
     /* .compare__scroll clips the wide table for scrolling, but the table's
        intrinsic width (the sum of its columns' floors) still counts toward this
@@ -808,6 +837,11 @@ a {
     overflow-x: clip;
     margin: clamp(4rem, 10vh, 7rem) auto clamp(4rem, 10vh, 6rem);
     padding-inline: var(--gutter);
+}
+@media (min-width: 76.01rem) {
+    .compare {
+        padding-inline: 0;
+    }
 }
 @media (max-width: 40rem) {
     .compare {
@@ -899,6 +933,7 @@ a {
     display: none;
 }
 .compare__chip {
+    border-radius: 999px;
     padding: 0.2rem 0.7rem;
     border: 1px solid var(--hairline);
     background: var(--surface);
@@ -918,16 +953,13 @@ a {
    left hint starts AFTER the pinned capability column (which is opaque and would
    swallow an edge-anchored fade).
 
-   The wrapper is as wide as the table wants to be and no wider, centred, so a
-   short table (the homepage's five columns) is a compact block rather than five
-   columns stretched across the page (Thobias, 21 September 2026); a table wider
-   than the page is capped at the page and scrolls inside .compare__scroll as
-   before. The hints and the floating header both measure this box, so they
-   follow it. */
+   The wrapper is the column's full width, so the table spreads its columns over
+   all of it (Thobias, 21 September 2026, the evening; it shrank to fit-content
+   that afternoon); a table wider than the column scrolls inside .compare__scroll.
+   The hints and the floating header both measure this box, so they follow it. */
 .compare__shadows {
     position: relative;
-    width: fit-content;
-    max-width: 100%;
+    width: 100%;
     margin: 1.2rem auto 0;
 }
 .compare__shadows::before,
@@ -970,6 +1002,13 @@ a {
     overflow-x: auto;
     border: 1px solid var(--hairline);
     background: var(--surface);
+}
+/* Line to line: with the margin lines showing, the table's own side borders
+   would double them (see .compare). */
+@media (min-width: 76.01rem) {
+    .compare__scroll {
+        border-inline: 0;
+    }
 }
 .compare__table {
     width: 100%;
@@ -1072,24 +1111,50 @@ a {
 .compare__cell.is-no {
     color: var(--line-exec);
 }
+/* A note's number in a cell: a small raised button in the accent, and the whole
+   of what the reader sees of the note until it is clicked. */
 .compare__ref {
     margin-left: 0.15rem;
-}
-.compare__ref a {
-    color: var(--accent);
-    text-decoration: none;
+    padding: 0 0.15rem;
+    border: 0;
+    background: none;
+    vertical-align: super;
     font-family: var(--sans);
     font-size: 0.72rem;
+    line-height: 1;
+    color: var(--accent);
+    cursor: pointer;
 }
-.compare__notes {
-    margin: 1.1rem auto 0;
-    padding-left: 1.2rem;
-    font-size: 0.78rem;
-    color: var(--muted);
-    max-width: 80ch;
+.compare__ref:hover,
+.compare__ref:focus-visible {
+    text-decoration: underline;
 }
-.compare__notes li {
-    margin-top: 0.25rem;
+/* The note itself: a native popover (light-dismissed by a click elsewhere or
+   Escape, one open at a time). initCompare parks it under the number that opened
+   it; with JS off the browser centres it on the screen, which still reads. The
+   UA sheet gives popovers a black border, a canvas background and a centring
+   margin, hence the resets. */
+.compare__note {
+    max-width: min(26rem, calc(100vw - 2rem));
+    padding: 0.65rem 0.85rem;
+    border: 1px solid var(--dock-border);
+    background: var(--surface);
+    color: var(--text);
+    font-size: 0.8rem;
+    line-height: 1.5;
+    text-align: left;
+    box-shadow: 0 12px 34px -16px rgba(22, 22, 15, 0.5);
+}
+.compare__note-num {
+    margin-right: 0.45rem;
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    color: var(--accent);
+}
+/* A browser without popovers has no :popover-open and drops this rule, so there
+   the notes stand as plain text under the table, numbered, which still reads. */
+.compare__note:not(:popover-open) {
+    display: none;
 }
 
 /* ── Vision / placeholder ─────────────────────────────────────────────────── */
@@ -1143,8 +1208,8 @@ a {
 }
 /* The portrait sits near the TOP, floated to the side so the opening story flows
    beside it; it drops to a centred block on narrow screens. A square, not a card:
-   the site has no rounded corners (Thobias, 21 September 2026), so the circle it
-   was went too. */
+   the site has no rounded corners except its buttons (Thobias, 21 September
+   2026), so the circle it was went too. */
 .about__portrait {
     float: right;
     width: min(13rem, 38vw);
@@ -1531,6 +1596,9 @@ a {
     align-items: center;
     justify-content: center;
     gap: 0.75rem 1.25rem;
+    /* Inside the page column, like the menu bar, so its rule runs between the
+       margin lines rather than across the whole window. */
+    margin-inline: var(--margin);
     padding: 1.5rem;
     border-top: 1px solid var(--hairline);
 }
@@ -1693,6 +1761,7 @@ html.is-scrolling::-webkit-scrollbar-thumb,
 .docs-version__select,
 .docs-search__input,
 .docs-search__regex {
+    border-radius: 7px;
     font-size: 0.85rem;
     border: 1px solid var(--dock-border);
     background: var(
@@ -1853,6 +1922,7 @@ details:not([open]) > .tree-folder .tree-chev {
     pointer-events: none;
 }
 .docs-snapnav__group {
+    border-radius: 999px;
     display: inline-flex;
     align-items: center;
     gap: 0.3rem;
@@ -1870,6 +1940,7 @@ details:not([open]) > .tree-folder .tree-chev {
     color: var(--warn-text);
 }
 .docs-snapnav__btn {
+    border-radius: 50%;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -1899,6 +1970,7 @@ details:not([open]) > .tree-folder .tree-chev {
     color: var(--warn-text);
 }
 .docs-correct {
+    border-radius: 999px;
     font-size: 0.85rem;
     color: var(--warn-text);
     text-decoration: none;
@@ -2084,6 +2156,7 @@ mark.search-hit {
     color: var(--heading);
 }
 #dl-version {
+    border-radius: 7px;
     font-family: var(--mono);
     font-size: 0.9rem;
     padding: 0.5rem 0.7rem;
@@ -2185,6 +2258,7 @@ mark.search-hit {
     white-space: pre;
 }
 .dl-copy {
+    border-radius: 6px;
     position: absolute;
     top: 0.5rem;
     right: 0.5rem;
@@ -2282,6 +2356,7 @@ mark.search-hit {
     color: var(--heading);
 }
 #pg-version {
+    border-radius: 7px;
     font-family: var(--mono);
     font-size: 0.9rem;
     padding: 0.5rem 0.7rem;
