@@ -64,8 +64,6 @@
         0.85
     ); /* the one cream (--bg) at 85%, for the blurred dock/panel */
     --dock-border: #e1dacd;
-    --track: #ddd7ca;
-    --track-on: #cfc9bb;
     --download-bg: var(--bp-light);
     --download-fg: var(--ink);
     --logo: var(--bp-dark);
@@ -102,6 +100,9 @@
     --tok-comment: #6f6a60;
 }
 
+/* The site is served dark only, for now: <html data-theme="dark"> on every page
+   and no toggle (Thobias, 22 September 2026). The light tokens above are what a
+   page without the attribute would get, kept for when the choice returns. */
 :root[data-theme="dark"] {
     --bg: #14130f;
     --margin-bg: #0c0b09; /* 40% of the way from --bg toward black */
@@ -116,8 +117,6 @@
     --accent: #8f88ff;
     --dock-bg: rgba(28, 28, 24, 0.72);
     --dock-border: #3a382f;
-    --track: #34322b;
-    --track-on: #403d34;
     --download-bg: var(--bp-dark);
     --download-fg: var(--white);
     --logo: var(--bp-light);
@@ -464,86 +463,6 @@ a {
     color: var(--btn-hover);
 }
 
-/* ── Theme toggle ─────────────────────────────────────────────────────────────
-   The last item in the menu bar's row. Docs pages have no bar, so there it is
-   pinned to the top-right corner of the window instead (.theme-switch--corner). */
-.theme-switch {
-    display: inline-flex;
-    align-items: center;
-    cursor: pointer;
-}
-.theme-switch--corner {
-    position: fixed;
-    inset-block-start: 1.15rem;
-    inset-inline-end: 1.15rem;
-    z-index: 60;
-}
-.theme-switch__input {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    opacity: 0;
-    pointer-events: none;
-}
-.theme-switch__track {
-    border-radius: 999px;
-    position: relative;
-    width: 3.6rem;
-    height: 1.9rem;
-    background: var(--track);
-    border: 1px solid var(--dock-border);
-    transition: background 0.18s ease;
-}
-.theme-switch__thumb {
-    border-radius: 50%;
-    position: absolute;
-    top: 50%;
-    inset-inline-start: 0.2rem;
-    z-index: 1;
-    width: 1.5rem;
-    height: 1.5rem;
-    background: var(--white);
-    transform: translateY(-50%);
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-    transition: inset-inline-start 0.18s ease;
-}
-.theme-switch__icon {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    z-index: 2;
-    color: var(--muted);
-    opacity: 0.5;
-    pointer-events: none;
-    transition:
-        color 0.18s ease,
-        opacity 0.18s ease;
-}
-.theme-switch__icon.sun {
-    inset-inline-start: 0.5rem;
-}
-.theme-switch__icon.moon {
-    inset-inline-end: 0.55rem;
-}
-.theme-switch:not(:has(.theme-switch__input:checked)) .sun {
-    color: #e8a33d;
-    opacity: 1;
-}
-.theme-switch:has(.theme-switch__input:checked) .moon {
-    color: var(--bp-dark);
-    opacity: 1;
-}
-.theme-switch__input:checked + .theme-switch__track {
-    background: var(--track-on);
-}
-.theme-switch__input:checked + .theme-switch__track .theme-switch__thumb {
-    inset-inline-start: calc(100% - 1.7rem);
-}
-.theme-switch__input:focus-visible + .theme-switch__track {
-    outline: 2px solid var(--accent);
-    outline-offset: 2px;
-}
-
 /* ── Page scaffold ────────────────────────────────────────────────────────── */
 .page-main {
     flex: 1 0 auto; /* grows to the window's foot on a short page (see body) */
@@ -679,20 +598,14 @@ a {
     max-width: 100%;
     margin: 0;
     /* A white box around the title, with rounded corners (Thobias, 22 September
-       2026): white in BOTH themes, so the text inside keeps the light theme's ink
-       and brand blue-purple whatever the theme. In the dark theme it is the
-       site's creamy white, a bright card that needs no edge. In the light theme
-       that cream is the column's own colour, so the box goes one step lighter,
-       the lightest cream on the site, inside a hairline. */
+       2026): the site's creamy white, a bright card on the dark page, with the
+       light theme's ink and brand blue-purple inside. (Should the light theme
+       return, that cream is its column colour, and the box wants a hairline and
+       a step lighter, #fffdf5, to show.) */
     padding: clamp(1.1rem, 2.6vw, 1.8rem) clamp(1.4rem, 4.5vw, 3rem);
-    border: 1px solid var(--hairline);
     border-radius: 1rem;
-    background: #fffdf5;
-    color: var(--ink);
-}
-:root[data-theme="dark"] .hero__headline {
     background: var(--white);
-    border-color: transparent;
+    color: var(--ink);
 }
 /* The wordmark leads the headline at the SAME size as the identity line, in the brand
    blue-purple, with a hair of separation beneath it. */
@@ -773,35 +686,6 @@ a {
 }
 .notify__status.is-error {
     color: var(--warn-text);
-}
-
-/* ── Bottom-of-homepage signup ────────────────────────────────────────────────
-   The get-notified form's home: at the foot of the argument, where a
-   convinced reader lands, styled like the other homepage sections. */
-.signup {
-    max-width: 46rem;
-    /* The bottom margin is the page's last breath: the form is the final element
-       before the footer's hairline, and without it the button sits on that rule. */
-    margin: clamp(4rem, 10vh, 7rem) auto clamp(3rem, 8vh, 5rem);
-    padding-inline: 1.25rem;
-    text-align: center;
-}
-.signup__title {
-    font-family: var(--serif);
-    font-size: clamp(1.5rem, 3vw, 2.2rem);
-    font-weight: 600;
-    letter-spacing: -0.01em;
-    color: var(--heading);
-    margin: 0;
-}
-.signup__lead {
-    font-size: 0.95rem;
-    max-width: 56ch;
-    margin: 0.9rem auto 0;
-    color: var(--muted);
-}
-.signup .notify {
-    margin-top: 1.6rem;
 }
 
 /* ── Listings ─────────────────────────────────────────────────────────────────
@@ -974,7 +858,8 @@ a {
 .compare__off:focus-visible {
     color: var(--heading);
 }
-/* The chip row above the table: one "+ Name" button per hidden language. A chip is
+/* The chip row above the table: one button, the language's name, per hidden
+   language (it read "+ Name" until 22 September 2026). A chip is
    .is-off while its column shows, and the row is .is-empty when nothing is hidden;
    initCompare keeps both in step with the columns. */
 .compare__chips {

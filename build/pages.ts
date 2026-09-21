@@ -1,10 +1,9 @@
 // Inner HTML for the marketing pages. The homepage order: the hero is the identity,
 // "Λόγος / One language for everything", over one paragraph on the mechanism (one
-// graph, checked redefinition); then the honest comparison matrix, and the
-// get-notified form last, where a convinced reader lands. No code listing: one ran
-// down the homepage's right-hand side from 11 to 21 September 2026, and the examples
-// page has the same definitions. The reflections on the Logos live in the page
-// margins now (build/wisdom.ts).
+// graph, checked redefinition); then the honest comparison matrix. No code listing:
+// one ran down the homepage's right-hand side from 11 to 21 September 2026, and the
+// examples page has the same definitions. The reflections on the Logos live in the
+// page margins now (build/wisdom.ts).
 import { escapeHtml } from "./templates.ts";
 import {
   OS_ORDER,
@@ -23,7 +22,8 @@ import { depmapHtml, DEFAULT_ASPECT } from "./roadmap-render.ts";
 const GITHUB = "https://github.com/ThobiasKnudsen/LogosLang";
 
 // ── Get-notified form ─────────────────────────────────────────────────────────
-// The intent-capture form shown on the home hero and the (empty) download page.
+// The intent-capture form on the (empty) download page; it closed the homepage too
+// until 22 September 2026.
 // Posts to the subscribe Pages Function (functions/api/subscribe.ts); client/main.ts
 // (initNotify) upgrades it to an inline fetch with a status line, and with JS off
 // the function answers with a small HTML page instead, so the form never dead-ends.
@@ -926,7 +926,7 @@ function compareHtml(toggles?: { hidden: readonly string[] }): string {
     ${COMPARE_LANGS.slice(1)
       .map(
         (lang) =>
-          `<button type="button" class="compare__chip${hidden.has(lang.id) ? "" : " is-off"}" data-lang="${lang.id}">+ ${lang.name}</button>`,
+          `<button type="button" class="compare__chip${hidden.has(lang.id) ? "" : " is-off"}" data-lang="${lang.id}">${lang.name}</button>`,
       )
       .join("\n    ")}
   </div>`
@@ -955,25 +955,17 @@ export function comparePage(): string {
   return compareHtml();
 }
 
-// The signup section at the bottom of the homepage: intent capture placed where a
-// convinced reader lands, after the argument, never as the first thing seen.
-function notifySectionHtml(): string {
-  return `<section class="signup" aria-label="Get notified about the first builds">
-  <h2 class="signup__title">Hear about the first build</h2>
-  <p class="signup__lead">No public builds exist yet. Leave your email and you will get a message when the most important builds ship. No spam, ever; removal any time (see <a href="/privacy/">Privacy</a>).</p>
-  ${notifyFormHtml("home-bottom")}
-</section>`;
-}
-
 // The homepage is one column of sections, each sizing itself (Thobias, 21 September
 // 2026). It was a two-column grid, prose down the left and one continuous code
 // listing down the right, from 11 September 2026 until the code was dropped.
 //
-// Three sections: the hero, the comparison matrix, the signup. The ladder of meta,
-// the Logic Graph figure, "Checked, not clever" and "Built from proven parts" sat
-// between the hero and the matrix until 21 September 2026, when Thobias cut them.
-// The quotes that ran as a band under the hero moved into the page margins the same
-// day (build/wisdom.ts).
+// Two sections: the hero and the comparison matrix. The ladder of meta, the Logic
+// Graph figure, "Checked, not clever" and "Built from proven parts" sat between the
+// hero and the matrix until 21 September 2026, when Thobias cut them, and a
+// "Hear about the first build" signup (the notify form) closed the page until 22
+// September 2026, when he cut that too; the download page still carries the form.
+// The quotes that ran as a band under the hero moved into the page margins on 21
+// September 2026 (build/wisdom.ts).
 export function homePage(): string {
   return `<section class="hero">
   <h1 class="hero__headline">
@@ -983,8 +975,7 @@ export function homePage(): string {
   </h1>
   <p class="hero__sub">Logos is maximally meta. Its grammar, types, proofs, compiler and interpreter live in the same graph as your program, so your code can read and redefine any of them, and every change is checked. Meta used to mean unchecked and slow. Here it is neither.</p>
 </section>
-${compareHtml({ hidden: HOME_HIDDEN })}
-${notifySectionHtml()}`;
+${compareHtml({ hidden: HOME_HIDDEN })}`;
 }
 
 export function visionPage(): string {
@@ -1201,12 +1192,12 @@ export function privacyPage(): string {
   <p>Neither is a cookie, neither is shared with anyone, and neither identifies you personally.</p>
 
   <h2>Release notifications (only if you sign up)</h2>
-  <p>The home and download pages have an optional "get notified" form. If you submit it, we store the email address you entered, the time you signed up, and which page's form you used, in Cloudflare Workers KV, and use it for exactly one purpose: emailing you when the most important Logos builds are released. It is a low-volume announcement list; you will not be spammed. It is never sold, shared, or used for analytics, and it sets no cookies. The legal basis is your consent, given by submitting the form.</p>
+  <p>The download page has an optional "get notified" form. If you submit it, we store the email address you entered, the time you signed up, and which page's form you used, in Cloudflare Workers KV, and use it for exactly one purpose: emailing you when the most important Logos builds are released. It is a low-volume announcement list; you will not be spammed. It is never sold, shared, or used for analytics, and it sets no cookies. The legal basis is your consent, given by submitting the form.</p>
   <p>To be removed from the list at any time, contact ${contactLine} and the address is deleted.</p>
 
-  <h2>Cookies and local storage we use</h2>
+  <h2>Local storage we use</h2>
+  <p>The site sets no cookies.</p>
   <ul>
-    <li><code>theme</code> cookie: remembers your light/dark choice (strictly necessary). ~180 days.</li>
     <li><code>localStorage</code> visitor id and <code>sessionStorage</code> session id: the anonymous analytics ids described above. No advertising or third-party cookies are set.</li>
     <li><code>localStorage</code> <code>compareHidden</code>: which columns you have hidden in the homepage's comparison table. A convenience, nothing personal; it stays until you clear site data.</li>
   </ul>

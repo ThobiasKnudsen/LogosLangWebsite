@@ -1,4 +1,5 @@
-// Client runtime: the theme toggle (every page) and docs hydration (docs pages).
+// Client runtime: the shell's small behaviours (every page) and docs hydration (docs
+// pages).
 //
 // The docs are fully server-rendered to real URLs at the latest version; this
 // script is progressive enhancement. With JS off, every page and the per-section
@@ -19,7 +20,6 @@ import {
 import { depmapHtml, DEFAULT_ASPECT } from '../build/roadmap-render.ts';
 import type { Roadmap } from '../build/roadmap.ts';
 
-initThemeToggle();
 initNavMenu();
 initDockHide();
 initMarginalia();
@@ -430,24 +430,6 @@ function initScrollbars(): void {
 		},
 		true
 	);
-}
-
-// ── Theme toggle ────────────────────────────────────────────────────────────
-function initThemeToggle(): void {
-	const input = document.querySelector<HTMLInputElement>('.theme-switch__input');
-	if (!input) return;
-	const readCookie = (name: string): string | null => {
-		const m = document.cookie.match('(?:^|; )' + name + '=([^;]*)');
-		return m ? decodeURIComponent(m[1]!) : null;
-	};
-	const current = readCookie('theme') === 'dark' ? 'dark' : 'light';
-	document.documentElement.dataset.theme = current;
-	input.checked = current === 'dark';
-	input.addEventListener('change', () => {
-		const theme = input.checked ? 'dark' : 'light';
-		document.documentElement.dataset.theme = theme;
-		document.cookie = `theme=${theme}; path=/; max-age=31536000; samesite=lax`;
-	});
 }
 
 // ── Download page ─────────────────────────────────────────────────────────────

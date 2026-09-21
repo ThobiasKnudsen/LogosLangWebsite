@@ -1,5 +1,5 @@
-// Static HTML templates shared by every page: the top menu bar, the page margins,
-// the footer, the pre-paint theme script, and the full-document shell.
+// Static HTML templates shared by every page: the menu dock, the page margins, the
+// footer, and the full-document shell.
 import { wisdomMarginsHtml } from './wisdom.ts';
 
 const GITHUB = 'https://github.com/ThobiasKnudsen/LogosLang';
@@ -54,23 +54,6 @@ const NAV = [
 	{ key: 'about', label: 'About', href: '/about/' },
 ];
 
-const SUN_SVG = `<svg class="theme-switch__icon sun" viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><circle cx="12" cy="12" r="4.2" fill="currentColor"/><g stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="1.5" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22.5"/><line x1="1.5" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22.5" y2="12"/><line x1="4.2" y1="4.2" x2="6" y2="6"/><line x1="18" y1="18" x2="19.8" y2="19.8"/><line x1="19.8" y1="4.2" x2="18" y2="6"/><line x1="6" y1="18" x2="4.2" y2="19.8"/></g></svg>`;
-const MOON_SVG = `<svg class="theme-switch__icon moon" viewBox="0 0 24 24" width="13" height="13" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z" fill="currentColor"/></svg>`;
-
-// The theme toggle sits at the right end of the menu bar. Docs pages have no menu
-// bar (they own their logo), so there it is pinned to the top-right corner instead
-// (`corner`).
-function themeToggleHtml(corner = false): string {
-	return `<label class="theme-switch${corner ? ' theme-switch--corner' : ''}" title="Toggle dark mode">
-  <span class="sr-only">Toggle dark mode</span>
-  <input type="checkbox" class="theme-switch__input" />
-  <span class="theme-switch__track">
-    <span class="theme-switch__thumb"></span>
-    ${SUN_SVG}${MOON_SVG}
-  </span>
-</label>`;
-}
-
 const MENU_SVG = `<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><g stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></g></svg>`;
 
 // The GitHub mark (octocat), shared by the dock button, the dropdown row, and the
@@ -108,7 +91,6 @@ function dockHtml(active: string): string {
         <nav class="nav-menu" id="nav-menu" aria-label="Primary" hidden>${links}<a class="nav-link nav-menu__github" href="${GITHUB}" target="_blank" rel="noopener noreferrer">${GITHUB_SVG}<span>GitHub</span></a></nav>
       </div>
       <a class="logos-btn logos-btn--download dock-github" href="${GITHUB}" target="_blank" rel="noopener noreferrer">${GITHUB_SVG}<span>GitHub</span></a>
-      ${themeToggleHtml()}
     </div>
   </div>
 </header>`;
@@ -135,9 +117,11 @@ function footerHtml(): string {
 </footer>`;
 }
 
-// Inlined in <head> so the theme is applied before first paint (no flash). Default
-// is always light; the choice is read from the `theme` cookie.
-const THEME_INIT = `<script>(function(){try{var m=document.cookie.match('(?:^|; )theme=([^;]*)');document.documentElement.dataset.theme=(m&&decodeURIComponent(m[1])==='dark')?'dark':'light';}catch(e){document.documentElement.dataset.theme='light';}})();</script>`;
+// The site is dark only, for now (Thobias, 22 September 2026): <html> carries
+// data-theme="dark" and there is no toggle. Until then a light default with a
+// theme cookie and a pre-paint script chose between the two; the light tokens are
+// still in theme.css for when the choice comes back.
+export const THEME = 'dark';
 
 export interface PageOptions {
 	title: string;
@@ -164,8 +148,7 @@ export interface PageOptions {
 export function page(opts: PageOptions): string {
 	const desc = opts.description ?? DEFAULT_DESC;
 	const title = opts.title === 'Λόγος' ? 'Λόγος' : `${opts.title} | Λόγος`;
-	// The toggle rides in the menu bar; without one (docs) it takes the corner.
-	const chrome = opts.header === 'none' ? themeToggleHtml(true) : `${dockHtml(opts.active)}\n${marginsHtml()}`;
+	const chrome = opts.header === 'none' ? '' : `${dockHtml(opts.active)}\n${marginsHtml()}`;
 
 	// Canonical / og:url: prefer an explicit canonical path, else this page's own
 	// path. Emitted as an absolute URL so crawlers and social cards resolve it.
@@ -191,7 +174,7 @@ export function page(opts: PageOptions): string {
 		: '';
 
 	return `<!doctype html>
-<html lang="en">
+<html lang="en" data-theme="${THEME}">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -199,7 +182,6 @@ export function page(opts: PageOptions): string {
 <meta name="description" content="${escapeHtml(desc)}" />
 <link rel="icon" href="/favicon.svg" />${canonical}${social}
 <link rel="stylesheet" href="${ASSET_CSS}" />${jsonLd}
-${THEME_INIT}
 </head>
 <body class="${opts.bodyClass ?? ''}">
 ${chrome}

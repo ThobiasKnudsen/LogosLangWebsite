@@ -5,7 +5,7 @@ language built on radical unification.
 
 A small **custom static-site generator** written in TypeScript (run with
 [`tsx`](https://github.com/privatenumber/tsx), no framework), deployed to
-Cloudflare Pages. Light, wisprflow.ai-inspired theme.
+Cloudflare Pages. Dark, wisprflow.ai-inspired theme.
 
 ## Develop
 
@@ -55,8 +55,8 @@ page.
   [`llms.txt`](https://llmstxt.org) map so AI answer-engines can read the site.
 - **Fonts** (self-hosted via Fontsource): Figtree (UI/body), EB Garamond (serif +
   the Greek `Λόγος` wordmark), JetBrains Mono (code).
-- **Theme tokens** live in `styles/theme.css`; light/dark is a cookie-driven
-  `[data-theme]` switch applied before first paint.
+- **Theme tokens** live in `styles/theme.css`. The site is served dark only for now
+  (`<html data-theme="dark">`); the light tokens are kept for when a switch returns.
 
 ## Structure
 
@@ -71,10 +71,10 @@ build/releases.test.ts unit tests for the release/download model
 build/markdown.ts     markdown-it + Shiki + version-less link resolution
 build/docs-render.ts  server-side render of a docs page (tree, version nav, article)
 build/pages.ts        marketing pages (home hero, vision, roadmap, placeholders)
-build/templates.ts    shared HTML shell: menu bar, page margins, footer, <head>, theme script
+build/templates.ts    shared HTML shell: menu dock, page margins, footer, <head>
 build/wisdom.ts       the reflections on the Logos that surface in the page margins
-client/main.ts        client runtime: theme toggle, margin quotes, docs hydration
-styles/theme.css       light/dark wisprflow theme: tokens, fonts, components
+client/main.ts        client runtime: dock, margin quotes, matrix, docs hydration
+styles/theme.css       wisprflow theme (dark, light tokens kept): tokens, fonts, components
 public/                static assets copied verbatim (favicon, og.png, robots.txt)
 ```
 

@@ -16,7 +16,7 @@ import {
   type DocPage,
 } from "./version.ts";
 import { renderMarkdown, parseFrontmatter } from "./markdown.ts";
-import { page, SITE_URL, absUrl, setAssetUrls } from "./templates.ts";
+import { page, SITE_URL, THEME, absUrl, setAssetUrls } from "./templates.ts";
 import {
   examplesPage,
   homePage,
@@ -408,9 +408,8 @@ async function bundleAssets(): Promise<{
  * guards the route with HTTP Basic Auth.
  */
 function adminShell(cssHref: string, dashHref: string): string {
-  const themeInit = `<script>(function(){try{var m=document.cookie.match('(?:^|; )theme=([^;]*)');document.documentElement.dataset.theme=(m&&decodeURIComponent(m[1])==='dark')?'dark':'light';}catch(e){document.documentElement.dataset.theme='light';}})();</script>`;
   return `<!doctype html>
-<html lang="en">
+<html lang="en" data-theme="${THEME}">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -418,7 +417,6 @@ function adminShell(cssHref: string, dashHref: string): string {
 <meta name="robots" content="noindex, nofollow" />
 <link rel="icon" href="/favicon.svg" />
 <link rel="stylesheet" href="${cssHref}" />
-${themeInit}
 </head>
 <body class="admin">
 <div id="admin-app" data-world="/admin/world.geo.json">
