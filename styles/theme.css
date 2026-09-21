@@ -667,12 +667,26 @@ a {
     align-items: center;
     max-width: 100%;
     margin: 0;
-    color: var(--heading);
+    /* A white box around the title, with rounded corners (Thobias, 22 September
+       2026): white in BOTH themes, so the text inside keeps the light theme's ink
+       and brand blue-purple whatever the theme. In the dark theme it is the
+       site's creamy white, a bright card that needs no edge. In the light theme
+       that cream is the column's own colour, so the box goes one step lighter,
+       the lightest cream on the site, inside a hairline. */
+    padding: clamp(1.1rem, 2.6vw, 1.8rem) clamp(1.4rem, 4.5vw, 3rem);
+    border: 1px solid var(--hairline);
+    border-radius: 1rem;
+    background: #fffdf5;
+    color: var(--ink);
+}
+:root[data-theme="dark"] .hero__headline {
+    background: var(--white);
+    border-color: transparent;
 }
 /* The wordmark leads the headline at the SAME size as the identity line, in the brand
    blue-purple, with a hair of separation beneath it. */
 .hero__brand {
-    color: var(--logo);
+    color: var(--bp-dark);
     white-space: nowrap;
     margin-bottom: 0.3em;
 }
@@ -681,7 +695,7 @@ a {
 .hero__lead {
     display: block;
     font-size: 0.8em;
-    color: var(--heading);
+    color: var(--ink);
 }
 .hero__sub {
     font-size: clamp(0.84rem, 1.28vw, 1.04rem);
