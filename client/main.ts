@@ -157,16 +157,18 @@ function initMarginalia(): void {
 	new ResizeObserver(fill).observe(document.body);
 }
 
-// ── Showcase: tabs of examples, and a language picker under the listing ───────
+// ── Showcase: tabs of examples over two panes, and a language picker ──────────
 // Every tab x language listing is already in the page (build/showcase.ts); this
-// shows the one the two choices select and hides the rest, nothing more. With JS
-// off the first example stays up in Logos.
+// shows the tab's Logos listing on the left and its listing in the picked
+// language on the right, hides the rest, and names the right pane. With JS off
+// the first example stays up, in Logos and in the first language.
 function initShowcase(): void {
 	const root = document.querySelector<HTMLElement>('[data-showcase]');
 	if (!root) return;
 	const tabs = [...root.querySelectorAll<HTMLButtonElement>('.showcase__tab')];
 	const langs = [...root.querySelectorAll<HTMLButtonElement>('.showcase__lang')];
 	const listings = [...root.querySelectorAll<HTMLElement>('.showcase__listing')];
+	const label = root.querySelector<HTMLElement>('[data-lang-label]');
 	let example = tabs.find((t) => t.classList.contains('is-active'))?.dataset.example ?? '';
 	let lang = langs.find((l) => l.classList.contains('is-active'))?.dataset.lang ?? '';
 	const show = (): void => {
@@ -179,9 +181,11 @@ function initShowcase(): void {
 			const on = l.dataset.lang === lang;
 			l.classList.toggle('is-active', on);
 			l.setAttribute('aria-pressed', String(on));
+			if (on && label) label.textContent = l.textContent;
 		}
 		for (const el of listings) {
-			el.hidden = !(el.dataset.example === example && el.dataset.lang === lang);
+			const side = el.dataset.lang === 'logos' || el.dataset.lang === lang;
+			el.hidden = !(el.dataset.example === example && side);
 		}
 	};
 	root.addEventListener('click', (e) => {

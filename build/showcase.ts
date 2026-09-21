@@ -1,6 +1,7 @@
 // The homepage showcase (Thobias, 22 September 2026): a row of tabs, one per
-// example program, a code panel, and under it a language picker, so the same
-// program can be read in Logos and then in the languages a visitor already knows.
+// example program, over two code panes, Logos on the left and on the right a
+// language picked under the box, so the same program can be read in Logos beside
+// a language the visitor already knows.
 //
 // The Logos listings are taken from the LogosLang repo's own examples/ directory
 // and docs (docs/v0.0.4), which is what the bootstrap seed runs today: functions,
@@ -138,7 +139,8 @@ fn pick(i: u8) type {
 
 pub fn main() void {
     const a: pick(1) = 9.9; // a is an f64
-    std.debug.print("{d} {}\\n", .{ a, pick(0) == i32 });
+    const same = pick(0) == i32;
+    std.debug.print("{d} {}\\n", .{ a, same });
 }`,
       c: `// no types as values; the nearest is a macro that pastes
 // a type name in before the compiler ever sees it
@@ -197,8 +199,8 @@ fn sum_to(n: i64) -> i64 {
 fn main() {
     println!("{}", sum_to(1_000_000));
 }`,
-      zig: `// compiled ahead of time, always; comptime runs code at
-// compile time instead, which is the other direction
+      zig: `// compiled ahead of time, always; comptime runs code
+// at compile time instead, the other direction
 const std = @import("std");
 
 fn sumTo(n: i64) i64 {
@@ -254,7 +256,7 @@ console.log(sumTo(1_000_000));`,
       logos: `# alloc returns an owning pointer and writes the
 # teardown into this scope itself: \`defer free a\`
 a := alloc i32 40,
-b := own a,   # ownership moves to b; a's pending free no-ops
+b := own a,   # moves ownership; a's free no-ops
 b@            # 40`,
       rust: `// a Box owns its heap value and frees it when the
 // owner goes out of scope; a move hands that duty on
@@ -359,8 +361,11 @@ console.log(same && !cross);`,
   },
 ];
 
-/** The showcase section's HTML: tabs, every tab x language listing (only the
- *  first tab in Logos shown; the rest carry `hidden`), and the language picker. */
+/** The showcase section's HTML: one box holding the tab row and, under one line,
+ *  two panes: Logos on the left, always, and on the right the language the picker
+ *  under the box selects (Thobias, 22 September 2026; for an hour it was one pane
+ *  with Logos in the picker). Every tab x language listing is in the page and all
+ *  but the first tab's carry `hidden`. */
 export async function showcaseHtml(): Promise<string> {
   const shikiLangs = LANGS.flatMap((l) => (l.shiki ? [l.shiki] : []));
   const hl = await createHighlighter({
@@ -387,28 +392,40 @@ export async function showcaseHtml(): Promise<string> {
       }
     }
   }
+  const [logos, ...others] = LANGS as [Lang, ...Lang[]];
   const tabs = EXAMPLES.map(
     (ex, i) =>
       `<button type="button" class="showcase__tab${i === 0 ? " is-active" : ""}" role="tab" aria-selected="${i === 0}" data-example="${ex.id}">${escapeHtml(ex.label)}</button>`,
-  ).join("\n    ");
-  const panels = EXAMPLES.flatMap((ex, i) =>
-    LANGS.map((lang, j) => {
-      const shown = i === 0 && j === 0;
-      return `<div class="showcase__listing" data-example="${ex.id}" data-lang="${lang.id}"${shown ? "" : " hidden"}>${render(lang, ex.code[lang.id]!)}</div>`;
-    }),
-  ).join("\n    ");
-  const langs = LANGS.map(
-    (lang, j) =>
-      `<button type="button" class="showcase__lang${j === 0 ? " is-active" : ""}" aria-pressed="${j === 0}" data-lang="${lang.id}">${escapeHtml(lang.name)}</button>`,
-  ).join("\n    ");
+  ).join("\n      ");
+  const listing = (ex: Example, lang: Lang, shown: boolean): string =>
+    `<div class="showcase__listing" data-example="${ex.id}" data-lang="${lang.id}"${shown ? "" : " hidden"}>${render(lang, ex.code[lang.id]!)}</div>`;
+  const left = EXAMPLES.map((ex, i) => listing(ex, logos, i === 0)).join("\n        ");
+  const right = EXAMPLES.flatMap((ex, i) =>
+    others.map((lang, j) => listing(ex, lang, i === 0 && j === 0)),
+  ).join("\n        ");
+  const langs = others
+    .map(
+      (lang, j) =>
+        `<button type="button" class="showcase__lang${j === 0 ? " is-active" : ""}" aria-pressed="${j === 0}" data-lang="${lang.id}">${escapeHtml(lang.name)}</button>`,
+    )
+    .join("\n    ");
   return `<section class="showcase" aria-label="The same program in Logos and other languages" data-showcase>
-  <div class="showcase__tabs" role="tablist" aria-label="Example">
-    ${tabs}
+  <div class="showcase__box">
+    <div class="showcase__tabs" role="tablist" aria-label="Example">
+      ${tabs}
+    </div>
+    <div class="showcase__panes">
+      <div class="showcase__pane">
+        <span class="showcase__pane-label">${escapeHtml(logos.name)}</span>
+        ${left}
+      </div>
+      <div class="showcase__pane showcase__pane--other">
+        <span class="showcase__pane-label" data-lang-label>${escapeHtml(others[0]!.name)}</span>
+        ${right}
+      </div>
+    </div>
   </div>
-  <div class="showcase__panel">
-    ${panels}
-  </div>
-  <div class="showcase__langs" role="group" aria-label="Language">
+  <div class="showcase__langs" role="group" aria-label="Language on the right">
     ${langs}
   </div>
 </section>`;

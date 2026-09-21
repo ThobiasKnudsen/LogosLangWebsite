@@ -618,7 +618,7 @@ a {
     border: 1px solid var(--white); /* a white line around the card */
     border-radius: 1rem;
     background: var(--margin-bg);
-    color: var(--white); /* white too, like its line (it was purple for an hour) */
+    color: var(--bp-light); /* the logo's light blue-purple (white for an hour) */
 }
 /* "everything" underlined (Thobias, 22 September 2026), the line tuned for the
    serif at display size: thin against the strokes, and clear of the descenders. */
@@ -629,26 +629,43 @@ a {
 }
 
 /* ── Showcase ─────────────────────────────────────────────────────────────────
-   Under the heading: a row of tabs, one per example program, the listing, and a
-   language picker beneath it, so the same program reads in Logos and then in a
-   language the visitor already knows (Thobias, 22 September 2026; it took the
-   place of the paragraph that sat under the heading). The markup, every tab x
-   language listing shipped hidden, is build/showcase.ts's; initShowcase shows
-   the pair the tabs and the picker select. Square like the matrix; only the
-   picker's chips are rounded, being buttons. */
+   Under the heading: one box, line to line across the column, holding a row of
+   tabs (one per example program) and, under a single rule, two code panes:
+   Logos on the left, always, and on the right the language the picker under
+   the box selects (Thobias, 22 September 2026; it took the place of the
+   paragraph under the heading, and for an hour was one pane with Logos in the
+   picker). The markup, every tab x language listing shipped hidden, is
+   build/showcase.ts's; initShowcase shows the pair the tabs and the picker
+   select. Square like the matrix, and like the matrix it drops its own side
+   borders where the margin lines stand in; only the picker's chips are rounded,
+   being buttons. */
 .showcase {
-    max-width: 46rem;
+    max-width: none;
     margin: clamp(2.5rem, 6vh, 4rem) auto 0;
     padding-inline: var(--gutter);
+}
+.showcase__box {
+    border: 1px solid var(--hairline);
+    background: var(--code-bg);
+}
+@media (min-width: 76.01rem) {
+    .showcase {
+        padding-inline: 0;
+    }
+    .showcase__box {
+        border-inline: 0;
+    }
 }
 .showcase__tabs {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.25rem 0.35rem;
-    border-bottom: 1px solid var(--hairline);
+    gap: 0 0.25rem;
+    padding-inline: 0.75rem;
+    border-bottom: 1px solid var(--hairline); /* the one line before the code */
+    background: var(--surface);
 }
 .showcase__tab {
-    padding: 0.55rem 0.8rem;
+    padding: 0.65rem 0.8rem;
     margin-bottom: -1px; /* its own bottom line sits on the row's rule */
     border: 0;
     border-bottom: 2px solid transparent;
@@ -666,20 +683,48 @@ a {
     color: var(--heading);
     border-bottom-color: var(--accent);
 }
-/* A fixed floor keeps the page from jumping as listings of different lengths
-   swap in; the longest is about fourteen lines. */
-.showcase__panel {
-    margin-top: 1rem;
+/* Two panes of equal width; a fixed floor keeps the page from jumping as
+   listings of different lengths swap in (the longest is about fourteen lines).
+   Narrow windows stack them, the rule between them turning horizontal. */
+.showcase__panes {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
     min-height: 18rem;
-    border: 1px solid var(--hairline);
-    background: var(--code-bg);
+}
+.showcase__pane {
+    position: relative;
+    min-width: 0; /* a long line scrolls inside its pane, never widens it */
+}
+.showcase__pane--other {
+    border-inline-start: 1px solid var(--hairline);
+}
+@media (max-width: 48rem) {
+    .showcase__panes {
+        grid-template-columns: 1fr;
+    }
+    .showcase__pane--other {
+        border-inline-start: 0;
+        border-top: 1px solid var(--hairline);
+    }
+}
+/* Each pane names its language in its top-right corner; the code starts low
+   enough that a long first line passes under the name, not through it. */
+.showcase__pane-label {
+    position: absolute;
+    top: 0.6rem;
+    right: 0.9rem;
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
 }
 .showcase__code {
     margin: 0;
-    padding: 1rem 1.2rem;
+    padding: 1.9rem 1rem 1rem;
     overflow-x: auto;
     font-family: var(--mono);
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     line-height: 1.6;
     color: var(--text);
     background: transparent;
@@ -713,6 +758,7 @@ a {
     border-color: var(--download-fg);
     color: var(--download-fg);
 }
+
 /* ── Get-notified form ────────────────────────────────────────────────────────
    The intent-capture form in the hero and on the empty download page: an email
    field beside the download-styled submit button, with an inline status line the
