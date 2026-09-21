@@ -1,10 +1,15 @@
-;; a new form is a macro: syntax written in Racket and
-;; used in the same module
+;; a module can redefine application itself, so
+;; (x ^ 3) reads the operator between its operands
 #lang racket
+(module infix racket
+  (require (for-syntax syntax/parse))
+  (provide (rename-out [app #%app])
+           (except-out (all-from-out racket) #%app))
+  (define-syntax (app stx)
+    (syntax-parse stx
+      [(_ lhs (~literal ^) rhs) #'(expt lhs rhs)]
+      [(_ f x ...) #'(#%app f x ...)])))
 
-(define-syntax-rule (^ base n)
-  (for/fold ([r 1]) ([_ (in-range n)])
-    (* r base)))
-
-(define (f x) (+ (^ x 3) 1))
-(displayln (f 2)) ; 9
+(module main (submod ".." infix)
+  (define (f x) (+ (x ^ 3) 1))
+  (displayln (f 2))) ; 9, one operator per parenthesis
