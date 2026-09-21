@@ -116,7 +116,7 @@ function dockHtml(active: string): string {
 
 // The two outer margins beside the page column, each drawn by one hairline the
 // full height of the page, on every page with a menu bar, hidden on narrow windows
-// (theme.css). They hold the quotes (build/wisdom.ts).
+// (theme.css). They hold the quotes, stacked down each side (build/wisdom.ts).
 function marginsHtml(): string {
 	return wisdomMarginsHtml();
 }

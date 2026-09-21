@@ -529,14 +529,25 @@ a {
 /* ── Margins ──────────────────────────────────────────────────────────────────
    The two outer margins beside the page column, each drawn as one hairline the
    full height of the page, in the page (not fixed) so they and everything in them
-   scroll with it, and click-through so nothing beside them is ever blocked. Each
-   is a column of the quotes on the Logos, spread evenly from the top of the page
-   to its foot like glosses in a manuscript, every one invisible until the pointer
-   has rested on it for a moment. The hover box is the stanza's own box, a hair
-   larger than the text (Thobias, 21 September 2026; earlier that day one quote
-   surfaced wherever the pointer rested, anywhere in the margin, and the band
-   under the hero drifted them past before that). A page shorter than its column
-   of quotes shows as many as fit and clips the rest. */
+   scroll with it. Each is a column of the quotes on the Logos stacked end to end
+   from the top of the page down, like glosses in a manuscript, every one
+   invisible until the pointer is on it. The hover box is the stanza's own box,
+   the height of its text and the margin's width less a small inset, and the boxes
+   touch, so the pointer anywhere in a margin is over one quote: crossing into the
+   next shows it at once as the last fades. Only the FIRST quote after the pointer
+   enters a margin waits the half second Thobias asked for: --warm flips from 0
+   to 1 half a second into hovering the margin (a zero-length transition with a
+   delay on a registered property) and the quotes' own delay is scaled by it. A
+   browser without @property skips the wait, nothing worse. (Thobias, 21
+   September 2026, in three steps that day: one quote surfacing wherever the
+   pointer rested; then fixed quotes spread down the page with a gap between,
+   each with its own wait; then this, with no gap and no wait between them.) A
+   page taller than the stack gets the sequence repeated by initMarginalia. */
+@property --warm {
+    syntax: "<number>";
+    inherits: true;
+    initial-value: 0;
+}
 .margin {
     position: absolute;
     inset-block: 0;
@@ -544,11 +555,14 @@ a {
     z-index: 1;
     display: flex;
     flex-direction: column;
-    justify-content: space-evenly;
-    align-items: center;
-    padding-block: 4rem;
+    align-items: stretch;
+    padding: 1rem 0.75rem;
     overflow: hidden;
-    pointer-events: none;
+    --warm: 0;
+    transition: --warm 0s linear 0.5s;
+}
+.margin:hover {
+    --warm: 1;
 }
 .margin--left {
     inset-inline-start: 0;
@@ -566,19 +580,17 @@ a {
 }
 .margin__quote {
     flex: none;
-    max-width: calc(100% - 1.5rem);
     margin: 0;
     padding: 0.3rem 0.45rem;
     text-align: center;
-    pointer-events: auto;
     opacity: 0;
-    transition: opacity 0.45s ease;
+    transition: opacity 0.25s ease;
 }
-/* The pause before a quote surfaces is the transition's delay on the way in
-   only: leaving fades it out at once. */
+/* The wait applies on the way in only, and only while the margin is not yet
+   warm: leaving fades a quote out at once, and the next one in at once. */
 .margin__quote:hover {
     opacity: 1;
-    transition-delay: 0.5s;
+    transition-delay: calc((1 - var(--warm)) * 0.5s);
 }
 /* The stanza keeps its authored lines where they fit the margin and wraps only
    a line that does not, so its box is the shape it was written in. */

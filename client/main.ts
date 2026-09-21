@@ -22,6 +22,7 @@ import type { Roadmap } from '../build/roadmap.ts';
 initThemeToggle();
 initNavMenu();
 initDockHide();
+initMarginalia();
 initScrollbars();
 initAnalytics();
 initNotify();
@@ -127,6 +128,32 @@ function initDockHide(): void {
 		},
 		{ passive: true },
 	);
+}
+
+// ── Marginalia: fill the margins to the foot of the page ─────────────────────
+// Each margin (.margin, build/wisdom.ts) is served with the quotes stacked once
+// from the top. A page taller than that stack would leave the rest of the margin
+// empty, so the sequence is repeated, in order, until the column overflows the
+// margin's height; the overflow is clipped. Re-done whenever the page's height
+// changes (fonts arriving, the roadmap re-rendering, a matrix column toggled),
+// which the body's ResizeObserver reports. The reveal itself is CSS (theme.css).
+function initMarginalia(): void {
+	const sides = [...document.querySelectorAll<HTMLElement>('.margin')];
+	if (sides.length === 0) return;
+	const served = new Map(sides.map((side) => [side, [...side.children] as HTMLElement[]]));
+	const fill = (): void => {
+		for (const side of sides) {
+			const own = served.get(side) ?? [];
+			for (const el of [...side.children]) if (!own.includes(el as HTMLElement)) el.remove();
+			// Hidden on narrow windows (display: none), where there is nothing to fill.
+			if (own.length === 0 || side.offsetWidth === 0) continue;
+			for (let i = 0; side.scrollHeight <= side.clientHeight && i < 500; i++) {
+				side.appendChild(own[i % own.length]!.cloneNode(true));
+			}
+		}
+	};
+	fill();
+	new ResizeObserver(fill).observe(document.body);
 }
 
 // ── Comparison matrix: scroll hints + floating header ─────────────────────────

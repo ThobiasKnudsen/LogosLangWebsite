@@ -1,7 +1,7 @@
-// The reflections on the Logos across the ages, shown as marginalia: spread down
-// the page's two outer margins on every page, invisible until the pointer rests on
+// The reflections on the Logos across the ages, shown as marginalia: stacked down
+// the page's two outer margins on every page, invisible until the pointer is on
 // one, and scrolling with the page like glosses in a manuscript (see .margin in
-// theme.css; no client code). They ran as a slow frieze under the homepage hero
+// theme.css and initMarginalia in client/main.ts). They ran as a slow frieze under the homepage hero
 // from 26 August to 21 September 2026 (with a few days pinned across the top of the
 // screen, and one as a vertical rail); Thobias moved them into the margins on 21
 // September 2026.
@@ -135,11 +135,14 @@ const WISDOM: { text: string; author: string }[] = [
   },
 ];
 
-/** The two margins of a page, each a column of quotes spread evenly down the whole
- *  page height (flex, theme.css). Consecutive quotes alternate sides, so reading
- *  down the page zigzags through them in the authored order. Each figure is its
- *  own hover box, the size of its stanza, and fades in after a short pause on it.
- *  Decorative and hover-only, so hidden from assistive tech. */
+/** The two margins of a page, each a column of the quotes stacked end to end from
+ *  the top of the page down (theme.css), so that wherever the pointer is in a
+ *  margin it is over one of them: the one under it shows, the next shows the
+ *  moment the pointer crosses into it, and the margin is never quiet (Thobias, 21
+ *  September 2026). Each side carries all the quotes, the left leading with the
+ *  even-numbered ones and the right with the odd, so the two columns differ where
+ *  a reader starts; a page taller than the stack has it repeated by the client
+ *  (initMarginalia). Decorative and hover-only, so hidden from assistive tech. */
 export function wisdomMarginsHtml(): string {
   const figure = (q: { text: string; author: string }): string =>
     `<figure class="margin__quote"><blockquote class="wisdom__text">${escapeHtml(
@@ -147,10 +150,12 @@ export function wisdomMarginsHtml(): string {
     )}</blockquote><figcaption class="wisdom__author">- ${escapeHtml(
       q.author,
     )}</figcaption></figure>`;
-  const side = (name: string, parity: number): string =>
-    `<aside class="margin margin--${name}" aria-hidden="true">${WISDOM.filter(
-      (_, i) => i % 2 === parity,
-    )
+  const half = (parity: number) => WISDOM.filter((_, i) => i % 2 === parity);
+  const side = (name: string, first: number): string =>
+    `<aside class="margin margin--${name}" aria-hidden="true">${[
+      ...half(first),
+      ...half(1 - first),
+    ]
       .map(figure)
       .join("")}</aside>`;
   return `${side("left", 0)}\n${side("right", 1)}`;
