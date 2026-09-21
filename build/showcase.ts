@@ -82,7 +82,8 @@ pub fn main() void {
       c: `// the answer, computed the long way
 #include <stdio.h>
 
-int twice(int x) { return x + x; } /* double is a keyword */
+/* double is a keyword, so: */
+int twice(int x) { return x + x; }
 
 int main(void) {
     int sum = 0;
@@ -119,8 +120,8 @@ pick := fn (i := i32 ?) -> type (
 mut a := pick(1) ?,   # a is declared as an f64
 a = 9.9,
 pick(0) == i32        # true`,
-      rust: `// no function returns a type; a type is chosen for
-// you by generics, or pasted in by a macro, at compile time
+      rust: `// no function returns a type; generics choose one
+// for you, or a macro pastes one in, at compile time
 macro_rules! pick {
     (0) => { i32 };
     ($other:tt) => { f64 };
@@ -142,8 +143,8 @@ pub fn main() void {
     const same = pick(0) == i32;
     std.debug.print("{d} {}\\n", .{ a, same });
 }`,
-      c: `// no types as values; the nearest is a macro that pastes
-// a type name in before the compiler ever sees it
+      c: `// no types as values; the nearest is a macro that
+// pastes a type name in before the compiler sees it
 #include <stdio.h>
 #define PICK(i) PICK_##i
 #define PICK_0 int
@@ -161,9 +162,11 @@ def pick(i: int) -> type:
 
 a = pick(1)(9.9)       # an ordinary float
 print(pick(0) is int)  # True`,
-      ts: `// the type level has functions of its own: a conditional
-// type picks a type, for the checker only, never at run time
-type Pick<I extends number> = I extends 0 ? number : bigint;
+      ts: `// the type level has functions of its own: a
+// conditional type picks a type, for the checker
+// only, never at run time
+type Pick<I extends number> =
+  I extends 0 ? number : bigint;
 
 const a: Pick<1> = 9n;
 console.log(typeof a); // "bigint"`,
@@ -186,7 +189,7 @@ sum_to := fn (n := i64 ?) -> i64 (
 ),
 sum_to.compile(),
 sum_to(1000000)`,
-      rust: `// compiled ahead of time, always; there is nothing to ask for
+      rust: `// compiled ahead of time, always; nothing to ask for
 fn sum_to(n: i64) -> i64 {
     let (mut i, mut s) = (0, 0);
     while i < n {
@@ -213,7 +216,7 @@ fn sumTo(n: i64) i64 {
 pub fn main() void {
     std.debug.print("{d}\\n", .{sumTo(1_000_000)});
 }`,
-      c: `// compiled ahead of time, always; there is nothing to ask for
+      c: `// compiled ahead of time, always; nothing to ask for
 #include <stdio.h>
 
 long sum_to(long n) {
@@ -311,11 +314,11 @@ x := i32 5,
 
 same := x:dyad.type == i32,     # true
 cross := x:dyad.type == f64,    # false
-meta := i32:dyad.type == type,  # true: a type's type is the root
+meta := i32:dyad.type == type,  # true: the root type
 
 same and meta and not (cross)`,
-      rust: `// no type of a value at run time; the compiler knows it,
-// the program gets a name for printing and no more
+      rust: `// no type of a value at run time; the compiler knows
+// it, the program gets a name for printing, no more
 use std::any::type_name_of_val;
 
 fn main() {
@@ -323,7 +326,8 @@ fn main() {
     let same = type_name_of_val(&x) == "i32"; // true
     println!("{}", same);
 }`,
-      zig: `// @TypeOf reads a type at compile time, and types compare with ==
+      zig: `// @TypeOf reads a type at compile time; types compare
+// with ==
 const std = @import("std");
 
 pub fn main() void {
@@ -331,9 +335,10 @@ pub fn main() void {
     const same = @TypeOf(x) == i32; // true
     const cross = @TypeOf(x) == f64; // false
     const meta = @TypeOf(i32) == type; // true
-    std.debug.print("{}\\n", .{same and meta and !cross});
+    const all = same and meta and !cross;
+    std.debug.print("{}\\n", .{all});
 }`,
-      c: `// no reflection; _Generic can pick a branch by a static
+      c: `// no reflection; _Generic picks a branch by a static
 // type at compile time, and that is as close as it gets
 #include <stdio.h>
 #define IS_INT(v) _Generic((v), int: 1, default: 0)
@@ -350,8 +355,8 @@ same = type(x) is int     # True
 cross = type(x) is float  # False
 meta = type(int) is type  # True
 print(same and meta and not cross)`,
-      ts: `// typeof names a handful of run-time kinds; the static
-// types themselves are gone by run time
+      ts: `// typeof names a handful of run-time kinds; the
+// static types themselves are gone by run time
 const x = 5;
 
 const same = typeof x === "number"; // true
