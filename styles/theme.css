@@ -482,8 +482,8 @@ a {
    The two outer margins beside the page column, each drawn as one hairline the
    full height of the page, in the page (not fixed) so they and everything in them
    scroll with it. Each is a column of the quotes on the Logos stacked end to end
-   from the top of the page down, like glosses in a manuscript, every one
-   invisible until the pointer is on it. The hover box is the stanza's own box,
+   from the top of the page down, like glosses in a manuscript, every one a
+   faint ghost until the pointer is on it. The hover box is the stanza's own box,
    the height of its text and the margin's width less a small inset, and the boxes
    touch, so the pointer anywhere in a margin is over one quote: crossing into the
    next shows it at once as the last fades. Only the FIRST quote after the pointer
@@ -535,7 +535,10 @@ a {
     margin: 0;
     padding: 0.3rem 0.45rem;
     text-align: center;
-    opacity: 0;
+    /* At rest a quote is barely there, a ghost of text down the margin; the one
+       under the pointer comes up to full colour (Thobias, 22 September 2026;
+       they were wholly invisible at rest before). */
+    opacity: 0.14;
     transition: opacity 0.25s ease;
 }
 /* The wait applies on the way in only, and only while the margin is not yet
