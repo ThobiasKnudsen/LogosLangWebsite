@@ -629,10 +629,10 @@ a {
 }
 
 /* ── Showcase ─────────────────────────────────────────────────────────────────
-   Under the heading: one box, line to line across the column, holding a row of
-   tabs (one per example program) and, under a single rule, two code panes:
-   Logos on the left, always, and on the right the language the picker under
-   the box selects (Thobias, 22 September 2026; it took the place of the
+   Under the heading: a language picker, then one box, line to line across the
+   column, holding a row of tabs (one per example program) and, under a single
+   rule, two code panes: Logos on the left, always, and on the right the language
+   the picker selects (Thobias, 22 September 2026; it took the place of the
    paragraph under the heading, and for an hour was one pane with Logos in the
    picker). The markup, every tab x language listing shipped hidden, is
    build/showcase.ts's; initShowcase shows the pair the tabs and the picker
@@ -732,12 +732,13 @@ a {
 .showcase__code code {
     font: inherit;
 }
+/* The picker sits above the box (it sat under it for an hour). */
 .showcase__langs {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
     gap: 0.4rem;
-    margin-top: 0.9rem;
+    margin-bottom: 0.9rem;
 }
 .showcase__lang {
     padding: 0.25rem 0.8rem;

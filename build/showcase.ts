@@ -1,7 +1,7 @@
-// The homepage showcase (Thobias, 22 September 2026): a row of tabs, one per
-// example program, over two code panes, Logos on the left and on the right a
-// language picked under the box, so the same program can be read in Logos beside
-// a language the visitor already knows.
+// The homepage showcase (Thobias, 22 September 2026): a language picker, then a
+// box with a row of tabs, one per example program, over two code panes, Logos on
+// the left and on the right the picked language, so the same program can be read
+// in Logos beside a language the visitor already knows.
 //
 // The Logos listings are taken from the LogosLang repo's own examples/ directory
 // and docs (docs/v0.0.4), which is what the bootstrap seed runs today: functions,
@@ -361,11 +361,12 @@ console.log(same && !cross);`,
   },
 ];
 
-/** The showcase section's HTML: one box holding the tab row and, under one line,
- *  two panes: Logos on the left, always, and on the right the language the picker
- *  under the box selects (Thobias, 22 September 2026; for an hour it was one pane
- *  with Logos in the picker). Every tab x language listing is in the page and all
- *  but the first tab's carry `hidden`. */
+/** The showcase section's HTML: the language picker, then one box holding the
+ *  tab row and, under one line, two panes: Logos on the left, always, and on the
+ *  right the language the picker selects (Thobias, 22 September 2026; for an hour
+ *  it was one pane with Logos in the picker, and the picker sat under the box).
+ *  Every tab x language listing is in the page and all but the first tab's carry
+ *  `hidden`. */
 export async function showcaseHtml(): Promise<string> {
   const shikiLangs = LANGS.flatMap((l) => (l.shiki ? [l.shiki] : []));
   const hl = await createHighlighter({
@@ -410,6 +411,9 @@ export async function showcaseHtml(): Promise<string> {
     )
     .join("\n    ");
   return `<section class="showcase" aria-label="The same program in Logos and other languages" data-showcase>
+  <div class="showcase__langs" role="group" aria-label="Language on the right">
+    ${langs}
+  </div>
   <div class="showcase__box">
     <div class="showcase__tabs" role="tablist" aria-label="Example">
       ${tabs}
@@ -424,9 +428,6 @@ export async function showcaseHtml(): Promise<string> {
         ${right}
       </div>
     </div>
-  </div>
-  <div class="showcase__langs" role="group" aria-label="Language on the right">
-    ${langs}
   </div>
 </section>`;
 }

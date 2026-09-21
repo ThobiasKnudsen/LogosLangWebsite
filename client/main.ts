@@ -157,7 +157,7 @@ function initMarginalia(): void {
 	new ResizeObserver(fill).observe(document.body);
 }
 
-// ── Showcase: tabs of examples over two panes, and a language picker ──────────
+// ── Showcase: a language picker, then tabs of examples over two panes ─────────
 // Every tab x language listing is already in the page (build/showcase.ts); this
 // shows the tab's Logos listing on the left and its listing in the picked
 // language on the right, hides the rest, and names the right pane. With JS off
