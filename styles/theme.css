@@ -90,14 +90,20 @@
     --line-proofs: #6f5de0;
     --line-interop: #c8466f;
     --line-tooling: #1a9088;
-    /* Code tokens for the listings (see .listing), in the roadmap line hues
-       darkened where needed to clear WCAG AA 4.5:1 on the cream --code-bg. */
-    --tok-kw: var(--accent);
-    --tok-type: #247a44;
-    --tok-num: #a8551a;
-    --tok-str: #c8466f;
+    /* Code tokens for the Logos listings (build/highlight.ts; see .listing and
+       the showcase): GitHub's light palette, the one Shiki paints the other
+       languages in, so Logos beside them reads as one scheme (Thobias, 22
+       September 2026; the roadmap line hues before that). */
+    --tok-kw: #cf222e;
+    --tok-fn: #8250df;
+    --tok-type: #0550ae;
+    --tok-num: #0550ae;
+    --tok-str: #0a3069;
+    --tok-def: #953800;
+    --tok-field: #116329;
+    --tok-hole: #9a6700;
     --tok-op: #6f6a60;
-    --tok-comment: #6f6a60;
+    --tok-comment: #6e7781;
 }
 
 /* The site is served dark only, for now: <html data-theme="dark"> on every page
@@ -139,12 +145,17 @@
     --line-proofs: #9d8dff;
     --line-interop: #ec7ba0;
     --line-tooling: #3fc3b8;
-    --tok-kw: var(--accent);
-    --tok-type: #54c47e;
-    --tok-num: #e8964a;
-    --tok-str: #ec7ba0;
+    /* GitHub's dark palette, as Shiki's github-dark paints the other panes. */
+    --tok-kw: #ff7b72;
+    --tok-fn: #d2a8ff;
+    --tok-type: #79c0ff;
+    --tok-num: #79c0ff;
+    --tok-str: #a5d6ff;
+    --tok-def: #ffa657;
+    --tok-field: #7ee787;
+    --tok-hole: #e3b341;
     --tok-op: #9c978b;
-    --tok-comment: #8a8578;
+    --tok-comment: #8b949e;
 }
 
 * {
@@ -894,9 +905,13 @@ a {
     /* A blank source line has no content to give it height. */
     min-height: 1.65em;
 }
+/* The categories are build/highlight.ts's; no weight on the keywords, as in the
+   Shiki panes beside them. */
 .tok-kw {
     color: var(--tok-kw);
-    font-weight: 600;
+}
+.tok-fn {
+    color: var(--tok-fn);
 }
 .tok-type {
     color: var(--tok-type);
@@ -906,6 +921,15 @@ a {
 }
 .tok-str {
     color: var(--tok-str);
+}
+.tok-def {
+    color: var(--tok-def);
+}
+.tok-field {
+    color: var(--tok-field);
+}
+.tok-hole {
+    color: var(--tok-hole);
 }
 .tok-op {
     color: var(--tok-op);

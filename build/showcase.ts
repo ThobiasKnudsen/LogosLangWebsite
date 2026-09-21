@@ -9,7 +9,7 @@
 // `@`), `.compile()`, and the dyad view (`x:dyad.type`). The one liberty is `mut`
 // on reassigned locals, the spelling the newest examples use though the seed does
 // not yet enforce it, and `print`, the designed spelling for output (Thobias, 22
-// September 2026: `print «…»` for a string, `print value` for a value), which the
+// September 2026: `print «…»`, with `{…}` in the string interpolating a value), which the
 // seed does not have yet; there a file's tail expression is its value and is
 // printed. The proof tab follows language_sketch.logos's conjectures (p1, p3, p4)
 // and DESIGN.md's ruling that a proof applies as a rewrite. The other languages
@@ -63,7 +63,7 @@ const EXAMPLES: Example[] = [
 double := fn (x := i32 ?) -> i32 ( x + x ),
 mut sum := i32 0,
 for i in 0..7 ( sum = sum + i ),
-print double(sum)   # 42`,
+print «answer {double(sum)}»   # answer 42`,
       rust: `// the answer, computed the long way
 fn double(x: i32) -> i32 {
     x + x
@@ -138,7 +138,7 @@ pick := fn (i := i32 ?) -> type (
 
 mut a := pick(1) ?,   # a is declared as an f64
 a = 9.9,
-print (pick(0) == i32)   # true`,
+print «{pick(0) == i32}»   # true`,
       zig: `// a function can return a type, run at compile time
 const std = @import("std");
 
@@ -183,7 +183,7 @@ sum_to := fn (n := i64 ?) -> i64 (
     s
 ),
 sum_to.compile(),
-print sum_to(1000000)`,
+print «{sum_to(1000000)}»`,
     },
   },
   {
@@ -195,7 +195,7 @@ print sum_to(1000000)`,
 # teardown into this scope itself: \`defer free a\`
 a := alloc i32 40,
 b := own a,   # moves ownership; a's free no-ops
-print b@      # 40`,
+print «b {b@}»   # b 40`,
       rust: `// a Box owns its heap value and frees it when the
 // owner goes out of scope; a move hands that duty on
 fn main() {
@@ -218,7 +218,7 @@ same := x:dyad.type == i32,     # true
 cross := x:dyad.type == f64,    # false
 meta := i32:dyad.type == type,  # true: the root type
 
-print (same and meta and not (cross))   # true`,
+print «{same and meta and not (cross)}»   # true`,
       rust: `// a value's type has an identity at run time,
 // though nothing more of it can be read back
 use std::any::{Any, TypeId};
@@ -287,7 +287,7 @@ half := conjecture ( (a + a) / a -> 2 )
         -> mul_one(2 * 1)
         -> 2
     ),
-print half((3 + 3) / 3)   # 2`,
+print «{half((3 + 3) / 3)}»   # 2`,
       lean: `-- a theorem is a type and its proof a term the kernel
 -- checks; the rewrites are the same steps
 import Mathlib
