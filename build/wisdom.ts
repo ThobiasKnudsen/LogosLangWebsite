@@ -1,6 +1,6 @@
 // The reflections on the Logos across the ages, shown as marginalia: stacked down
-// the page's two outer margins on every page, faint until the pointer is on one,
-// and scrolling with the page like glosses in a manuscript (see .margin in
+// the page's two outer margins on every page, invisible until the pointer is on
+// one, and scrolling with the page like glosses in a manuscript (see .margin in
 // theme.css and initMarginalia in client/main.ts). They ran as a slow frieze under the homepage hero
 // from 26 August to 21 September 2026 (with a few days pinned across the top of the
 // screen, and one as a vertical rail); Thobias moved them into the margins on 21

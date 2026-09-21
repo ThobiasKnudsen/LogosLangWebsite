@@ -1,6 +1,7 @@
 // Inner HTML for the marketing pages. The homepage order: the hero is the identity,
-// "Λόγος / One language for everything", over one paragraph on the mechanism (one
-// graph, checked redefinition); then the honest comparison matrix. No code listing:
+// "One language for everything" (the wordmark "Λόγος" stood above it until 22
+// September 2026), over one paragraph on the mechanism (one graph, checked
+// redefinition); then the honest comparison matrix. No code listing:
 // one ran down the homepage's right-hand side from 11 to 21 September 2026, and the
 // examples page has the same definitions. The reflections on the Logos live in the
 // page margins now (build/wisdom.ts).
@@ -957,11 +958,7 @@ function compareHtml(hiddenIds: readonly string[]): string {
 // September 2026 (build/wisdom.ts).
 export function homePage(): string {
   return `<section class="hero">
-  <h1 class="hero__headline">
-    <span class="hero__brand" aria-hidden="true">Λόγος</span>
-    <span class="hero__lead" aria-hidden="true">One language for everything</span>
-    <span class="sr-only">Λόγος: one language for everything.</span>
-  </h1>
+  <h1 class="hero__headline">One language for everything</h1>
   <p class="hero__sub">Logos is maximally meta. Its grammar, types, proofs, compiler and interpreter live in the same graph as your program, so your code can read and redefine any of them, and every change is checked. Meta used to mean unchecked and slow. Here it is neither.</p>
 </section>
 ${compareHtml(HOME_HIDDEN)}`;

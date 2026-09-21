@@ -482,8 +482,8 @@ a {
    The two outer margins beside the page column, each drawn as one hairline the
    full height of the page, in the page (not fixed) so they and everything in them
    scroll with it. Each is a column of the quotes on the Logos stacked end to end
-   from the top of the page down, like glosses in a manuscript, every one a
-   faint ghost until the pointer is on it. The hover box is the stanza's own box,
+   from the top of the page down, like glosses in a manuscript, every one
+   invisible until the pointer is on it. The hover box is the stanza's own box,
    the height of its text and the margin's width less a small inset, and the boxes
    touch, so the pointer anywhere in a margin is over one quote: crossing into the
    next shows it at once as the last fades. Only the FIRST quote after the pointer
@@ -535,10 +535,10 @@ a {
     margin: 0;
     padding: 0.3rem 0.45rem;
     text-align: center;
-    /* At rest a quote is barely there, a ghost of text down the margin; the one
-       under the pointer comes up to full colour (Thobias, 22 September 2026;
-       they were wholly invisible at rest before). */
-    opacity: 0.07;
+    /* At rest a quote is invisible; the one under the pointer comes up to full
+       colour (Thobias, 22 September 2026: a faint ghost at rest was tried for an
+       hour and he preferred nothing). */
+    opacity: 0;
     transition: opacity 0.25s ease;
 }
 /* The wait applies on the way in only, and only while the margin is not yet
@@ -575,53 +575,33 @@ a {
 
 /* ── Hero ─────────────────────────────────────────────────────────────────── */
 .hero {
-    /* Room above the headline: it should sit clearly below the dock, not hug it. The
-       side padding is the phone gutter every other homepage section keeps. */
-    padding-top: clamp(4rem, 16vh, 5rem);
+    /* Room above the headline: clearly below the dock, not hugging it, and a
+       little higher than it sat before 22 September 2026 (clamp(4rem, 16vh,
+       5rem) then). The side padding is the phone gutter every other homepage
+       section keeps. */
+    padding-top: clamp(3rem, 12vh, 3.5rem);
     padding-inline: 1.25rem;
     display: flex;
     flex-direction: column;
     align-items: center;
     text-align: center;
 }
+/* The one heading, "One language for everything" (Thobias, 22 September 2026;
+   the wordmark "Λόγος" stood above it as a first line from 26 August until then,
+   at clamp(1.28rem, 4.4vw, 3.4rem) with the identity line at 80% of that). It is
+   a rounded card in the brand's light blue-purple, the logo's own colour on the
+   dark page, with ink text. */
 .hero__headline {
     font-family: var(--serif);
-    /* The size it took when it shared the page with a code column (11 September
-       2026), kept after the column went. The full-width hero before that ran to
-       clamp(1.28rem, 6.4vw, 4.48rem). */
-    font-size: clamp(1.28rem, 4.4vw, 3.4rem);
-    line-height: 1.02;
+    font-size: clamp(1.5rem, 5vw, 4rem);
+    line-height: 1.05;
     font-weight: 600;
     letter-spacing: -0.02em;
-    /* Stacked: the wordmark "Λόγος" and the identity line beneath it, at the same
-       size, so they read as one two-line title. */
-    display: flex;
-    flex-direction: column;
-    align-items: center;
     max-width: 100%;
     margin: 0;
-    /* A white box around the title, with rounded corners (Thobias, 22 September
-       2026): the site's creamy white, a bright card on the dark page, with the
-       light theme's ink and brand blue-purple inside. (Should the light theme
-       return, that cream is its column colour, and the box wants a hairline and
-       a step lighter, #fffdf5, to show.) */
-    padding: clamp(1.1rem, 2.6vw, 1.8rem) clamp(1.4rem, 4.5vw, 3rem);
+    padding: clamp(1rem, 2.4vw, 1.6rem) clamp(1.4rem, 4.5vw, 3rem);
     border-radius: 1rem;
-    background: var(--white);
-    color: var(--ink);
-}
-/* The wordmark leads the headline at the SAME size as the identity line, in the brand
-   blue-purple, with a hair of separation beneath it. */
-.hero__brand {
-    color: var(--bp-dark);
-    white-space: nowrap;
-    margin-bottom: 0.3em;
-}
-/* The identity line, the one sentence a first-time visitor should read, at 80% of
-   the wordmark above it (Thobias, 2026-08-26). */
-.hero__lead {
-    display: block;
-    font-size: 0.8em;
+    background: var(--bp-light);
     color: var(--ink);
 }
 .hero__sub {
