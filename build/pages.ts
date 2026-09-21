@@ -1,13 +1,13 @@
 // Inner HTML for the marketing pages. The homepage order: the hero is the identity,
 // "Λόγος / One language for everything", over one paragraph on the mechanism (one
 // graph, checked redefinition); the frieze of reflections on the Logos sits directly
-// under it, part of the name (Thobias, 2026-08-26); the code card comes next with one
-// line of description, so a developer sees syntax before theory; the ladder of meta
-// makes the "maximally meta" claim concrete against the languages a PL-literate
-// visitor will name; the Logic Graph figure shows the mechanism; "Checked, not
-// clever" answers the Lisp/Smalltalk objection; the payoffs say why it matters; then
-// the proven-parts section, the honest comparison matrix, and the get-notified form
-// last, where a convinced reader lands.
+// under it, part of the name (Thobias, 2026-08-26); the ladder of meta makes the
+// "maximally meta" claim concrete against the languages a PL-literate visitor will
+// name; the Logic Graph figure shows the mechanism; "Checked, not clever" answers the
+// Lisp/Smalltalk objection; then the proven-parts section, the honest comparison
+// matrix, and the get-notified form last, where a convinced reader lands. No code
+// listing: one ran down the homepage's right-hand side from 11 to 21 September 2026,
+// and the examples page has the same definitions.
 import { escapeHtml } from "./templates.ts";
 import {
   OS_ORDER,
@@ -187,16 +187,14 @@ function notifyFormHtml(source: string): string {
     </form>`;
 }
 
-// ── The code listing and the examples page ────────────────────────────────────
-// On the homepage, one continuous file running the length of the page, as if the
-// homepage were a single Logos source read top to bottom (Thobias, 11 September
-// 2026). It carries no comments of its own and no prose around it: it is meant to be
-// read as code, so anything that needs saying has to be said by the code. The same
-// definitions, divided at their blank lines, are the examples page, where each one
-// gets a title and a line of prose (Thobias, 15 September 2026). EXAMPLES is the one
-// source of both: the listing is its `code` fields joined by blank lines.
+// ── The examples ──────────────────────────────────────────────────────────────
+// One definition per example, each with a title and a line of prose, on the examples
+// page (Thobias, 15 September 2026). Joined by blank lines, their `code` fields were
+// also one continuous file down the homepage's right-hand side, as if the homepage
+// were a single Logos source read top to bottom (Thobias, 11 September 2026), until
+// the homepage dropped its code on 21 September 2026.
 //
-// The listing is the language defining itself, in the order that dependency demands:
+// The examples are the language defining itself, in the order dependency demands:
 // the dyad, the self-classifying `logos`, `type` (which reads its own bracket), `(`
 // (the scope opener and the eager-segment driver), and finally `+`, an ordinary
 // operator built out of all of it. Every definition is lifted from a REAL file in the
@@ -223,8 +221,8 @@ function notifyFormHtml(source: string): string {
 //     spelling of "is a" in a language with no inheritance, where `==` on types is
 //     identity. The and-group distributes, so one line covers both operands.
 //   - `lhs` / `rhs` rather than DESIGN.md's `.operands` collection: ruled for `+` by
-//     Thobias, 11 September 2026, and it keeps the card and the Logic Graph figure
-//     below it telling the same story.
+//     Thobias, 11 September 2026, and it keeps the `+` example and the homepage's
+//     Logic Graph figure telling the same story.
 // The one invented value is the 4.0. DESIGN.md pins no table of ranks, only that the
 // axis is an f64 where higher binds tighter and fractional values let a new operator
 // slot between two existing ones without renumbering.
@@ -397,10 +395,6 @@ const EXAMPLES: Example[] = [
     code: `total := 2 + 3 + 4`,
   },
 ];
-
-// The homepage listing: every example's code, joined by one blank line.
-const HOME_SAMPLE = EXAMPLES.map((e) => e.code).join("\n\n");
-
 
 const LOGOS_KEYWORDS = new Set([
   "fn",
@@ -712,28 +706,17 @@ function structureHtml(): string {
 /** A listing's lines as blocks: each line is its own block so that a blank source
  *  line still takes a line's height, from .code-line's min-height; the lines carry
  *  no "\n" between them, since a newline plus a block would render as a second,
- *  empty line. The blocks were also what a CSS counter numbered the homepage listing
- *  through until the numbers were dropped (commit ef4d3d4); nothing numbers them
- *  now. */
+ *  empty line. */
 function codeLinesHtml(source: string): string {
   return highlightLogosLines(source)
     .map((line) => `<span class="code-line">${line}</span>`)
     .join("");
 }
 
-// The listing stands on its own: no card, no filename bar, no heading, no prose, just
-// an open bracket down its left side (see .listing and .page-grid__code). It is the
-// page's right-hand column, running beside every section from the wordmark to the
-// signup.
-function codeListingHtml(): string {
-  return `<pre class="listing page-grid__code"><code>${codeLinesHtml(HOME_SAMPLE)}</code></pre>`;
-}
-
 // ── Examples page ─────────────────────────────────────────────────────────────
-// The homepage listing divided at its blank lines (Thobias, 15 September 2026): one
-// article per definition, in the same order, with the identifier as its title, a line
-// or two of prose from the source file's own comments, and the code held by the same
-// open bracket as on the homepage.
+// One article per definition (Thobias, 15 September 2026), in dependency order, with
+// the identifier as its title, a line or two of prose from the source file's own
+// comments, and the code held by an open bracket down its left side (see .listing).
 export function examplesPage(): string {
   const items = EXAMPLES.map(
     (e) => `  <article class="example" id="${e.id}">
@@ -1286,18 +1269,19 @@ function compareHtml(): string {
 </section>`;
 }
 
-/** The matrix on its own page. It left the homepage when that became a two-column
- *  read (11 September 2026): the table is 13 columns wide with an intrinsic floor of
- *  82rem, so it cannot share a page with anything. It carries its own title and lead,
- *  so the page is the section. */
+/** The matrix on its own page as well. It left the homepage when that became a
+ *  two-column read (11 September 2026), since a 13-column table with an intrinsic
+ *  floor of 82rem cannot share a page with anything, and went back to the foot of the
+ *  homepage when the code column went (21 September 2026). It carries its own title
+ *  and lead, so the page is the section. */
 export function comparePage(): string {
   return compareHtml();
 }
 
-// A short "large but tractable" section between the code card and the matrix: it
-// names the working precedent each part has, the small self-hosting seed the whole
-// thing bootstraps from, and points at the roadmap and vision. It frames the matrix
-// below as the capability-by-capability evidence.
+// A short "large but tractable" section between "Checked, not clever" and the
+// matrix: it names the working precedent each part has, the small self-hosting seed
+// the whole thing bootstraps from, and points at the roadmap and vision. It frames
+// the matrix below as the capability-by-capability evidence.
 function buildableHtml(): string {
   return `<section class="buildable" aria-label="Why Logos can be built">
   <h2 class="buildable__title">Built from proven parts</h2>
@@ -1409,37 +1393,32 @@ function notifySectionHtml(): string {
 </section>`;
 }
 
-// The homepage is one two-column grid (Thobias, 11 September 2026): every prose
-// section down the left and one continuous code listing down the right, both running
-// the full height of the document. Below the grid's breakpoint the two columns become
-// one; see .page-grid.
+// The homepage is one column of sections, each sizing itself (Thobias, 21 September
+// 2026). It was a two-column grid, prose down the left and one continuous code
+// listing down the right, from 11 September 2026 until the code was dropped.
 //
-// The quote band sits in the left column directly under the hero, the "Logos is
-// maximally meta" paragraph (Thobias, 15 September 2026). It was pinned across the
-// top of the screen for four days before that, and a vertical rail between the two
-// columns for a day before that; in flow under the hero is where it began.
+// The quote band sits directly under the hero, the "Logos is maximally meta"
+// paragraph (Thobias, 15 September 2026). It was pinned across the top of the screen
+// for four days before that, and a vertical rail between the prose and the code for
+// a day before that; in flow under the hero is where it began.
 export function homePage(): string {
-  return `<div class="page-grid">
-  <div class="page-grid__text">
-    <section class="hero">
-      <h1 class="hero__headline">
-        <span class="hero__brand" aria-hidden="true">Λόγος</span>
-        <span class="hero__lead" aria-hidden="true">One language for everything</span>
-        <span class="sr-only">Λόγος: one language for everything.</span>
-      </h1>
-      <p class="hero__sub">Logos is maximally meta. Its grammar, types, proofs, compiler and interpreter live in the same graph as your program, so your code can read and redefine any of them, and every change is checked. Meta used to mean unchecked and slow. Here it is neither.</p>
-    </section>
-    <section class="wisdom" aria-label="On the Logos, voices across the ages">
-      <div class="wisdom__scroll"><div class="wisdom__track">${wisdomUnits()}</div></div>
-    </section>
+  return `<section class="hero">
+  <h1 class="hero__headline">
+    <span class="hero__brand" aria-hidden="true">Λόγος</span>
+    <span class="hero__lead" aria-hidden="true">One language for everything</span>
+    <span class="sr-only">Λόγος: one language for everything.</span>
+  </h1>
+  <p class="hero__sub">Logos is maximally meta. Its grammar, types, proofs, compiler and interpreter live in the same graph as your program, so your code can read and redefine any of them, and every change is checked. Meta used to mean unchecked and slow. Here it is neither.</p>
+</section>
+<section class="wisdom" aria-label="On the Logos, voices across the ages">
+  <div class="wisdom__scroll"><div class="wisdom__track">${wisdomUnits()}</div></div>
+</section>
 ${metaLadderHtml()}
 ${structureHtml()}
 ${checkedHtml()}
 ${buildableHtml()}
-${notifySectionHtml()}
-  </div>
-  ${codeListingHtml()}
-</div>`;
+${compareHtml()}
+${notifySectionHtml()}`;
 }
 
 export function visionPage(): string {

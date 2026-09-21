@@ -74,7 +74,7 @@
     --line-proofs: #6f5de0;
     --line-interop: #c8466f;
     --line-tooling: #1a9088;
-    /* Code tokens for the homepage code card, in the roadmap line hues
+    /* Code tokens for the listings (see .listing), in the roadmap line hues
        darkened where needed to clear WCAG AA 4.5:1 on the cream --code-bg. */
     --tok-kw: var(--accent);
     --tok-type: #247a44;
@@ -515,39 +515,12 @@ a {
     padding-top: var(--nav-height);
 }
 
-/* ── The homepage grid ────────────────────────────────────────────────────────
-   Two columns running the full height of the document: every prose section down the
-   left, one continuous code listing down the right. The quotes ran between them as a
-   third column for a day (Thobias, 11 September 2026); they are a band inside the
-   left column now, under the hero (see .wisdom), so the two survivors close up.
-
-   The measure is still the dock's own thickness. Prose to code is two of them, half
-   the four the rail needed to sit in the middle with a gutter either side. The two
-   columns are equal fractions, and the listing is indented two spaces rather than
-   four so that it fits one of them without scrolling. Below 88rem they become one. */
-.page-grid {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    column-gap: calc(var(--nav-height) * 2);
-    align-items: start;
-    max-width: 96rem;
-    margin-inline: auto;
-    padding-inline: clamp(1rem, 4vw, 2.5rem);
-}
-.page-grid__text {
-    min-width: 0;
-}
-@media (max-width: 88rem) {
-    .page-grid {
-        grid-template-columns: minmax(0, 1fr);
-        row-gap: clamp(3rem, 8vw, 5rem);
-    }
-}
-
 /* ── Hero ─────────────────────────────────────────────────────────────────── */
 .hero {
-    /* Room above the headline: it should sit clearly below the dock, not hug it. */
+    /* Room above the headline: it should sit clearly below the dock, not hug it. The
+       side padding is the phone gutter every other homepage section keeps. */
     padding-top: clamp(4rem, 16vh, 5rem);
+    padding-inline: 1.25rem;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -555,8 +528,9 @@ a {
 }
 .hero__headline {
     font-family: var(--serif);
-    /* Sized for half the page rather than all of it: the old full-width hero ran to
-       clamp(1.28rem, 6.4vw, 4.48rem), which cannot fit beside the code. */
+    /* The size it took when it shared the page with a code column (11 September
+       2026), kept after the column went. The full-width hero before that ran to
+       clamp(1.28rem, 6.4vw, 4.48rem). */
     font-size: clamp(1.28rem, 4.4vw, 3.4rem);
     line-height: 1.02;
     font-weight: 600;
@@ -659,6 +633,7 @@ a {
     /* The bottom margin is the page's last breath: the form is the final element
        before the footer's hairline, and without it the button sits on that rule. */
     margin: clamp(4rem, 10vh, 7rem) auto clamp(3rem, 8vh, 5rem);
+    padding-inline: 1.25rem;
     text-align: center;
 }
 .signup__title {
@@ -679,10 +654,11 @@ a {
     margin-top: 1.6rem;
 }
 
-/* "Built from proven parts": the large-but-tractable section under the code. */
+/* "Built from proven parts": the large-but-tractable section before the matrix. */
 .buildable {
     max-width: 46rem;
     margin: clamp(4rem, 10vh, 7rem) auto 0;
+    padding-inline: 1.25rem;
     text-align: center;
 }
 .buildable__title {
@@ -709,6 +685,7 @@ a {
 .checked {
     max-width: 46rem;
     margin: clamp(4rem, 10vh, 7rem) auto 0;
+    padding-inline: 1.25rem;
     text-align: center;
 }
 .checked__title {
@@ -744,8 +721,8 @@ a {
    Code floats on the page: no card, no frame, no tinted ground, no heading, just the
    lines held by one open bracket down their left side (Thobias, 11 September 2026).
    Tokens are colored by the build's small highlighter (highlightLogosLines in
-   build/pages.ts) via the --tok-* vars. The homepage's code column and the examples
-   page share this look; each places it below. */
+   build/pages.ts) via the --tok-* vars. The examples page places it (.example__code);
+   the homepage's code column did too, until 21 September 2026. */
 .listing {
     /* The bracket's arm length, which is also the air it keeps on all four sides:
        from the stem to the first character, and from each arm to the line nearest it
@@ -759,9 +736,6 @@ a {
     padding: calc(var(--bracket) - var(--half-leading)) 0
         calc(var(--bracket) - var(--half-leading)) var(--bracket);
     text-align: left;
-    /* An ordinary code pitch: stretching the listing to the prose column's full
-       height spread the lines far too wide to read as a file (Thobias, 11 September
-       2026). It ends where it ends.  */
     overflow-x: auto;
     /* The open bracket: the stem is the left border, the two arms are background
        strips at the top and bottom of it. Both live on the border box, so neither
@@ -781,26 +755,6 @@ a {
     font-size: 0.82rem;
     line-height: 1.65;
     color: var(--text);
-}
-/* The homepage's code column. Dock clearance as a margin rather than padding, the
-   way the hero's headline clears it, so the bracket starts at the first line instead
-   of up under the menu. The listing's block padding is taken back off it, which
-   keeps the first line of code exactly level with the headline beside it and moves
-   only the arm. The negative inline start likewise cancels the inline padding: the
-   stem hangs in the gutter between the two columns and the lines keep the column's
-   full width. */
-.page-grid__code {
-    margin: calc(clamp(4rem, 16vh, 5rem) - var(--bracket) + var(--half-leading)) 0 0
-        calc(var(--bracket) * -1);
-}
-/* One column: there is no gutter left to hang the bracket in, and hanging it outside
-   the page's own padding would give a phone a sideways scroll. It sits inside
-   instead, and the lines move over by its width. This has to come AFTER the rule
-   above, whose margin shorthand would otherwise beat it. */
-@media (max-width: 88rem) {
-    .page-grid__code {
-        margin-left: 0;
-    }
 }
 .code-line {
     display: block;
@@ -834,6 +788,7 @@ a {
 .ladder {
     max-width: 46rem;
     margin: clamp(4rem, 10vh, 7rem) auto 0;
+    padding-inline: 1.25rem;
     text-align: center;
 }
 .ladder__title {
@@ -918,6 +873,7 @@ a {
 .unify {
     max-width: 46rem;
     margin: clamp(4rem, 10vh, 7rem) auto 0;
+    padding-inline: 1.25rem;
     text-align: center;
 }
 .unify__title {
@@ -1052,10 +1008,10 @@ a {
 }
 /* ── Wisdom band ──────────────────────────────────────────────────────────────
    A slow right-to-left drift of reflections on the Logos, framed by two hairlines
-   like an inscription, directly under the hero in the prose column (Thobias, 15
-   September 2026). It was pinned across the top of the screen for four days before
-   that, a vertical rail between the prose and the code for a day before that, and a
-   band under the hero, where it began, before that.
+   like an inscription, directly under the hero (Thobias, 15 September 2026). It was
+   pinned across the top of the screen for four days before that, a vertical rail
+   between the prose and the code for a day before that, and a band under the hero,
+   where it began, before that.
 
    Each quote exists exactly ONCE in the track. The drift is driven in JS by nudging
    scrollLeft (see initWisdom), which is the same scrollLeft a reader moves by
@@ -1161,7 +1117,8 @@ a {
     opacity: 0.55;
 }
 /* ── Comparison matrix ────────────────────────────────────────────────────────
-   "Next to its neighbors" on the homepage: Logos against eleven other languages.
+   "Next to its neighbors", at the foot of the homepage and on /compare/: Logos
+   against eleven other languages.
    One glyph per cell (has it / partial / no), colored green / yellow / red; the
    not-done-yet disclaimer lives once in the lead paragraph, not per cell or in
    the header. The section is wide enough that the whole table shows on a
@@ -1547,10 +1504,9 @@ a {
 }
 
 /* ── Examples ─────────────────────────────────────────────────────────────────
-   The homepage listing divided at its blank lines: one definition per article, the
-   identifier as a mono title, a line of prose, and the code held by the same open
-   bracket as on the homepage, here inside the column rather than hung in a gutter
-   (Thobias, 15 September 2026). */
+   One definition per article: the identifier as a mono title, a line of prose, and
+   the code held by an open bracket (see .listing) inside the column (Thobias, 15
+   September 2026). */
 .examples {
     max-width: 48rem;
     margin-inline: auto;
