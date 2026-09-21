@@ -48,7 +48,6 @@ export function escapeHtml(s: string): string {
 const NAV = [
 	{ key: 'vision', label: 'Vision', href: '/vision/' },
 	{ key: 'roadmap', label: 'Roadmap', href: '/roadmap/' },
-	{ key: 'compare', label: 'Compare', href: '/compare/' },
 	{ key: 'examples', label: 'Examples', href: '/examples/' },
 	{ key: 'docs', label: 'Docs', href: '/docs/' },
 	{ key: 'about', label: 'About', href: '/about/' },

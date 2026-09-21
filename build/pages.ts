@@ -359,9 +359,10 @@ ${items}
 // its number in the cell (a popover; they were a list under the table until 21
 // September 2026).
 //
-// On the homepage the reader chooses the columns (Thobias, 21 September 2026): a ×
-// in each language header hides that column, a chip row above the table adds it
-// back, and the choice is kept in localStorage. /compare/ shows all eleven.
+// The reader chooses the columns (Thobias, 21 September 2026): a × in each language
+// header hides that column, a chip row above the table adds it back, and the choice
+// is kept in localStorage. (A /compare/ page showed all eleven, without the
+// toggles, until Thobias cut it on 22 September 2026.)
 
 type CompareVerdict = "yes" | "partial" | "no";
 interface CompareCell {
@@ -870,12 +871,11 @@ const VERDICT_TEXT: Record<CompareVerdict, string> = {
   no: "no",
 };
 
-/** @param toggles When given, every column but Logos gets a hide button, a chip row
- *  above the table offers the hidden ones back, and `hidden` names the columns that
- *  start out hidden (the client side is in initCompare, client/main.ts). Without it,
- *  the plain table. */
-function compareHtml(toggles?: { hidden: readonly string[] }): string {
-  const hidden = new Set(toggles?.hidden ?? []);
+/** @param hiddenIds The columns that start out hidden. Every column but Logos gets
+ *  a hide button, and a chip row above the table offers the hidden ones back (the
+ *  client side is in initCompare, client/main.ts). */
+function compareHtml(hiddenIds: readonly string[]): string {
+  const hidden = new Set(hiddenIds);
   for (const id of hidden) {
     if (!COMPARE_LANGS.some((l) => l.id === id)) {
       throw new Error(`compareHtml: unknown language id ${id}`);
@@ -893,7 +893,7 @@ function compareHtml(toggles?: { hidden: readonly string[] }): string {
   const off = (i: number): string => (hidden.has(langAt(i).id) ? " is-off" : "");
   const head = COMPARE_LANGS.map((lang, i) => {
     const hide =
-      toggles && i > 0
+      i > 0
         ? `<button type="button" class="compare__off" data-lang="${lang.id}" aria-label="Hide ${lang.name}">×</button>`
         : "";
     return `<th scope="col" class="compare__lang${i === 0 ? " compare__lang--logos" : ""}${off(i)}"${colAttrs(i)}>${lang.name}${hide}</th>`;
@@ -919,8 +919,7 @@ function compareHtml(toggles?: { hidden: readonly string[] }): string {
   ).join("\n  ");
   // One chip per language, in column order; a chip is .is-off while its column
   // shows, and the row is .is-empty when nothing is hidden.
-  const chips = toggles
-    ? `
+  const chips = `
   <div class="compare__chips${hidden.size === 0 ? " is-empty" : ""}" data-compare-chips>
     <span class="compare__chips-label">Add a language:</span>
     ${COMPARE_LANGS.slice(1)
@@ -929,8 +928,7 @@ function compareHtml(toggles?: { hidden: readonly string[] }): string {
           `<button type="button" class="compare__chip${hidden.has(lang.id) ? "" : " is-off"}" data-lang="${lang.id}">${lang.name}</button>`,
       )
       .join("\n    ")}
-  </div>`
-    : "";
+  </div>`;
   return `<section class="compare" aria-label="How Logos compares to other languages">
   <h2 class="compare__title">Comparison Matrix</h2>
   <ul class="compare__legend"><li class="is-yes"><span aria-hidden="true">✓</span> has it</li><li class="is-partial"><span aria-hidden="true">~</span> partial</li><li class="is-no"><span aria-hidden="true">✗</span> no</li></ul>${chips}
@@ -944,15 +942,6 @@ function compareHtml(toggles?: { hidden: readonly string[] }): string {
   </div>
   ${notes}
 </section>`;
-}
-
-/** The matrix on its own page as well. It left the homepage when that became a
- *  two-column read (11 September 2026), since a 13-column table with an intrinsic
- *  floor of 82rem cannot share a page with anything, and went back to the foot of the
- *  homepage when the code column went (21 September 2026). It carries its own title,
- *  so the page is the section. */
-export function comparePage(): string {
-  return compareHtml();
 }
 
 // The homepage is one column of sections, each sizing itself (Thobias, 21 September
@@ -975,7 +964,7 @@ export function homePage(): string {
   </h1>
   <p class="hero__sub">Logos is maximally meta. Its grammar, types, proofs, compiler and interpreter live in the same graph as your program, so your code can read and redefine any of them, and every change is checked. Meta used to mean unchecked and slow. Here it is neither.</p>
 </section>
-${compareHtml({ hidden: HOME_HIDDEN })}`;
+${compareHtml(HOME_HIDDEN)}`;
 }
 
 export function visionPage(): string {

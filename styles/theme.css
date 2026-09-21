@@ -538,7 +538,7 @@ a {
     /* At rest a quote is barely there, a ghost of text down the margin; the one
        under the pointer comes up to full colour (Thobias, 22 September 2026;
        they were wholly invisible at rest before). */
-    opacity: 0.14;
+    opacity: 0.07;
     transition: opacity 0.25s ease;
 }
 /* The wait applies on the way in only, and only while the margin is not yet
@@ -756,8 +756,8 @@ a {
     font-style: italic;
 }
 /* ── Comparison matrix ────────────────────────────────────────────────────────
-   "Comparison Matrix", at the foot of the homepage and on /compare/: Logos
-   against eleven other languages.
+   "Comparison Matrix", at the foot of the homepage (it had a page of its own,
+   /compare/, until 22 September 2026): Logos against eleven other languages.
    One glyph per cell (has it / partial / no), colored green / yellow / red. No
    lead paragraph: title, legend, chips, table, notes. The table is as wide as the columns it shows; where that is more
    than the screen, it scrolls horizontally and the .compare__shadows overlays

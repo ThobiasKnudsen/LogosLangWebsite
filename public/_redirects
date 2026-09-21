@@ -1,0 +1,4 @@
+# Cloudflare Pages redirects. The comparison matrix's own page went on 22
+# September 2026; the matrix lives at the foot of the homepage.
+/compare/  /  301
+/compare   /  301

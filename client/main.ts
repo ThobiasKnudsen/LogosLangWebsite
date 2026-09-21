@@ -166,8 +166,7 @@ function initMarginalia(): void {
 // mirroring scrollLeft onto its own overflow:hidden clip box, which also keeps the
 // capability corner pinned via the same sticky rule as the real header. All of it
 // re-checks on scroll, resize, and font load (which changes column widths). (3) On
-// the homepage, column toggles, and (4) the notes' popovers: the two blocks at the
-// end.
+// column toggles, and (4) the notes' popovers: the two blocks at the end.
 function initCompare(): void {
 	const wrap = document.querySelector<HTMLElement>('[data-compare]');
 	const scroll = wrap?.querySelector<HTMLElement>('.compare__scroll');
@@ -266,7 +265,7 @@ function initCompare(): void {
 		updateHints();
 		place();
 	});
-	// ── Column toggles (homepage only; the markup is compareHtml's, build/pages.ts)
+	// ── Column toggles (the markup is compareHtml's, build/pages.ts)
 	// A × in a language header hides that column, a chip in the row above the table
 	// shows it again. Every cell of a column carries its data-lang, so a toggle is
 	// one class flip per cell, mirrored onto the chip, and then the header clone and
@@ -311,7 +310,7 @@ function initCompare(): void {
 		});
 	}
 
-	// ── Notes (both pages; the markup is compareHtml's)
+	// ── Notes (the markup is compareHtml's, build/pages.ts)
 	// A number in a cell opens its note, a native popover: light-dismissed, one at
 	// a time. Parked under the number that opened it (above it when there is no
 	// room below) and kept inside the window; the browser's own placement, centred
