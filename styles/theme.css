@@ -659,13 +659,12 @@ a {
 .showcase__tabs {
     display: flex;
     flex-wrap: wrap;
-    gap: 0 0.25rem;
-    padding-inline: 0.75rem;
     border-bottom: 1px solid var(--hairline); /* the one line before the code */
     background: var(--surface);
 }
+/* Each tab a cell, a line between neighbours (Thobias, 22 September 2026). */
 .showcase__tab {
-    padding: 0.65rem 0.8rem;
+    padding: 0.65rem 1rem;
     margin-bottom: -1px; /* its own bottom line sits on the row's rule */
     border: 0;
     border-bottom: 2px solid transparent;
@@ -675,6 +674,9 @@ a {
     font-weight: 500;
     color: var(--muted);
     cursor: pointer;
+}
+.showcase__tab + .showcase__tab {
+    border-left: 1px solid var(--hairline);
 }
 .showcase__tab:hover {
     color: var(--heading);
@@ -694,6 +696,28 @@ a {
 .showcase__pane {
     position: relative;
     min-width: 0; /* a long line scrolls inside its pane, never widens it */
+    /* One row the shown listing fills, so a message can centre in the pane's
+       full height (the hidden listings make no boxes). */
+    display: grid;
+    grid-template-rows: minmax(0, 1fr);
+}
+/* The shown listing is a grid too, so what it holds (a listing, or the message)
+   stretches to the pane's height; `:not([hidden])` keeps `hidden` in force. */
+.showcase__listing:not([hidden]) {
+    display: grid;
+}
+/* The message for a language that cannot do what the tab shows: alone in the
+   middle of its pane, in the muted colour, no code. */
+.showcase__none {
+    display: grid;
+    place-items: center;
+    padding: 2rem 1.5rem;
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.9rem;
+}
+.showcase__none p {
+    margin: 0;
 }
 .showcase__pane--other {
     border-inline-start: 1px solid var(--hairline);
