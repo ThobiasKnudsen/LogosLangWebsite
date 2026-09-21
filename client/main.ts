@@ -243,7 +243,8 @@ function initWisdom(): void {
 // identifiable through all 22 rows. The clone follows horizontal scrolling by
 // mirroring scrollLeft onto its own overflow:hidden clip box, which also keeps the
 // capability corner pinned via the same sticky rule as the real header. All of it
-// re-checks on scroll, resize, and font load (which changes column widths).
+// re-checks on scroll, resize, and font load (which changes column widths). (3) On
+// the homepage, column toggles: see the block at the end.
 function initCompare(): void {
 	const wrap = document.querySelector<HTMLElement>('[data-compare]');
 	const scroll = wrap?.querySelector<HTMLElement>('.compare__scroll');
@@ -342,6 +343,51 @@ function initCompare(): void {
 		updateHints();
 		place();
 	});
+	// ── Column toggles (homepage only; the markup is compareHtml's, build/pages.ts)
+	// A × in a language header hides that column, a chip in the row above the table
+	// shows it again. Every cell of a column carries its data-lang, so a toggle is
+	// one class flip per cell, mirrored onto the chip, and then the header clone and
+	// the edge hints are rebuilt for the new width. The hidden set is kept in
+	// localStorage; a stored set replaces the server's default before the clone is
+	// first built. Clicks are delegated from the document so the × works in the
+	// floating clone too, which lives outside the section.
+	const section = wrap.closest<HTMLElement>('.compare');
+	const chips = section?.querySelector<HTMLElement>('[data-compare-chips]');
+	if (section && chips) {
+		const KEY = 'compareHidden';
+		const ids = [...thead.querySelectorAll<HTMLElement>('th[data-lang]')].map((th) => th.dataset.lang ?? '');
+		const hiddenIds = (): string[] =>
+			ids.filter((id) => thead.querySelector(`th[data-lang="${id}"]`)?.classList.contains('is-off'));
+		const setOff = (id: string, off: boolean): void => {
+			for (const el of section.querySelectorAll<HTMLElement>(`[data-lang="${id}"]`)) {
+				if (el.classList.contains('compare__off')) continue;
+				const isChip = el.classList.contains('compare__chip');
+				el.classList.toggle('is-off', isChip ? !off : off);
+			}
+			chips.classList.toggle('is-empty', hiddenIds().length === 0);
+		};
+		try {
+			const stored: unknown = JSON.parse(localStorage.getItem(KEY) ?? 'null');
+			if (Array.isArray(stored)) for (const id of ids) setOff(id, stored.includes(id));
+		} catch {
+			/* ignore */
+		}
+		document.addEventListener('click', (e) => {
+			const btn = (e.target as HTMLElement | null)?.closest<HTMLElement>('.compare__off, .compare__chip');
+			const id = btn?.dataset.lang;
+			if (!btn || !id) return;
+			setOff(id, btn.classList.contains('compare__off'));
+			rebuild();
+			updateHints();
+			place();
+			try {
+				localStorage.setItem(KEY, JSON.stringify(hiddenIds()));
+			} catch {
+				/* ignore */
+			}
+		});
+	}
+
 	rebuild();
 	updateHints();
 	place();

@@ -740,6 +740,10 @@ ${items}
 // being usable at all). Verdicts for the other columns were researched and
 // adversarially fact-checked per language (July 2026); the numbered footnotes carry
 // the nuance a one-glyph cell cannot.
+//
+// On the homepage the reader chooses the columns (Thobias, 21 September 2026): a ×
+// in each language header hides that column, a chip row above the table adds it
+// back, and the choice is kept in localStorage. /compare/ shows all eleven.
 
 type CompareVerdict = "yes" | "partial" | "no";
 interface CompareCell {
@@ -754,20 +758,34 @@ interface CompareRow {
   cells: CompareCell[];
 }
 
-const COMPARE_LANGS = [
-  "Logos",
-  "C/C++",
-  "Rust",
-  "Zig",
-  "Lean 4",
-  "Unison",
-  "Racket",
-  "Smalltalk",
-  "Julia",
-  "Python",
-  "TS/JS",
-  "Mojo",
+interface CompareLang {
+  /** The column's handle: on every cell as data-lang, and in the reader's
+   *  localStorage as part of their hidden set, so it must not change once shipped. */
+  id: string;
+  name: string;
+}
+const COMPARE_LANGS: CompareLang[] = [
+  { id: "logos", name: "Logos" },
+  { id: "cpp", name: "C/C++" },
+  { id: "rust", name: "Rust" },
+  { id: "zig", name: "Zig" },
+  { id: "lean", name: "Lean 4" },
+  { id: "unison", name: "Unison" },
+  { id: "racket", name: "Racket" },
+  { id: "smalltalk", name: "Smalltalk" },
+  { id: "julia", name: "Julia" },
+  { id: "python", name: "Python" },
+  { id: "ts", name: "TS/JS" },
+  { id: "mojo", name: "Mojo" },
 ];
+
+// The columns the homepage hides to begin with: eleven neighbors were too many to
+// read (Thobias, 21 September 2026). Ranked by what each column adds. Mojo, Zig and
+// Python each say what a neighbor says (Zig agrees with C/C++ on 17 of 23 rows,
+// Python with TS/JS on 17); Unison's and TS/JS's only yes cells sit in rows where
+// Logos is itself only partial; C/C++ has no row where it beats Rust. Every one of
+// them is a chip above the table, one click from coming back.
+const HOME_HIDDEN = ["cpp", "zig", "unison", "python", "ts", "mojo"];
 
 // Cells are in COMPARE_LANGS order: Logos, C/C++, Rust, Zig, Lean 4, Unison,
 // Racket, Smalltalk, Julia, Python, TS/JS, Mojo.
@@ -1234,18 +1252,41 @@ const VERDICT_TEXT: Record<CompareVerdict, string> = {
   no: "no",
 };
 
-function compareHtml(): string {
-  const head = COMPARE_LANGS.map(
-    (lang, i) =>
-      `<th scope="col" class="compare__lang${i === 0 ? " compare__lang--logos" : ""}">${lang}</th>`,
-  ).join("");
+/** @param toggles When given, every column but Logos gets a hide button, a chip row
+ *  above the table offers the hidden ones back, and `hidden` names the columns that
+ *  start out hidden (the client side is in initCompare, client/main.ts). Without it,
+ *  the plain table. */
+function compareHtml(toggles?: { hidden: readonly string[] }): string {
+  const hidden = new Set(toggles?.hidden ?? []);
+  for (const id of hidden) {
+    if (!COMPARE_LANGS.some((l) => l.id === id)) {
+      throw new Error(`compareHtml: unknown language id ${id}`);
+    }
+  }
+  // Every column but Logos carries its language id on each cell, so a toggle can
+  // reach the whole column; a hidden column's cells start out .is-off. Cells are in
+  // COMPARE_LANGS order, so a cell past the last language is a data error.
+  const langAt = (i: number): CompareLang => {
+    const lang = COMPARE_LANGS[i];
+    if (!lang) throw new Error(`compareHtml: cell ${i} has no language`);
+    return lang;
+  };
+  const colAttrs = (i: number): string => (i === 0 ? "" : ` data-lang="${langAt(i).id}"`);
+  const off = (i: number): string => (hidden.has(langAt(i).id) ? " is-off" : "");
+  const head = COMPARE_LANGS.map((lang, i) => {
+    const hide =
+      toggles && i > 0
+        ? `<button type="button" class="compare__off" data-lang="${lang.id}" aria-label="Hide ${lang.name}">×</button>`
+        : "";
+    return `<th scope="col" class="compare__lang${i === 0 ? " compare__lang--logos" : ""}${off(i)}"${colAttrs(i)}>${lang.name}${hide}</th>`;
+  }).join("");
   const rows = COMPARE_ROWS.map((row) => {
     const cells = row.cells
       .map((cell, i) => {
         const sup = cell.note
           ? `<sup class="compare__ref"><a href="#compare-note-${cell.note}" aria-label="Note ${cell.note}">${cell.note}</a></sup>`
           : "";
-        return `<td class="compare__cell is-${cell.v}${i === 0 ? " compare__cell--logos" : ""}"><span aria-hidden="true">${VERDICT_GLYPH[cell.v]}</span><span class="sr-only">${VERDICT_TEXT[cell.v]}</span>${sup}</td>`;
+        return `<td class="compare__cell is-${cell.v}${i === 0 ? " compare__cell--logos" : ""}${off(i)}"${colAttrs(i)}><span aria-hidden="true">${VERDICT_GLYPH[cell.v]}</span><span class="sr-only">${VERDICT_TEXT[cell.v]}</span>${sup}</td>`;
       })
       .join("");
     return `<tr><th scope="row" class="compare__cap">${row.label}<span class="compare__sub">${row.sub}</span></th>${cells}</tr>`;
@@ -1253,10 +1294,27 @@ function compareHtml(): string {
   const notes = COMPARE_NOTES.map(
     (note, i) => `<li id="compare-note-${i + 1}">${note}</li>`,
   ).join("");
+  // One chip per language, in column order; a chip is .is-off while its column
+  // shows, and the row is .is-empty when nothing is hidden.
+  const chips = toggles
+    ? `
+  <div class="compare__chips${hidden.size === 0 ? " is-empty" : ""}" data-compare-chips>
+    <span class="compare__chips-label">Add a language:</span>
+    ${COMPARE_LANGS.slice(1)
+      .map(
+        (lang) =>
+          `<button type="button" class="compare__chip${hidden.has(lang.id) ? "" : " is-off"}" data-lang="${lang.id}">+ ${lang.name}</button>`,
+      )
+      .join("\n    ")}
+  </div>`
+    : "";
+  const howTo = toggles
+    ? " The table starts with the closest neighbors; add any of the others from the row above it, or hide a column with its ×."
+    : "";
   return `<section class="compare" aria-label="How Logos compares to other languages">
   <h2 class="compare__title">Next to its neighbors</h2>
-  <p class="compare__lead">The first question a language-literate visitor asks is "why not C++, Rust, Zig, Lean, Julia, Python, TypeScript, or a Lisp?". Here is the honest answer. <strong>Logos is not done yet</strong>: its column is the design it is being built toward, not software you can run today, while every other column is what ships now. But read across the rows: nearly every capability in the Logos column is already a yes somewhere else here, so the hard part is not inventing any one of them, it is uniting them in one structure. Some rows are things other languages do well that Logos does not attempt at all.</p>
-  <ul class="compare__legend"><li class="is-yes"><span aria-hidden="true">✓</span> has it</li><li class="is-partial"><span aria-hidden="true">~</span> partial</li><li class="is-no"><span aria-hidden="true">✗</span> no</li></ul>
+  <p class="compare__lead">The first question a language-literate visitor asks is "why not C++, Rust, Zig, Lean, Julia, Python, TypeScript, or a Lisp?". Here is the honest answer. <strong>Logos is not done yet</strong>: its column is the design it is being built toward, not software you can run today, while every other column is what ships now. But read across the rows: nearly every capability in the Logos column is already a yes somewhere else here, so the hard part is not inventing any one of them, it is uniting them in one structure. Some rows are things other languages do well that Logos does not attempt at all.${howTo}</p>
+  <ul class="compare__legend"><li class="is-yes"><span aria-hidden="true">✓</span> has it</li><li class="is-partial"><span aria-hidden="true">~</span> partial</li><li class="is-no"><span aria-hidden="true">✗</span> no</li></ul>${chips}
   <div class="compare__shadows" data-compare>
     <div class="compare__scroll">
       <table class="compare__table">
@@ -1417,7 +1475,7 @@ ${metaLadderHtml()}
 ${structureHtml()}
 ${checkedHtml()}
 ${buildableHtml()}
-${compareHtml()}
+${compareHtml({ hidden: HOME_HIDDEN })}
 ${notifySectionHtml()}`;
 }
 
@@ -1642,6 +1700,7 @@ export function privacyPage(): string {
   <ul>
     <li><code>theme</code> cookie: remembers your light/dark choice (strictly necessary). ~180 days.</li>
     <li><code>localStorage</code> visitor id and <code>sessionStorage</code> session id: the anonymous analytics ids described above. No advertising or third-party cookies are set.</li>
+    <li><code>localStorage</code> <code>compareHidden</code>: which columns you have hidden in the homepage's comparison table. A convenience, nothing personal; it stays until you clear site data.</li>
   </ul>
 
   <h2>Legal basis and your choices</h2>

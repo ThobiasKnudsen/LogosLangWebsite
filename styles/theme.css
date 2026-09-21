@@ -1121,10 +1121,12 @@ a {
    against eleven other languages.
    One glyph per cell (has it / partial / no), colored green / yellow / red; the
    not-done-yet disclaimer lives once in the lead paragraph, not per cell or in
-   the header. The section is wide enough that the whole table shows on a
-   desktop; where it can't, it scrolls horizontally and the .compare__shadows
-   overlays (fade + chevron, toggled by initCompare) show WHICH direction holds
-   more columns. The Logos column carries a faint accent wash. */
+   the header. The table is as wide as the columns it shows; where that is more
+   than the screen, it scrolls horizontally and the .compare__shadows overlays
+   (fade + chevron, toggled by initCompare) show WHICH direction holds more
+   columns. The Logos column carries a faint accent wash. On the homepage each
+   language header carries a × that hides its column, and a chip row above the
+   table adds it back (see .compare__off, .compare__chips, initCompare). */
 .compare {
     /* The pinned capability column's exact width; the left scroll hint starts
        where it ends. Referenced by .compare__cap and .compare__shadows::before. */
@@ -1134,8 +1136,8 @@ a {
        cap. Narrow screens fall back to the ordinary page gutter. */
     max-width: none;
     /* .compare__scroll clips the wide table for scrolling, but the table's
-       intrinsic min-width (82rem) still counts toward this section's layout
-       width and, through it, the page's. On a phone that widens the layout
+       intrinsic width (the sum of its columns' floors) still counts toward this
+       section's layout width and, through it, the page's. On a phone that widens the layout
        viewport, which sizes the fixed menu dock, so the dock stops shrinking to
        fit (desktop just shows a scrollbar and hides the symptom). Clip the
        section's horizontal overflow so the table can only ever scroll inside
@@ -1209,6 +1211,55 @@ a {
 .compare__legend .is-no > span {
     color: var(--line-exec);
 }
+/* The hide button in each language header: a plain × after the name, in the
+   header's muted color, darkening on hover. */
+.compare__off {
+    margin-left: 0.35rem;
+    padding: 0 0.15rem;
+    border: 0;
+    background: none;
+    font: inherit;
+    font-size: 0.95rem;
+    letter-spacing: 0;
+    line-height: 1;
+    color: var(--muted);
+    cursor: pointer;
+}
+.compare__off:hover,
+.compare__off:focus-visible {
+    color: var(--heading);
+}
+/* The chip row above the table: one "+ Name" button per hidden language. A chip is
+   .is-off while its column shows, and the row is .is-empty when nothing is hidden;
+   initCompare keeps both in step with the columns. */
+.compare__chips {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem;
+    margin-top: 1.2rem;
+    font-size: 0.8rem;
+    color: var(--muted);
+}
+.compare__chips.is-empty,
+.compare__chip.is-off {
+    display: none;
+}
+.compare__chip {
+    padding: 0.2rem 0.7rem;
+    border: 1px solid var(--hairline);
+    border-radius: 999px;
+    background: var(--surface);
+    font: inherit;
+    font-size: 0.78rem;
+    color: var(--heading);
+    cursor: pointer;
+}
+.compare__chip:hover,
+.compare__chip:focus-visible {
+    border-color: var(--accent);
+    color: var(--accent);
+}
 /* Wrapper that hosts the direction hints: absolutely-positioned fade + chevron
    bands over each scrollable edge, shown/hidden by initCompare via .show-left /
    .show-right. Pointer-events off so they never block scrolling or clicks. The
@@ -1263,7 +1314,6 @@ a {
 }
 .compare__table {
     width: 100%;
-    min-width: 82rem;
     /* separate, not collapse: collapsed borders are painted at the table layer
        and do not travel with sticky cells, which leaves a seam between the two
        pinned columns where scrolling row lines and content bleed through. With
@@ -1288,9 +1338,6 @@ a {
 .compare__float-clip {
     overflow: hidden;
 }
-.compare__float .compare__table {
-    min-width: 0;
-}
 .compare__table th,
 .compare__table td {
     padding: 0.6rem 0.75rem;
@@ -1306,6 +1353,15 @@ a {
 .compare__table tbody tr:last-child th,
 .compare__table tbody tr:last-child td {
     border-bottom: 0;
+}
+/* Each language column has a floor, so the table is as wide as the columns it
+   shows: all eleven come to the 82rem the table used to be pinned at, and the
+   homepage's five fit a laptop without scrolling. A hidden column takes nothing. */
+.compare__lang {
+    min-width: 6.1rem;
+}
+.compare__table .is-off {
+    display: none;
 }
 .compare__cap {
     text-align: left;
