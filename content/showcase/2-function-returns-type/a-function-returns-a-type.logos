@@ -1,0 +1,9 @@
+# a function can return a type; the call runs at
+# parse time and becomes the type it yields
+pick := fn (i := i32 ?) -> type (
+    if (i == 0) (i32) else (f64)
+),
+
+mut a := pick(1) ?,   # a is declared as an f64
+a = 9.9,
+print «{pick(0) == i32}»   # true

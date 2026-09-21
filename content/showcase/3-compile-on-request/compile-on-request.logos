@@ -1,0 +1,13 @@
+# interpreted by default; the source asks for machine
+# code, and the next call jumps to it
+sum_to := fn (n := i64 ?) -> i64 (
+    mut i := i64 0,
+    mut s := i64 0,
+    while (i < n) (
+        s = s + i,
+        i = i + 1
+    ),
+    s
+),
+sum_to.compile(),
+print «{sum_to(1000000)}»

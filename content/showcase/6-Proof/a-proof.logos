@@ -1,0 +1,17 @@
+# a conjecture states a rewrite; its proof is the
+# chain of steps that gets there, each citing a rule
+twice := conjecture ( a + a -> 2 * a )
+    where ( a:dyad.type is number ),
+cancel := conjecture ( a / a -> 1 )
+    where ( a:dyad.type is number and a != 0 ),
+half := conjecture ( (a + a) / a -> 2 )
+    where ( a:dyad.type is number and a != 0 )
+    proof (
+        (a + a) / a
+        -> twice(a + a) / a
+        -> mul_div_assoc((2 * a) / a)
+        -> 2 * cancel(a / a)
+        -> mul_one(2 * 1)
+        -> 2
+    ),
+print «{half((3 + 3) / 3)}»   # 2

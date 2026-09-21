@@ -73,9 +73,12 @@ build/docs-render.ts  server-side render of a docs page (tree, version nav, arti
 build/pages.ts        marketing pages (home hero, vision, roadmap, placeholders)
 build/templates.ts    shared HTML shell: menu dock, page margins, footer, <head>
 build/wisdom.ts       the reflections on the Logos that surface in the page margins
+build/showcase.ts     the homepage's tabbed code box, read from content/showcase/
+build/highlight.ts    the Logos tokenizer that colours the listings
 client/main.ts        client runtime: dock, margin quotes, matrix, docs hydration
 styles/theme.css       wisprflow theme (dark, light tokens kept): tokens, fonts, components
 public/                static assets copied verbatim (favicon, og.png, robots.txt)
+content/showcase/      the showcase's programs: a folder per tab, a file per language (see its README)
 ```
 
 The documentation pages live in the LogosLang repo under `docs/vX.Y.Z/`, one complete
