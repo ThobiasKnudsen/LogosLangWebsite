@@ -20,8 +20,10 @@
 	   plain bleach #fff would otherwise appear, in both themes. There is no pure
 	   #fff/#ffffff anywhere on the site. */
     --white: #fdf8e3;
-    /* The menu bar's height: the page content starts under it. */
+    /* The menu dock's height and its inset from the top edge: the page content
+       starts under the two together. */
     --nav-height: 3.5rem;
+    --nav-inset: 0.85rem;
     /* The page column. Everything on a page with a menu bar (the bar, the
        sections, the footer) sits inside it, and two hairlines frame it, one down
        each side, running the full height of the page (the margins were Thobias's
@@ -189,34 +191,39 @@ a {
     border: 0;
 }
 
-/* ── Menu bar ───────────────────────────────────────────────────────────────
-   A flat bar at the very top of the window, exactly the page column wide, with
-   one hairline under it and nothing else drawn: no box, no corners, no shadow
-   (Thobias, 21 September 2026; it was a rounded frosted dock floating below the
-   top edge before that, and for a few hours a bar across the whole window). It
-   sits between the two margin lines, which run on past it to the top edge. */
+/* ── Floating menu dock ─────────────────────────────────────────────────────
+   A rounded, frosted dock floating just below the top edge, inside the page
+   column: a hair in from each margin line, with the column's content scrolling
+   under it (Thobias, 22 September 2026, asking for the dock "like it was
+   earlier"; for a day it was a flat bar with one line under it, first across
+   the whole window and then between the lines). */
 .dock {
     position: fixed;
-    inset-block-start: 0;
-    inset-inline: var(--margin);
+    inset-block-start: var(--nav-inset);
+    inset-inline: calc(var(--margin) + 1rem);
     z-index: 50;
     height: var(--nav-height);
-    background: var(--bg);
-    border-bottom: 1px solid var(--hairline);
+    border: 1px solid var(--dock-border);
+    border-radius: 14px;
+    background: var(--surface-frost); /* the darker cream, frosted over the page */
+    -webkit-backdrop-filter: saturate(140%) blur(12px);
+    backdrop-filter: saturate(140%) blur(12px);
+    box-shadow: 0 10px 30px -18px rgba(22, 22, 15, 0.4);
     transition: transform 0.28s ease;
 }
 .dock__row {
-    position: relative; /* the burger centres on the row, not the whole bar */
+    position: relative; /* the burger centres on the row, not the whole dock */
     height: 100%;
-    padding-inline: var(--gutter);
+    padding-inline: 1.1rem 0.9rem;
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 1rem;
 }
-/* Scrolling down tucks the bar away (initDockHide); scrolling up brings it back. */
+/* Scrolling down tucks the dock away (initDockHide); scrolling up brings it back.
+   The offset covers the dock's own top inset plus its shadow. */
 .dock.is-hidden {
-    transform: translateY(-100%);
+    transform: translateY(calc(-100% - 1.35rem));
 }
 @media (prefers-reduced-motion: reduce) {
     .dock {
@@ -246,6 +253,7 @@ a {
     font-weight: 500;
     color: var(--muted);
     text-decoration: none;
+    border-radius: 7px; /* rounds the hover outline below */
     transition: color 0.12s ease;
 }
 .nav-link.active {
@@ -346,6 +354,7 @@ a {
     /* 0.55rem all around: with the -0.15rem outline inset below, the hover line
 	   sits exactly 0.4rem from the text, the same gap as the inline dock links. */
     padding: 0.55rem;
+    border-radius: 8px;
 }
 .nav-menu .nav-link.active {
     background: var(--hairline);
@@ -538,14 +547,16 @@ a {
 /* ── Page scaffold ────────────────────────────────────────────────────────── */
 .page-main {
     flex: 1 0 auto; /* grows to the window's foot on a short page (see body) */
-    padding-top: var(--nav-height);
+    padding-top: calc(var(--nav-inset) + var(--nav-height));
     /* The page column: the same margins the .margin asides are drawn at. The
-       column's colour is painted on the content box only, so the padding that
-       IS the margins keeps the body's. The strip under the menu bar is padding
-       too, and the bar covers it whenever it could be on screen. */
+       column's colour is painted as one image exactly the column wide, centred,
+       from the very top of the page to its foot (Thobias, 22 September 2026: a
+       content-box clip left the strip under the dock in the margins' darker
+       colour). Narrower windows have a column wider than the page, so the image
+       simply covers it. */
     padding-inline: var(--margin);
-    background: var(--bg);
-    background-clip: content-box;
+    background: linear-gradient(var(--bg), var(--bg)) center top / var(--column)
+        100% no-repeat;
 }
 
 /* ── Margins ──────────────────────────────────────────────────────────────────
@@ -1731,6 +1742,7 @@ body.docs-page .page-main {
     margin: 0 auto 1.6rem; /* centred between the panel's left edge and the divider */
     padding: 0.55rem 1.5rem; /* same vertical padding as .dock: equal logo height */
     border: 1px solid var(--dock-border);
+    border-radius: 14px; /* the dock's corners */
     background: var(--surface-frost);
     -webkit-backdrop-filter: saturate(140%) blur(12px);
     backdrop-filter: saturate(140%) blur(12px);
