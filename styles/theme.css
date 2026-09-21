@@ -37,6 +37,13 @@
 
     /* Light theme */
     --bg: #fdf8e3; /* gruvbox cream #fbf1c7, lightened 50% toward white */
+    /* Outside the page column: the margins, and the canvas beyond the page. A
+       shade LIGHTER than the column here, so the column reads as the sheet laid
+       on the desk; in the dark theme the column is the lighter of the two
+       (Thobias, 22 September 2026). --bg itself stays the column's colour, so
+       every tint mixed against it (surfaces, code, the table) keeps its contrast.
+       40% of the way from --bg toward white. */
+    --margin-bg: #fefbee;
     /* The cream, darkened back toward the raw gruvbox cream (#fbf1c7): the
        raised-surface tint for the dock, buttons, banner, roadmap nodes, and docs
        controls. --surface-frost is the same tone at 85% for the frosted panels
@@ -95,6 +102,7 @@
 
 :root[data-theme="dark"] {
     --bg: #14130f;
+    --margin-bg: #0c0b09; /* 40% of the way from --bg toward black */
     /* Dark counterpart of the raised-surface tint: surfaces elevate slightly
 	   LIGHTER than the near-black page (matching the existing dark dock tone). */
     --surface: #1c1c18;
@@ -151,7 +159,15 @@ html {
 body {
     margin: 0;
     position: relative; /* the margins (.margin) span the body's full height */
-    background: var(--bg);
+    /* The margins' colour; the column paints its own (.page-main, .dock, the
+       footer). Propagates to the canvas, so it is also what shows past the end of
+       a page shorter than the window, which is why the page fills the window:
+       the body is a column whose main grows, so the page column and the margin
+       lines always reach the bottom edge. */
+    background: var(--margin-bg);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
     color: var(--text);
     font-family: var(--sans);
     font-size: 16px;
@@ -521,9 +537,15 @@ a {
 
 /* ── Page scaffold ────────────────────────────────────────────────────────── */
 .page-main {
+    flex: 1 0 auto; /* grows to the window's foot on a short page (see body) */
     padding-top: var(--nav-height);
-    /* The page column: the same margins the fixed .margin asides are drawn at. */
+    /* The page column: the same margins the .margin asides are drawn at. The
+       column's colour is painted on the content box only, so the padding that
+       IS the margins keeps the body's. The strip under the menu bar is padding
+       too, and the bar covers it whenever it could be on screen. */
     padding-inline: var(--margin);
+    background: var(--bg);
+    background-clip: content-box;
 }
 
 /* ── Margins ──────────────────────────────────────────────────────────────────
@@ -1609,9 +1631,11 @@ a {
     justify-content: center;
     gap: 0.75rem 1.25rem;
     /* Inside the page column, like the menu bar, so its rule runs between the
-       margin lines rather than across the whole window. */
+       margin lines rather than across the whole window, and in the column's
+       colour. */
     margin-inline: var(--margin);
     padding: 1.5rem;
+    background: var(--bg);
     border-top: 1px solid var(--hairline);
 }
 /* The personal social + contact icons, shown in the footer on every page. */
@@ -1634,6 +1658,10 @@ a {
 body.docs-page {
     height: 100vh;
     overflow: hidden;
+    /* No margins on the docs pages: one colour edge to edge, and the ordinary
+       block layout their fixed-height panes were built on. */
+    display: block;
+    background: var(--bg);
 }
 body.docs-page .page-main {
     padding-top: 0;
