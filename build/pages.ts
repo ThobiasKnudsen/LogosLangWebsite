@@ -958,7 +958,7 @@ function compareHtml(hiddenIds: readonly string[]): string {
 // September 2026 (build/wisdom.ts).
 export function homePage(): string {
   return `<section class="hero">
-  <h1 class="hero__headline">One language for everything</h1>
+  <h1 class="hero__headline">One language for <span class="hero__underline">everything</span></h1>
   <p class="hero__sub">Logos is maximally meta. Its grammar, types, proofs, compiler and interpreter live in the same graph as your program, so your code can read and redefine any of them, and every change is checked. Meta used to mean unchecked and slow. Here it is neither.</p>
 </section>
 ${compareHtml(HOME_HIDDEN)}`;

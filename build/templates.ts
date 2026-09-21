@@ -74,12 +74,12 @@ function dockHtml(active: string): string {
 
 	// The same links appear inline on wide screens (.nav) and inside the collapsed
 	// dropdown (.nav-menu) on narrow ones, where the hamburger button toggles them.
-	// The dock's styled button is GitHub while no public builds exist (a Download
-	// button would lead to an empty page); it returns to Download with the first
-	// release. At phone widths the styled button hides and the dropdown's GitHub
-	// row takes over (see theme.css). The bar is the page column's width, between
-	// the two margin lines, with one line under it (Thobias, 21 September 2026; it
-	// floated as a rounded frosted dock before that).
+	// The dock's styled button is Download, with the GitHub mark as its own small
+	// link just left of it (Thobias, 22 September 2026; the button was GitHub while
+	// no public builds existed, from 26 August until then). At phone widths the
+	// styled button hides and the dropdown's Download row takes over; the mark
+	// stays (see theme.css). The dock floats inside the page column, between the
+	// two margin lines.
 	return `<header class="dock">
   <div class="dock__row">
     <a class="wordmark" href="/" aria-label="Logos home">Λόγος</a>
@@ -87,9 +87,10 @@ function dockHtml(active: string): string {
     <div class="dock-right">
       <div class="nav-burger">
         <button class="nav-toggle" type="button" aria-label="Menu" aria-expanded="false" aria-controls="nav-menu">${MENU_SVG}</button>
-        <nav class="nav-menu" id="nav-menu" aria-label="Primary" hidden>${links}<a class="nav-link nav-menu__github" href="${GITHUB}" target="_blank" rel="noopener noreferrer">${GITHUB_SVG}<span>GitHub</span></a></nav>
+        <nav class="nav-menu" id="nav-menu" aria-label="Primary" hidden>${links}<a class="nav-link nav-menu__download" href="/download/">Download</a></nav>
       </div>
-      <a class="logos-btn logos-btn--download dock-github" href="${GITHUB}" target="_blank" rel="noopener noreferrer">${GITHUB_SVG}<span>GitHub</span></a>
+      <a class="dock-github" href="${GITHUB}" target="_blank" rel="noopener noreferrer" aria-label="Logos on GitHub" title="GitHub">${GITHUB_SVG}</a>
+      <a class="logos-btn logos-btn--download dock-download" href="/download/">Download</a>
     </div>
   </div>
 </header>`;

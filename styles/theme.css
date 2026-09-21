@@ -276,11 +276,26 @@ a {
 .dock-right {
     display: flex;
     align-items: center;
-    gap: 0.85rem;
+    gap: 0.6rem;
 }
-/* The dock's styled button (.logos-btn--download inside .dock-right) is GitHub
-   while no public builds exist; it becomes Download again with the first release.
-   Below 30rem it hides and the dropdown's .nav-menu__github row stands in. */
+/* The dock's styled button (.logos-btn--download inside .dock-right) is Download.
+   Below 30rem it hides and the dropdown's .nav-menu__download row stands in. The
+   GitHub mark sits just left of it as its own link, muted until hovered, and
+   stays at every width (Thobias, 22 September 2026; until then the mark lived
+   inside the button, which read GitHub). */
+.dock-github {
+    display: inline-flex;
+    padding: 0.3rem;
+    color: var(--muted);
+    transition: color 0.12s ease;
+}
+.dock-github:hover {
+    color: var(--btn-hover);
+}
+.dock-github svg {
+    width: 20px;
+    height: 20px;
+}
 /* Hamburger button + collapsed dropdown. Hidden on wide screens (the inline .nav
    is shown instead); swapped in below 60rem where .nav is hidden. The breakpoint
    leaves slack: the inline links must never overflow the dock (a squeezed dock
@@ -367,13 +382,11 @@ a {
     outline: 1.5px solid var(--btn-hover);
     outline-offset: -0.15rem;
 }
-/* GitHub's home inside the dropdown, a row like the nav links (same hover). Hidden
-   until the phone layout (below) hides the dock's styled GitHub button and this
-   row stands in for it. */
-.nav-menu .nav-menu__github {
+/* Download inside the dropdown, a row like the nav links (same hover). Hidden
+   until the phone layout (below) hides the dock's styled Download button and
+   this row stands in for it. */
+.nav-menu .nav-menu__download {
     display: none;
-    align-items: center;
-    gap: 0.5rem;
 }
 
 @media (max-width: 60rem) {
@@ -393,12 +406,13 @@ a {
         display: inline-flex;
     }
 }
-/* Phone widths: nothing shrinks. The dock's styled GitHub button moves into the
-   hamburger dropdown (.nav-menu__github) and the burger takes its place at the
-   dock's right edge, so the wordmark and burger keep their full size. */
+/* Phone widths: nothing shrinks. The dock's styled Download button moves into the
+   hamburger dropdown (.nav-menu__download) and the burger takes its place beside
+   the GitHub mark at the dock's right edge, so the wordmark and burger keep their
+   full size. */
 @media (max-width: 30rem) {
     /* Direct child only: the dropdown (now inside .dock-right via .nav-burger)
-	   carries its own GitHub row, which must NOT be hidden with it. */
+	   carries its own Download row, which must NOT be hidden with it. */
     .dock-right > .logos-btn--download {
         display: none;
     }
@@ -415,8 +429,8 @@ a {
         inset-inline-start: auto;
         inset-inline-end: 0;
     }
-    .nav-menu .nav-menu__github {
-        display: flex;
+    .nav-menu .nav-menu__download {
+        display: block;
     }
 }
 
@@ -601,9 +615,17 @@ a {
     max-width: 100%;
     margin: 0;
     padding: clamp(1rem, 2.4vw, 1.6rem) clamp(1.4rem, 4.5vw, 3rem);
+    border: 1px solid var(--white); /* a white line around the card */
     border-radius: 1rem;
     background: var(--margin-bg);
     color: var(--bp-light);
+}
+/* "everything" underlined (Thobias, 22 September 2026), the line tuned for the
+   serif at display size: thin against the strokes, and clear of the descenders. */
+.hero__underline {
+    text-decoration: underline;
+    text-decoration-thickness: 0.05em;
+    text-underline-offset: 0.14em;
 }
 .hero__sub {
     font-size: clamp(0.84rem, 1.28vw, 1.04rem);
