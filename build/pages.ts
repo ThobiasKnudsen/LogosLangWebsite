@@ -1311,7 +1311,7 @@ function compareHtml(toggles?: { hidden: readonly string[] }): string {
   </div>`
     : "";
   return `<section class="compare" aria-label="How Logos compares to other languages">
-  <h2 class="compare__title">Next to its neighbors</h2>
+  <h2 class="compare__title">Comparison Matrix</h2>
   <ul class="compare__legend"><li class="is-yes"><span aria-hidden="true">✓</span> has it</li><li class="is-partial"><span aria-hidden="true">~</span> partial</li><li class="is-no"><span aria-hidden="true">✗</span> no</li></ul>${chips}
   <div class="compare__shadows" data-compare>
     <div class="compare__scroll">
