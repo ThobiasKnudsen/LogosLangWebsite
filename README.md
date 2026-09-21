@@ -71,8 +71,9 @@ build/releases.test.ts unit tests for the release/download model
 build/markdown.ts     markdown-it + Shiki + version-less link resolution
 build/docs-render.ts  server-side render of a docs page (tree, version nav, article)
 build/pages.ts        marketing pages (home hero, vision, roadmap, placeholders)
-build/templates.ts    shared HTML shell: dock, footer, <head>, theme script
-client/main.ts        client runtime: theme toggle, hero rotator, docs hydration
+build/templates.ts    shared HTML shell: menu bar, page margins, footer, <head>, theme script
+build/wisdom.ts       the reflections on the Logos that surface in the page margins
+client/main.ts        client runtime: theme toggle, margin quotes, docs hydration
 styles/theme.css       light/dark wisprflow theme: tokens, fonts, components
 public/                static assets copied verbatim (favicon, og.png, robots.txt)
 ```

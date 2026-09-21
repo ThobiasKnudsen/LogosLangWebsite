@@ -22,7 +22,7 @@ import type { Roadmap } from '../build/roadmap.ts';
 initThemeToggle();
 initNavMenu();
 initDockHide();
-initWisdom();
+initMarginalia();
 initScrollbars();
 initAnalytics();
 initNotify();
@@ -130,108 +130,111 @@ function initDockHide(): void {
 	);
 }
 
-// ── Hero headline rotator ─────────────────────────────────────────────────────
-// Cycles the tail of "Logos is ___" through its phrases: the current phrase
-// slides up and out while the next rises into place. The box reserves the widest
-// phrase's width in CSS, so it never changes size and the brand stays put (no
-// re-centering jitter). Pure progressive enhancement: with JS off (or reduced
-// motion) the first phrase stays shown. Pauses while the pointer is over the
-// rotator so a reader can hold a phrase.
-// ── Wisdom band: a drifting frieze under the hero on the home page ───────────
-// One movement, and it is ours: a rAF loop nudges scrollLeft so the quotes travel
-// slowly leftwards across the band. It is the same scrollLeft a reader moves by
-// swiping or dragging, so a hand scroll adopts the drift's position rather than
-// competing with it. The endless loop comes from rotating whole units across the
-// track's ends, with scrollLeft compensated by the unit's width so the visible
-// content never jumps.
-//
-// The frieze was a vertical rail down the page's middle for a day (Thobias, 11
-// September 2026). That version had to carry a SECOND movement, travelling with the
-// page, and the accumulator pump it needed is gone with it: a horizontal band, in
-// flow or pinned, has only the one drift. It is the simpler of the two.
-//
-// Hover and focus pause the drift so a passage can be read and selected. That was
-// wrong on the rail, where scrolling it by hand WAS the interaction and a pause on
-// pointer-enter stopped the drift the moment a reader reached for it. On a
-// horizontal band a pointer is usually on its way somewhere else, and stopping under
-// one is what lets a quote be finished.
-function initWisdom(): void {
-	const frieze = document.querySelector<HTMLElement>('.wisdom__scroll');
-	const track = frieze?.querySelector<HTMLElement>('.wisdom__track');
-	if (!frieze || !track) return;
+// ── Marginalia: the quotes in the page margins ───────────────────────────────
+// The two outer margins (.margin, fixed and click-through) each hold one empty
+// figure. When the pointer rests in a margin for a moment, the next quote from the
+// hidden list (.wisdom, build/wisdom.ts) is copied into that side's figure, placed
+// at the pointer's height, and faded in. It fades out when the pointer leaves the
+// margin, or once it has moved well away from where the quote appeared, and then a
+// fresh quote surfaces at the new resting place after the same pause: the margins
+// are full of them, and wherever the reader lingers one comes up (warp.dev does
+// this with glyphs; Thobias asked for it with the quotes, 21 September 2026). The
+// quotes come in their authored order, and the place in it survives page loads
+// within the visit (sessionStorage), so browsing the site keeps meeting new ones.
+// Touch never hovers, so touch pointers are ignored; the margins are gone on small
+// screens anyway. Nothing shows without JS, and the list itself stays hidden.
+function initMarginalia(): void {
+	const quotes = [...document.querySelectorAll<HTMLElement>('.wisdom .wisdom__quote')];
+	const sides = [...document.querySelectorAll<HTMLElement>('.margin')];
+	if (quotes.length === 0 || sides.length === 0) return;
 
-	// Rotate units across the ends so the strip loops without any quote existing
-	// twice. Read widths live each time: fonts loading can change them after init.
-	const rotate = (): void => {
-		if (track.scrollWidth <= frieze.clientWidth) return; // nothing overflows
-		let first = track.firstElementChild as HTMLElement | null;
-		// STRICTLY greater: after a backward rotation scrollLeft lands exactly on the
-		// new first unit's width, and `>=` would rotate that unit straight back,
-		// ping-ponging DOM moves on every scroll event when parked at the left edge.
-		while (first && first.offsetWidth > 0 && frieze.scrollLeft > first.offsetWidth) {
-			const w = first.offsetWidth;
-			track.appendChild(first); // now the last unit
-			frieze.scrollLeft -= w;
-			first = track.firstElementChild as HTMLElement | null;
+	const KEY = 'wisdomIndex';
+	const DELAY = 500; // ms the pointer rests in a margin before a quote appears
+	const DRIFT = 160; // px of vertical travel after which a shown quote gives way
+	const MIN_WIDTH = 160; // px; a narrower margin cannot hold a readable quote
+	const PAD = 16; // px kept between a quote and the menu bar / the window's bottom
+
+	let index = 0;
+	try {
+		index = Number(sessionStorage.getItem(KEY)) || 0;
+	} catch {
+		/* ignore */
+	}
+
+	let timer = 0;
+	let shown: HTMLElement | null = null;
+	let shownY = 0;
+	let x = 0;
+	let y = 0;
+
+	const hide = (): void => {
+		clearTimeout(timer);
+		timer = 0;
+		shown?.classList.remove('is-shown');
+		shown = null;
+	};
+
+	// The menu bar's bottom edge on screen (0 while it is tucked away).
+	const barBottom = (): number => {
+		const bar = document.querySelector<HTMLElement>('.dock');
+		return Math.max(bar ? bar.getBoundingClientRect().bottom : 0, 0);
+	};
+
+	// The margin under the pointer: wide enough for a quote, and not under the bar.
+	const sideAt = (): HTMLElement | null => {
+		if (y < barBottom()) return null;
+		for (const side of sides) {
+			const r = side.getBoundingClientRect();
+			if (r.width >= MIN_WIDTH && x >= r.left && x < r.right) return side;
 		}
-		let last = track.lastElementChild as HTMLElement | null;
-		while (last && last.offsetWidth > 0 && frieze.scrollLeft <= 0) {
-			const w = last.offsetWidth;
-			track.prepend(last); // now the first unit
-			frieze.scrollLeft += w;
-			last = track.lastElementChild as HTMLElement | null;
+		return null;
+	};
+
+	const show = (side: HTMLElement): void => {
+		const fig = side.querySelector<HTMLElement>('.margin__quote');
+		const src = quotes[index % quotes.length];
+		if (!fig || !src) return;
+		fig.innerHTML = src.innerHTML;
+		index = (index + 1) % quotes.length;
+		try {
+			sessionStorage.setItem(KEY, String(index));
+		} catch {
+			/* ignore */
 		}
+		// Centred on the pointer's height, kept clear of the bar and the bottom edge.
+		const h = fig.offsetHeight;
+		const top = barBottom() + PAD;
+		const bottom = window.innerHeight - h - PAD;
+		fig.style.top = `${Math.round(Math.min(Math.max(y - h / 2, top), bottom))}px`;
+		side.classList.add('is-shown');
+		shown = side;
+		shownY = y;
 	};
-	// A hand scroll or a swipe needs the rotation too, so it also loops endlessly.
-	frieze.addEventListener('scroll', rotate, { passive: true });
-	// Rotate once up front: from the pristine scrollLeft=0 state no scroll event can
-	// fire (the position cannot go below 0), so without this the strip would dead-end
-	// leftward until something first scrolled it right.
-	rotate();
-	// The quotes as authored run many screens wide, so the track always overflows the
-	// band and there is always something to rotate. The rail had to clone the set to
-	// fill a column as tall as the document; sideways, the set fills itself.
 
-	if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-
-	// Positive: scrollLeft rising walks the track forwards, which carries the quotes
-	// leftwards across the band. Negative would run them the other way.
-	const SPEED = 24; // px/second of drift
-
-	let paused = false;
-	const pause = (): void => {
-		paused = true;
-	};
-	const resume = (): void => {
-		paused = false;
-	};
-	frieze.addEventListener('pointerenter', pause);
-	frieze.addEventListener('pointerleave', resume);
-	frieze.addEventListener('focusin', pause);
-	frieze.addEventListener('focusout', resume);
-
-	// Sub-pixel nudges are DISCARDED, not accumulated: a scroll container snaps
-	// scrollLeft to whole pixels (device pixels, so whole CSS pixels at a 1x display),
-	// and 24px/s is ~0.4px per frame, which snaps back to where it started every time.
-	// Read-modify-write against scrollLeft therefore never moves at all. So carry the
-	// fraction here and hand the element only whole pixels. Still read-modify-write,
-	// so a hand scroll in between is adopted rather than fought.
-	let carry = 0;
-	let last = 0;
-	const step = (t: number): void => {
-		if (last && !paused) {
-			carry += (SPEED * (t - last)) / 1000;
-			const whole = Math.trunc(carry);
-			if (whole !== 0) {
-				carry -= whole;
-				frieze.scrollLeft += whole;
-				rotate();
+	document.addEventListener(
+		'pointermove',
+		(e) => {
+			if (e.pointerType === 'touch') return;
+			x = e.clientX;
+			y = e.clientY;
+			const side = sideAt();
+			if (!side) {
+				hide();
+				return;
 			}
-		}
-		last = t;
-		requestAnimationFrame(step);
-	};
-	requestAnimationFrame(step);
+			// Lingering near the quote that is up: leave it to be read.
+			if (shown === side && Math.abs(y - shownY) < DRIFT) return;
+			if (shown) hide();
+			if (!timer) {
+				timer = window.setTimeout(() => {
+					timer = 0;
+					if (sideAt() === side) show(side);
+				}, DELAY);
+			}
+		},
+		{ passive: true },
+	);
+	document.documentElement.addEventListener('pointerleave', hide);
 }
 
 // ── Comparison matrix: scroll hints + floating header ─────────────────────────

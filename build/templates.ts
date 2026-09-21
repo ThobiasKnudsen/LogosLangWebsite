@@ -1,5 +1,6 @@
-// Static HTML templates shared by every page: the floating menu dock, the footer,
-// the pre-paint theme script, and the full-document shell.
+// Static HTML templates shared by every page: the top menu bar, the page margins,
+// the footer, the pre-paint theme script, and the full-document shell.
+import { wisdomListHtml } from './wisdom.ts';
 
 const GITHUB = 'https://github.com/ThobiasKnudsen/LogosLang';
 
@@ -56,10 +57,11 @@ const NAV = [
 const SUN_SVG = `<svg class="theme-switch__icon sun" viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><circle cx="12" cy="12" r="4.2" fill="currentColor"/><g stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="1.5" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22.5"/><line x1="1.5" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22.5" y2="12"/><line x1="4.2" y1="4.2" x2="6" y2="6"/><line x1="18" y1="18" x2="19.8" y2="19.8"/><line x1="19.8" y1="4.2" x2="18" y2="6"/><line x1="6" y1="18" x2="4.2" y2="19.8"/></g></svg>`;
 const MOON_SVG = `<svg class="theme-switch__icon moon" viewBox="0 0 24 24" width="13" height="13" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z" fill="currentColor"/></svg>`;
 
-// The theme toggle lives in the fixed top-right corner on every page, independent
-// of the dock.
-function themeToggleHtml(): string {
-	return `<label class="theme-switch" title="Toggle dark mode">
+// The theme toggle sits at the right end of the menu bar. Docs pages have no menu
+// bar (they own their logo), so there it is pinned to the top-right corner instead
+// (`corner`).
+function themeToggleHtml(corner = false): string {
+	return `<label class="theme-switch${corner ? ' theme-switch--corner' : ''}" title="Toggle dark mode">
   <span class="sr-only">Toggle dark mode</span>
   <input type="checkbox" class="theme-switch__input" />
   <span class="theme-switch__track">
@@ -93,18 +95,33 @@ function dockHtml(active: string): string {
 	// The dock's styled button is GitHub while no public builds exist (a Download
 	// button would lead to an empty page); it returns to Download with the first
 	// release. At phone widths the styled button hides and the dropdown's GitHub
-	// row takes over (see theme.css).
+	// row takes over (see theme.css). The bar spans the window with one line under
+	// it; its row is the page column, between the two margin lines (Thobias, 21
+	// September 2026; it floated as a rounded frosted dock before that).
 	return `<header class="dock">
-  <a class="wordmark" href="/" aria-label="Logos home">Λόγος</a>
-  <nav class="nav" aria-label="Primary">${links}</nav>
-  <div class="dock-right">
-    <div class="nav-burger">
-      <button class="nav-toggle" type="button" aria-label="Menu" aria-expanded="false" aria-controls="nav-menu">${MENU_SVG}</button>
-      <nav class="nav-menu" id="nav-menu" aria-label="Primary" hidden>${links}<a class="nav-link nav-menu__github" href="${GITHUB}" target="_blank" rel="noopener noreferrer">${GITHUB_SVG}<span>GitHub</span></a></nav>
+  <div class="dock__row">
+    <a class="wordmark" href="/" aria-label="Logos home">Λόγος</a>
+    <nav class="nav" aria-label="Primary">${links}</nav>
+    <div class="dock-right">
+      <div class="nav-burger">
+        <button class="nav-toggle" type="button" aria-label="Menu" aria-expanded="false" aria-controls="nav-menu">${MENU_SVG}</button>
+        <nav class="nav-menu" id="nav-menu" aria-label="Primary" hidden>${links}<a class="nav-link nav-menu__github" href="${GITHUB}" target="_blank" rel="noopener noreferrer">${GITHUB_SVG}<span>GitHub</span></a></nav>
+      </div>
+      <a class="logos-btn logos-btn--download dock-github" href="${GITHUB}" target="_blank" rel="noopener noreferrer">${GITHUB_SVG}<span>GitHub</span></a>
+      ${themeToggleHtml()}
     </div>
-    <a class="logos-btn logos-btn--download dock-github" href="${GITHUB}" target="_blank" rel="noopener noreferrer">${GITHUB_SVG}<span>GitHub</span></a>
   </div>
 </header>`;
+}
+
+// The two outer margins beside the page column, each drawn by one hairline, on
+// every page with a menu bar. They are fixed, click-through, and hidden on narrow
+// windows (theme.css). Each holds one empty figure that initMarginalia fills with
+// the next quote from the hidden list and fades in where the pointer rests.
+function marginsHtml(): string {
+	return `${wisdomListHtml()}
+<aside class="margin margin--left" aria-hidden="true"><figure class="margin__quote"></figure></aside>
+<aside class="margin margin--right" aria-hidden="true"><figure class="margin__quote"></figure></aside>`;
 }
 
 function footerHtml(): string {
@@ -134,7 +151,8 @@ export interface PageOptions {
 	bodyClass?: string;
 	/** Inner HTML placed between the header and the footer. */
 	main: string;
-	/** Header style: the full floating dock (default) or none (docs own their logo). */
+	/** Header style: the menu bar plus the page margins (default) or none (docs own
+	 *  their logo and their own full-width layout). */
 	header?: 'dock' | 'none';
 	/** Whether to render the shared footer. */
 	footer?: boolean;
@@ -149,7 +167,8 @@ export interface PageOptions {
 export function page(opts: PageOptions): string {
 	const desc = opts.description ?? DEFAULT_DESC;
 	const title = opts.title === 'Λόγος' ? 'Λόγος' : `${opts.title} | Λόγος`;
-	const header = opts.header === 'none' ? '' : dockHtml(opts.active);
+	// The toggle rides in the menu bar; without one (docs) it takes the corner.
+	const chrome = opts.header === 'none' ? themeToggleHtml(true) : `${dockHtml(opts.active)}\n${marginsHtml()}`;
 
 	// Canonical / og:url: prefer an explicit canonical path, else this page's own
 	// path. Emitted as an absolute URL so crawlers and social cards resolve it.
@@ -186,8 +205,7 @@ export function page(opts: PageOptions): string {
 ${THEME_INIT}
 </head>
 <body class="${opts.bodyClass ?? ''}">
-${themeToggleHtml()}
-${header}
+${chrome}
 <main class="page-main">
 ${opts.main}
 </main>

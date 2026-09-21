@@ -1,13 +1,10 @@
 // Inner HTML for the marketing pages. The homepage order: the hero is the identity,
 // "Λόγος / One language for everything", over one paragraph on the mechanism (one
-// graph, checked redefinition); the frieze of reflections on the Logos sits directly
-// under it, part of the name (Thobias, 2026-08-26); the ladder of meta makes the
-// "maximally meta" claim concrete against the languages a PL-literate visitor will
-// name; the Logic Graph figure shows the mechanism; "Checked, not clever" answers the
-// Lisp/Smalltalk objection; then the proven-parts section, the honest comparison
-// matrix, and the get-notified form last, where a convinced reader lands. No code
-// listing: one ran down the homepage's right-hand side from 11 to 21 September 2026,
-// and the examples page has the same definitions.
+// graph, checked redefinition); then the honest comparison matrix, and the
+// get-notified form last, where a convinced reader lands. No code listing: one ran
+// down the homepage's right-hand side from 11 to 21 September 2026, and the examples
+// page has the same definitions. The reflections on the Logos live in the page
+// margins now (build/wisdom.ts).
 import { escapeHtml } from "./templates.ts";
 import {
   OS_ORDER,
@@ -24,149 +21,6 @@ import { type Roadmap } from "./roadmap.ts";
 import { depmapHtml, DEFAULT_ASPECT } from "./roadmap-render.ts";
 
 const GITHUB = "https://github.com/ThobiasKnudsen/LogosLang";
-
-// Reflections on the Logos across the ages, scrolled as a slow frieze directly
-// beneath the hero. Rendered in English (italic, EB Garamond) so visitors actually
-// understand them; the sources are Greek and Latin, and the renderings here are our
-// own, kept plain on purpose (Thobias, 2026-08-26) rather than literal. Greek
-// antiquity, the Stoics, and the Latin Fathers (Vulgate John, Augustine, Anselm,
-// Aquinas) meet on the one Word, Λόγος / Verbum, through which all things are made
-// and known. Attributions name only the person (and "John 1:1" / "Hebrews 4:12"
-// alone, so the frieze reads as antiquity rather than as a denominational
-// statement). Sources, in order:
-// John 1:1 (Vulgate); Heraclitus, Fragment 1 (DK B1); Gorgias, Encomium of Helen 8;
-// Augustine, De Trinitate 15.11.20; Anselm, Monologion 30; Heraclitus, Fragment 50
-// (DK B50); Aristotle, Politics 1253a; Epictetus, Discourses 1.1; Cicero, De
-// Officiis 1.50; Plato, Sophist 263e; Heraclitus, Fragment 45 (DK B45); Seneca,
-// Epistles 115.2; Clement of Alexandria, Protrepticus 1.5; Isocrates, Nicocles 7;
-// Thomas Aquinas, Summa Theologiae I.34.3; Augustine, De Trinitate 6.10.11; Philo
-// of Alexandria; Heraclitus, Fragment 2 (DK B2); Cleanthes, Hymn to Zeus 12-13;
-// Hebrews 4:12; Heraclitus, Fragment 115 (DK B115); "verba volant, scripta manent"
-// is a traditional Latin proverb with no single ancient source; the "Stoic
-// tradition" line's exact source is uncertain, swap in a precise citation when you
-// have one.
-// Each quote carries explicit "\n" line breaks (honored by `white-space: pre-line`
-// in the CSS) so it reads as a short stanza. Wherever the source word is λόγος (or
-// Verbum standing for it) it is left untranslated as "Logos", since no English word
-// covers word, speech and reason at once; Cicero's "ratio et oratio", Seneca's
-// "oratio" and Epictetus's "logikē dynamis" (the power of Logos), the Latin and
-// Greek for the same idea, are rendered "Logos" as well, so that every line says
-// something about the Logos itself. Augustine's "verbum quod foris sonat" is Logos
-// too: he uses one word for the outer and the inner, and says the name belongs more
-// properly to the inner. Only the ordinary plural "words" stays English, in Anselm's
-// contrast and the proverb. Heraclitus appears
-// five times because he is where the word begins; his fragments are spaced out
-// along the frieze. The Aristotle line keeps its internal "…", which marks a real
-// elision between two clauses of the Politics.
-const WISDOM: { text: string; author: string }[] = [
-  {
-    text: "In the beginning was the Logos,\nand the Logos was with God,\nand the Logos was God.",
-    author: "John 1:1",
-  },
-  {
-    text: "Though this Logos holds forever,\npeople fail to understand it,\nboth before they hear it\nand once they have heard it.",
-    author: "Heraclitus",
-  },
-  {
-    text: "Logos is a mighty lord:\nwith the smallest and least visible body\nit achieves the most divine works.",
-    author: "Gorgias",
-  },
-  {
-    text: "The Logos spoken aloud\nis only a sign of the Logos\nthat shines within.",
-    author: "Augustine",
-  },
-  {
-    text: "It does not consist of many words,\nbut is one Logos\nthrough which all things were made.",
-    author: "Anselm",
-  },
-  {
-    text: "Listen not to me but to the Logos,\nand you will find it wise to agree:\nall things are one.",
-    author: "Heraclitus",
-  },
-  {
-    text: "Alone among the animals, humans have Logos…\nand Logos exists to make clear\nthe useful and the harmful,\nand so the just and the unjust.",
-    author: "Aristotle",
-  },
-  {
-    text: "Every other ability judges only its own subject.\nThe Logos alone judges itself,\nand all the others.",
-    author: "Epictetus",
-  },
-  {
-    text: "The bond of human fellowship\nis Logos.",
-    author: "Cicero",
-  },
-  {
-    text: "Thought is Logos:\nthe soul's silent dialogue\nwith itself.",
-    author: "Plato",
-  },
-  {
-    text: "You could not find the limits of the soul,\nthough you travelled every road:\nso deep is its Logos.",
-    author: "Heraclitus",
-  },
-  {
-    text: "Logos is the face of the soul.",
-    author: "Seneca",
-  },
-  {
-    text: "The Logos tuned the whole world into harmony\nand turned the clashing elements\ninto one symphony.",
-    author: "Clement of Alexandria",
-  },
-  {
-    text: "Logos that is true, lawful and just\nis the image\nof a good and faithful soul.",
-    author: "Isocrates",
-  },
-  {
-    text: "God knows himself and all things in one act,\nso his single Logos expresses\nnot the Father alone, but every creature.",
-    author: "Thomas Aquinas",
-  },
-  {
-    text: "The Logos is the art of God,\nfull of every living pattern,\nand none of them ever changes.",
-    author: "Augustine",
-  },
-  {
-    text: "The Logos of God is\nthe bond of all things,\nholding the parts together and binding them fast.",
-    author: "Philo of Alexandria",
-  },
-  {
-    text: "The Logos is shared by all,\nyet most people live\nas if each had a truth of their own.",
-    author: "Heraclitus",
-  },
-  {
-    text: "The common Logos\nmoves through all things.",
-    author: "Cleanthes",
-  },
-  {
-    text: "For the Logos of God is living and active,\nsharper than any two-edged sword.",
-    author: "Hebrews 4:12",
-  },
-  {
-    text: "The soul has a Logos\nthat grows itself.",
-    author: "Heraclitus",
-  },
-  {
-    text: "Spoken words fly away,\nwritten words remain.",
-    author: "Latin proverb",
-  },
-  {
-    text: "God is nothing other\nthan mind and Logos.",
-    author: "Stoic tradition",
-  },
-];
-
-/** The quote units of the frieze: each quote appears exactly once, as a stanza plus
- *  its trailing manuscript ornament. The endless loop is achieved in the client by
- *  rotating whole units from one end of the track to the other as they scroll out of
- *  view (see initWisdom), never by rendering the sequence twice. */
-function wisdomUnits(): string {
-  return WISDOM.map(
-    (q) =>
-      `<div class="wisdom__unit"><figure class="wisdom__quote"><blockquote class="wisdom__text">${escapeHtml(
-        q.text,
-      )}</blockquote><figcaption class="wisdom__author">- ${escapeHtml(
-        q.author,
-      )}</figcaption></figure><span class="wisdom__sep" aria-hidden="true">❦</span></div>`,
-  ).join("");
-}
 
 // ── Get-notified form ─────────────────────────────────────────────────────────
 // The intent-capture form shown on the home hero and the (empty) download page.
@@ -462,245 +316,6 @@ function highlightLogosLines(source: string): string[] {
       `<span class="tok-comment">${escapeHtml(line.slice(hash))}</span>`
     );
   });
-}
-
-function highlightLogos(source: string): string {
-  return highlightLogosLines(source).join("\n");
-}
-
-// ── "The program is the structure" figure ────────────────────────────────────
-// The homepage payoff: the smallest program, `a = a + 1`, drawn as the actual Logic
-// Graph it becomes. The shape follows the `a = a + 1` expansion in LogosLang's
-// language_sketch.logos (V1PLAN's canonical smoke test), spelled in DESIGN.md's
-// vocabulary (dyad / .type / .value, ruled August 2026; the July dyad/logos/value
-// spelling is retired). Two node kinds: a DYAD node has a `type` slot and a
-// `value` slot; a RECORD node (what a `value:@void` points at) is the operand
-// record whose fields the type defines, here `lhs` and `rhs`. Every `->` in the
-// source is one edge that leaves a single FIELD (a port on the node's right edge,
-// at that field's row) and points at a whole NODE. So `a = a + 1` unfolds left to
-// right as dyad -> record -> dyad -> record -> dyad, bottoming out at the identity
-// nodes `=`, `+`, `rational_number`, the variable `a`, and the literal `1`. Laid
-// out as a planar left-to-right tree (leaf rows in reading order, columns by
-// depth), rendered as inline SVG with no client JS. The viewBox width is computed
-// from the laid-out columns, so wider field text never clips.
-const SG_VY = 8; // viewBox top (leaves room for the kind labels above the top nodes)
-const SG_VH = 314; // viewBox height
-
-const GNODE_H = 42; // a dyad/record node: two field rows
-const GLEAF_H = 26; // an un-expanded identity / literal node
-const GROW_Y = [16, 32]; // y of each field row's port, within a node
-
-// Monospace advance widths (~0.6em) for the three font sizes used in the graph, with
-// a little margin so text never touches a node edge. Node widths are derived from
-// these (structW / leafW), so a field like `value:void@` always fits its box.
-const FIELD_CW = 7.9; // .dyad-field, 13px (the field name)
-const SLOT_CW = 6.0; // .dyad-slot, 10px (the `:@dyad` / `:@void` suffix)
-const HEAD_CW = 9.7; // .dyad-head, 16px (a leaf identity name)
-const PAD_L = 10; // text inset from a node's left edge
-const PAD_R = 13; // gap between the text and the right-edge port
-
-const fieldW = (nm: string, ty: string) =>
-  nm.length * FIELD_CW + (ty.length + 1) * SLOT_CW;
-const structW = (rows: [string, string][]) =>
-  Math.ceil(PAD_L + Math.max(...rows.map((r) => fieldW(r[0], r[1]))) + PAD_R);
-const leafW = (label: string) =>
-  Math.max(30, Math.ceil(label.length * HEAD_CW + 2 * PAD_L + 4));
-
-interface GNode {
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-  kind: "dyad" | "record" | "leaf";
-  /** For a structural node: two [name, type] fields, e.g. ["type", "@dyad"]. */
-  rows?: [string, string][];
-  label?: string;
-  /** Kind label drawn above the node. Leaves are dyads too, so they carry one. */
-  tag?: string;
-}
-
-/** A node: a leaf identity/literal (dashed, just its name) or a two-field dyad /
- *  record box. Each field prints its name and its type (:@dyad / :@void), and
- *  carries a port on the right edge, exactly where that field's edge leaves. Every
- *  node shows its kind above it (a leaf's `tag`, a structural node's own kind). */
-function gNode(n: GNode): string {
-  const kindLabel = (tag: string) =>
-    `<text class="dyad-kind" x="${n.x + n.w / 2}" y="${n.y - 5}" text-anchor="middle">${escapeHtml(tag)}</text>`;
-  if (n.kind === "leaf") {
-    const tag = n.tag ? kindLabel(n.tag) : "";
-    return `<g class="dyad-node">${tag}<rect class="dyad-box dyad-box--ref" x="${n.x}" y="${n.y}" width="${n.w}" height="${n.h}" rx="6" /><text class="dyad-head" x="${n.x + n.w / 2}" y="${n.y + n.h / 2 + 5}" text-anchor="middle">${escapeHtml(n.label ?? "")}</text></g>`;
-  }
-  let s = `<rect class="dyad-box dyad-box--${n.kind}" x="${n.x}" y="${n.y}" width="${n.w}" height="${n.h}" rx="6" />`;
-  s += kindLabel(n.kind);
-  n.rows!.forEach(([name, ty], i) => {
-    const py = n.y + GROW_Y[i]!;
-    s += `<text class="dyad-field" x="${n.x + PAD_L}" y="${py + 4}">${escapeHtml(name)}<tspan class="dyad-slot" dx="1">:${escapeHtml(ty)}</tspan></text>`;
-    s += `<circle class="dyad-port" cx="${n.x + n.w}" cy="${py}" r="2.5" />`;
-  });
-  return `<g class="dyad-node">${s}</g>`;
-}
-
-/** The right-edge port of a structural node's field `f`, and a node's left-side
- *  entry (where an incoming arrow lands on the whole node). */
-function gPort(n: GNode, f: number): [number, number] {
-  return [n.x + n.w, n.y + GROW_Y[f]!];
-}
-function gEntry(n: GNode, dy = 0): [number, number] {
-  return [n.x, n.y + n.h / 2 + dy];
-}
-function gPathEl(pts: [number, number][]): string {
-  const d = pts.map(([x, y], i) => `${i === 0 ? "M" : "L"}${x} ${y}`).join(" ");
-  return `<path class="dyad-edge" d="${d}" marker-end="url(#dyad-arrow)" />`;
-}
-/** A short edge from field `f` of `src` to the left side of `dst` (target up- or
- *  down-right): out along a per-field lane, then in. `dy` nudges the landing point. */
-function gEdge(src: GNode, f: number, dst: GNode, dy = 0): string {
-  const [sx, sy] = gPort(src, f);
-  const [tx, ty] = gEntry(dst, dy);
-  const mx = sx + (tx - sx) * (0.42 + f * 0.16);
-  return gPathEl([
-    [sx, sy],
-    [mx, sy],
-    [mx, ty],
-    [tx, ty],
-  ]);
-}
-
-// The ten nodes of `a = a + 1`, laid out left to right. Every node is a dyad, so
-// the leaf identities (`=`, `+`, `a`, `rational_number`) are tagged "dyad" too;
-// the literal `1` is the raw matter a value bottoms out at, so it is tagged "value".
-// Column x-positions are derived from each column's widest node, so widening a node
-// (for its field text) never overlaps a neighbour. `a` is one shared node two edges
-// point at: `+`'s lhs reaches it up-right (short), and `=`'s lhs reaches it along a
-// lane over the top of the chain (long).
-function structureGraphSvg(): string {
-  const dyadRows: [string, string][] = [
-    ["type", "@dyad"],
-    ["value", "@void"],
-  ];
-  const recRows: [string, string][] = [
-    ["lhs", "@dyad"],
-    ["rhs", "@dyad"],
-  ];
-
-  interface Spec {
-    id: string;
-    col: number;
-    y: number;
-    kind: "dyad" | "record" | "leaf";
-    label?: string;
-    tag?: string;
-  }
-  const specs: Spec[] = [
-    { id: "D1", col: 0, y: 52, kind: "dyad" },
-    { id: "EQ", col: 1, y: 26, kind: "leaf", label: "=", tag: "dyad" },
-    { id: "G1", col: 1, y: 102, kind: "record" },
-    { id: "D2", col: 2, y: 154, kind: "dyad" },
-    { id: "PLUS", col: 3, y: 128, kind: "leaf", label: "+", tag: "dyad" },
-    { id: "G2", col: 3, y: 206, kind: "record" },
-    { id: "A", col: 4, y: 162, kind: "leaf", label: "a", tag: "dyad" },
-    { id: "D3", col: 4, y: 258, kind: "dyad" },
-    {
-      id: "RAT",
-      col: 5,
-      y: 240,
-      kind: "leaf",
-      label: "rational_number",
-      tag: "dyad",
-    },
-    { id: "ONE", col: 5, y: 290, kind: "leaf", label: "1", tag: "value" },
-  ];
-  const wOf = (s: Spec): number =>
-    s.kind === "leaf"
-      ? leafW(s.label!)
-      : structW(s.kind === "dyad" ? dyadRows : recRows);
-
-  // Column x from each column's widest node, so nodes never overlap once auto-sized.
-  const NCOL = 6;
-  const GAP = 30;
-  const colW = Array.from({ length: NCOL }, (_, c) =>
-    Math.max(...specs.filter((s) => s.col === c).map(wOf)),
-  );
-  const colX: number[] = [];
-  for (let c = 0, x = 16; c < NCOL; c++) {
-    colX[c] = x;
-    x += colW[c]! + GAP;
-  }
-
-  const N: Record<string, GNode> = {};
-  for (const s of specs) {
-    N[s.id] =
-      s.kind === "leaf"
-        ? {
-            x: colX[s.col]!,
-            y: s.y,
-            w: wOf(s),
-            h: GLEAF_H,
-            kind: "leaf",
-            label: s.label,
-            tag: s.tag,
-          }
-        : {
-            x: colX[s.col]!,
-            y: s.y,
-            w: wOf(s),
-            h: GNODE_H,
-            kind: s.kind,
-            rows: s.kind === "dyad" ? dyadRows : recRows,
-          };
-  }
-  const nodes = specs.map((s) => gNode(N[s.id]!)).join("");
-  // Natural width of the laid-out graph: the last column's right edge plus the same
-  // margin the first column starts at. Used for the viewBox and the width attribute.
-  const width = Math.ceil(colX[NCOL - 1]! + colW[NCOL - 1]! + 16);
-
-  // `=`.lhs -> a routed over the top: right stub, up to a lane above the chain,
-  // across, then down into a's left side, landing just above +.lhs's landing. The
-  // lane sits above the "dyad" kind label over the `+` leaf (at ~y116), so raise it.
-  const LANE_Y = 102;
-  const [glx, gly] = gPort(N.G1!, 0);
-  const [aex, aey] = gEntry(N.A!, -5);
-  const eqLhsToA = gPathEl([
-    [glx, gly],
-    [glx + 14, gly],
-    [glx + 14, LANE_Y],
-    [aex - 14, LANE_Y],
-    [aex - 14, aey],
-    [aex, aey],
-  ]);
-
-  const edges = [
-    gEdge(N.D1!, 0, N.EQ!), // =dyad.type -> =
-    gEdge(N.D1!, 1, N.G1!), // =dyad.value  -> record
-    eqLhsToA, // =record.lhs -> a (shared, over the top)
-    gEdge(N.G1!, 1, N.D2!), // =record.rhs -> +dyad
-    gEdge(N.D2!, 0, N.PLUS!), // +dyad.type -> +
-    gEdge(N.D2!, 1, N.G2!), // +dyad.value  -> record
-    gEdge(N.G2!, 0, N.A!, 5), // +record.lhs -> a (shared)
-    gEdge(N.G2!, 1, N.D3!), // +record.rhs -> rational_number dyad
-    gEdge(N.D3!, 0, N.RAT!), // rat dyad.type -> rational_number
-    gEdge(N.D3!, 1, N.ONE!), // rat dyad.value  -> 1
-  ].join("");
-  // The inline max-width keeps CSS from stretching the graph past its natural size
-  // while letting narrow viewports scroll it at a readable scale (see .dyad-graph).
-  return `<svg class="dyad-graph" viewBox="0 ${SG_VY} ${width} ${SG_VH}" width="${width}" height="${SG_VH}" style="max-width:${width}px" role="img" aria-label="The program a = a + 1 as a Logic Graph: a dyad whose type slot points at = and whose value slot points at an operand record; that record's lhs points at the one variable a, and its rhs unfolds into a + dyad and then a rational_number dyad whose value is the literal 1. Both lhs fields point at the same a.">
-  <defs><marker id="dyad-arrow" viewBox="0 0 8 8" refX="6.5" refY="4" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L8 4 L0 8 z" /></marker></defs>
-  ${edges}
-  ${nodes}
-</svg>`;
-}
-
-function structureHtml(): string {
-  return `<section class="unify" aria-label="A program is the structure that runs it">
-  <h2 class="unify__title">The program is the structure</h2>
-  <p class="unify__lead">The smallest program, <code>a = a + 1</code>, is not text a compiler reads once and throws away. It <em>is</em> a graph, the Logic Graph, and the grammar that parsed it, the types that check it, and the compiler that runs it are nodes of the same kind in the same graph. That is the whole trick behind "maximally meta": there is nothing outside the graph for code to be unable to reach.</p>
-  <figure class="unify__figure">
-    <pre class="unify__source"><code>${highlightLogos("a = a + 1")}</code></pre>
-    <span class="unify__becomes"><span class="unify__becomes-arrow" aria-hidden="true">↓</span> becomes</span>
-    <div class="unify__graph">${structureGraphSvg()}</div>
-    <figcaption class="unify__caption">Every arrow leaves one <em>field</em> of a node and points at another whole node. A <strong>dyad</strong> is a node of exactly two slots: a <code>type</code>, which says what the node is, and a <code>value</code>, the matter the type gives meaning to. Here each <code>value</code> points at an operand <strong>record</strong> whose fields (<code>lhs</code>, <code>rhs</code>) the type defines, bottoming out at the identities <code>=</code>, <code>+</code>, <code>rational_number</code>, the variable <code>a</code>, and the literal <code>1</code>. Both <code>lhs</code> fields point at the one <code>a</code>, so it is a graph, not a tree. And because <code>=</code> and <code>+</code> are themselves dyads carrying their own parsing code, the operations that run this program can also read, rewrite, optimize, and prove it, or redefine <code>+</code>: the optimizer, the computer-algebra system, the proof checker, and metaprogramming are one set of operations over one structure.</figcaption>
-  </figure>
-</section>`;
 }
 
 /** A listing's lines as blocks: each line is its own block so that a blank source
@@ -1334,111 +949,6 @@ export function comparePage(): string {
   return compareHtml();
 }
 
-// A short "large but tractable" section between "Checked, not clever" and the
-// matrix: it names the working precedent each part has, the small self-hosting seed
-// the whole thing bootstraps from, and points at the roadmap and vision. It frames
-// the matrix below as the capability-by-capability evidence.
-function buildableHtml(): string {
-  return `<section class="buildable" aria-label="Why Logos can be built">
-  <h2 class="buildable__title">Built from proven parts</h2>
-  <div class="buildable__body">
-    <p>Logos is large, and honest about being large. But none of its parts is without precedent: self-hosting (Lean 4), a layered intermediate representation (MLIR), equality saturation in production (egg and Cranelift), borrow checking without a garbage collector (Rust), a live and malleable system (Smalltalk), machine-checked proofs (Lean). The novel work is uniting them in one structure, not inventing any one of them.</p>
-    <p>The path is a small Rust seed, kept small enough to audit by hand. Everything above it is written in Logos, until the language compiles itself: a tiny trusted core, and then the language builds the rest. The <a href="/roadmap/">roadmap</a> breaks the work into parts and shows what already runs, and the <a href="/vision/">vision</a> shows how each hard part is solved.</p>
-  </div>
-</section>`;
-}
-
-// ── The levels of meta ───────────────────────────────────────────────────────
-// The brand made concrete. "Maximally meta" is a ranking, so the page shows the
-// scale: how much of the language a program's own code can reach, from text macros
-// up to Logos, where the grammar, types, borrow rules, proofs, compiler and
-// interpreter are all nodes of the graph the program lives in. Each language sits
-// at the highest rung it reaches (a Lisp has code-as-data too, but tops out at
-// "live system"). Levels are listed bottom-up here and rendered top-down, so Logos,
-// the summit, is what a reader sees first. Kept honest: the Logos rung says it is
-// the design, not shipping software.
-interface MetaLevel {
-  name: string;
-  /** What a program's own code can reach at this level. */
-  what: string;
-  /** Languages whose highest rung this is. */
-  who: string;
-}
-const META_LEVELS: MetaLevel[] = [
-  {
-    name: "Text and token macros",
-    what: "Code rewrites code before the compiler understands any of it.",
-    who: "C preprocessor, Rust macros",
-  },
-  {
-    name: "Compile-time execution",
-    what: "Ordinary code runs while compiling and its results are baked in.",
-    who: "Zig, C++ constexpr, D",
-  },
-  {
-    name: "Code as data",
-    what: "Programs are values a program can build, inspect, and evaluate.",
-    who: "Clojure, Julia, Elixir",
-  },
-  {
-    name: "Redefinable grammar",
-    what: "The parser is code you can change, so whole languages become libraries.",
-    who: "Racket",
-  },
-  {
-    name: "Live system",
-    what: "Anything, including the compiler, can be redefined while it runs. Nothing checks the result.",
-    who: "Smalltalk, Forth, Common Lisp",
-  },
-  {
-    name: "Checked metaprogramming",
-    what: "Types and proofs are data, and metaprograms are themselves type-checked. Syntax, elaboration, and the kernel stay separate layers, on managed memory.",
-    who: "Lean 4, Agda, Coq",
-  },
-];
-const LOGOS_LEVEL: MetaLevel = {
-  name: "Everything in one checked graph",
-  what: "The program, its types, its borrow rules, its proofs, its grammar, its parser, its compiler and its interpreter are nodes in one graph, and the same operations that run code can read and redefine any of them. Every redefinition is borrow-checked, and proof-checked where you ask for it, before it runs. Still a systems language: no garbage collector, native speed.",
-  who: "Logos (designed; not yet running)",
-};
-
-function ladderRung(lvl: MetaLevel, n: number, extraClass = ""): string {
-  return `<li class="ladder__rung${extraClass}"><span class="ladder__num" aria-hidden="true">${n}</span><div class="ladder__text"><h3 class="ladder__name">${lvl.name}</h3><p class="ladder__what">${lvl.what}</p><p class="ladder__who">${lvl.who}</p></div></li>`;
-}
-
-function metaLadderHtml(): string {
-  const rungs = META_LEVELS.map((lvl, i) => ladderRung(lvl, i + 1))
-    .reverse()
-    .join("\n    ");
-  return `<section class="ladder" aria-label="The levels of metaprogramming">
-  <h2 class="ladder__title">The levels of meta</h2>
-  <p class="ladder__lead">Most languages have "metaprogramming". The word hides a ladder: how much of the language your own code can reach. Every language stops somewhere. Logos is designed so that nothing is out of reach.</p>
-  <ol class="ladder__list" reversed>
-    ${ladderRung(LOGOS_LEVEL, META_LEVELS.length + 1, " ladder__rung--logos")}
-    ${rungs}
-  </ol>
-  <p class="ladder__note">Each language sits at the highest level it reaches.</p>
-</section>`;
-}
-
-// ── Checked, not clever ───────────────────────────────────────────────────────
-// The objection every experienced programmer raises at "redefine the language":
-// Lisp, Forth and Smalltalk allowed exactly that, nothing checked the result, and
-// teams learned to fence it off. This section answers with the mechanism (a
-// redefinition is a checked write into the graph under the one reader-writer rule)
-// and names the half each ancestor misses. Kept honest: direction, not feature.
-function checkedHtml(): string {
-  return `<section class="checked" aria-label="Why redefining the language is safe in Logos">
-  <h2 class="checked__title">Checked, not clever</h2>
-  <p class="checked__lead">Total metaprogramming has a bad reputation, and it earned it. Lisp, Forth and Smalltalk let code redefine anything, nothing checked the result, and teams learned to fence off the very feature that made those languages special.</p>
-  <div class="checked__body">
-    <p>Logos keeps the freedom and adds the check. Redefining a type, the grammar, or the compiler itself is an ordinary write into the Logic Graph, governed by the same rule as every other write: many readers or one writer, never both. The type system sees the change, the borrow checker sees it, and where you have asked for proofs, the proof kernel sees it, all before it runs.</p>
-    <p>That is the half each of Logos's ancestors misses. Smalltalk can rewrite itself but cannot prove a change right. Lean can prove a change right, but it is a prover built for mathematicians, on managed memory, with syntax, elaboration and kernel terms kept as separate layers, not a systems substrate a program rewrites and runs at native speed. Logos reaches for both in one structure: rewrite it as freely as Smalltalk, check it as strictly as Lean, run it as fast as Rust.</p>
-    <p>This is the direction Logos is built toward, not a shipping feature. It does not run yet; the <a href="/roadmap/">roadmap</a> tracks what does.</p>
-  </div>
-</section>`;
-}
-
 // The signup section at the bottom of the homepage: intent capture placed where a
 // convinced reader lands, after the argument, never as the first thing seen.
 function notifySectionHtml(): string {
@@ -1453,10 +963,11 @@ function notifySectionHtml(): string {
 // 2026). It was a two-column grid, prose down the left and one continuous code
 // listing down the right, from 11 September 2026 until the code was dropped.
 //
-// The quote band sits directly under the hero, the "Logos is maximally meta"
-// paragraph (Thobias, 15 September 2026). It was pinned across the top of the screen
-// for four days before that, and a vertical rail between the prose and the code for
-// a day before that; in flow under the hero is where it began.
+// Three sections: the hero, the comparison matrix, the signup. The ladder of meta,
+// the Logic Graph figure, "Checked, not clever" and "Built from proven parts" sat
+// between the hero and the matrix until 21 September 2026, when Thobias cut them.
+// The quotes that ran as a band under the hero moved into the page margins the same
+// day (build/wisdom.ts).
 export function homePage(): string {
   return `<section class="hero">
   <h1 class="hero__headline">
@@ -1466,13 +977,6 @@ export function homePage(): string {
   </h1>
   <p class="hero__sub">Logos is maximally meta. Its grammar, types, proofs, compiler and interpreter live in the same graph as your program, so your code can read and redefine any of them, and every change is checked. Meta used to mean unchecked and slow. Here it is neither.</p>
 </section>
-<section class="wisdom" aria-label="On the Logos, voices across the ages">
-  <div class="wisdom__scroll"><div class="wisdom__track">${wisdomUnits()}</div></div>
-</section>
-${metaLadderHtml()}
-${structureHtml()}
-${checkedHtml()}
-${buildableHtml()}
 ${compareHtml({ hidden: HOME_HIDDEN })}
 ${notifySectionHtml()}`;
 }
@@ -1699,6 +1203,7 @@ export function privacyPage(): string {
     <li><code>theme</code> cookie: remembers your light/dark choice (strictly necessary). ~180 days.</li>
     <li><code>localStorage</code> visitor id and <code>sessionStorage</code> session id: the anonymous analytics ids described above. No advertising or third-party cookies are set.</li>
     <li><code>localStorage</code> <code>compareHidden</code>: which columns you have hidden in the homepage's comparison table. A convenience, nothing personal; it stays until you clear site data.</li>
+    <li><code>sessionStorage</code> <code>wisdomIndex</code>: which of the quotes in the page margins comes up next, so you keep meeting new ones as you browse. A single number; it disappears when you close the tab.</li>
   </ul>
 
   <h2>Legal basis and your choices</h2>
