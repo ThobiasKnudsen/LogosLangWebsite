@@ -8,12 +8,13 @@
 //
 //   content/showcase/<number>-<slug>/<anything>.<ext>
 //
-// The folder's number orders the tabs and its slug is the tab's label (dashes to
-// spaces, first letter up), unless a label.txt in the folder says otherwise. A
-// file's extension names its language (LANGS below); a language with no file in
-// a folder is one that cannot do what the tab shows, and its pane says so. Every
-// folder needs a .logos file, the left pane. content/showcase/README.md says the
-// same for whoever opens the folder.
+// The folder's leading number orders the tabs and the rest of its name is the
+// tab's label (dashes and underscores as spaces, the first letter up, the rest
+// as typed), unless a label.txt in the folder says otherwise. A file's extension
+// names its language (LANGS below); a language with no file in a folder is one
+// that cannot do what the tab shows, and its pane says so. A folder needs a
+// .logos file, the left pane, before it is a tab. content/showcase/README.md says
+// the same for whoever opens the folder.
 //
 // The Logos listings are taken from the LogosLang repo's own examples/ directory,
 // docs (docs/v0.0.4) and language sketch, which is what the bootstrap seed runs
@@ -77,35 +78,49 @@ interface Example {
   none: string[];
 }
 
-/** The tabs, read from content/showcase/ in folder-number order. */
+/** A folder's name split into its ordering number, if it has one, and the rest. */
+function parseDirName(dir: string): { order: number; rest: string } {
+  const m = /^(\d+)[-_ ]*(.*)$/.exec(dir);
+  return m && m[2] ? { order: Number(m[1]), rest: m[2] } : { order: Infinity, rest: dir };
+}
+
+/** The tabs, read from content/showcase/ in folder-number order. The folders are
+ *  edited by hand while the dev server watches, so nothing here fails the build:
+ *  a file the build cannot place is warned about and skipped, and a folder with
+ *  no Logos file yet is left out until it has one. */
 async function loadExamples(): Promise<Example[]> {
   const entries = await fs.readdir(SHOWCASE_DIR, { withFileTypes: true });
   const dirs = entries
-    .filter((e) => e.isDirectory())
+    .filter((e) => e.isDirectory() && !e.name.startsWith("."))
     .map((e) => e.name)
-    .sort((a, b) => Number(a.split("-")[0]) - Number(b.split("-")[0]) || a.localeCompare(b));
+    .sort((a, b) => parseDirName(a).order - parseDirName(b).order || a.localeCompare(b));
   const examples: Example[] = [];
+  const ids = new Set<string>();
   for (const dir of dirs) {
-    const m = /^(\d+)-([a-z0-9]+(?:-[a-z0-9]+)*)$/.exec(dir);
-    if (!m) {
-      throw new Error(`content/showcase/${dir}: a tab's folder is named <number>-<slug>, like 1-the-answer`);
-    }
-    const slug = m[2]!;
-    const words = slug.replace(/-/g, " ");
+    const { rest } = parseDirName(dir);
+    // The label is the folder's name after its number, dashes and underscores as
+    // spaces and the first letter up, so `6-Proof` is "Proof" and `1-42` is "42";
+    // the id is the same made safe for an attribute.
+    const words = rest.replace(/[-_]+/g, " ").trim();
     let label = words.charAt(0).toUpperCase() + words.slice(1);
+    let id = words.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "tab";
+    while (ids.has(id)) id += "-2";
     const code: Partial<Record<string, string>> = {};
     for (const file of (await fs.readdir(path.join(SHOWCASE_DIR, dir))).sort()) {
       const full = path.join(SHOWCASE_DIR, dir, file);
+      if (file.startsWith(".")) continue;
       if (file === "label.txt") {
-        label = (await fs.readFile(full, "utf8")).trim();
+        label = (await fs.readFile(full, "utf8")).trim() || label;
         continue;
       }
       const lang = LANGS.find((l) => file.endsWith(l.ext));
       if (!lang) {
-        throw new Error(`content/showcase/${dir}/${file}: no language has this extension (${LANGS.map((l) => l.ext).join(", ")})`);
+        console.warn(`content/showcase/${dir}/${file}: skipped, no language has this extension (${LANGS.map((l) => l.ext).join(", ")})`);
+        continue;
       }
       if (code[lang.id] !== undefined) {
-        throw new Error(`content/showcase/${dir}: two ${lang.name} files; one per language`);
+        console.warn(`content/showcase/${dir}/${file}: skipped, the folder already has a ${lang.name} file`);
+        continue;
       }
       const source = (await fs.readFile(full, "utf8")).replace(/\s+$/, "");
       source.split("\n").forEach((line, i) => {
@@ -116,16 +131,18 @@ async function loadExamples(): Promise<Example[]> {
       code[lang.id] = source;
     }
     if (code.logos === undefined) {
-      throw new Error(`content/showcase/${dir}: no .logos file, and the left pane is always Logos`);
+      console.warn(`content/showcase/${dir}: no .logos file yet, so no tab; the left pane is always Logos`);
+      continue;
     }
+    ids.add(id);
     examples.push({
-      id: slug,
+      id,
       label,
       code,
       none: LANGS.filter((l) => code[l.id] === undefined).map((l) => l.id),
     });
   }
-  if (examples.length === 0) throw new Error("content/showcase: no tab folders");
+  if (examples.length === 0) throw new Error("content/showcase: no folder with a .logos file, so nothing to show");
   return examples;
 }
 

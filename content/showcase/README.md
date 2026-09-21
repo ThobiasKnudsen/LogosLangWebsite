@@ -3,10 +3,11 @@
 The tabbed code box under the homepage heading is built from this folder.
 Edit the files here; `npm run dev` rebuilds on save.
 
-- **One folder per tab**, named `<number>-<slug>`. The number orders the tabs
-  and the slug is the label: `2-a-function-returns-a-type` shows as
-  "A function returns a type". Put a `label.txt` in the folder to override the
-  label.
+- **One folder per tab.** A leading number orders the tabs, and the rest of
+  the name is the label, with dashes and underscores shown as spaces and the
+  first letter capitalised: `2-function-returns-type` shows as "Function
+  returns type", `6-Proof` as "Proof", `1-42` as "42". Put a `label.txt` in
+  the folder to set the label outright.
 - **One file per language** in each folder. The extension names the language;
   the file's base name does not matter.
 
@@ -23,7 +24,11 @@ Edit the files here; `npm run dev` rebuilds on save.
 - **A language with no file** in a folder is shown as "does not support this"
   on that tab. Delete a file to say a language cannot do it; add one to say it
   can.
-- **Every folder needs a `.logos` file**: Logos is always the left pane.
+- **A folder becomes a tab once it has a `.logos` file**: Logos is always the
+  left pane. Until then the build skips the folder with a warning.
+- **Other files are skipped** with a warning (an unknown extension, a second
+  file for the same language), never a failed build, so editing while
+  `npm run dev` runs is safe.
 - **Keep lines to about 54 characters**; longer lines scroll sideways in the
   half-width pane, and the build prints a warning for each one.
 - Adding a language means adding it to `LANGS` in `build/showcase.ts` (its

@@ -1,11 +1,14 @@
 # a conjecture states a rewrite; its proof is the
 # chain of steps that gets there, each citing a rule
-twice := conjecture ( a + a -> 2 * a )
-    where ( a:dyad.type is number ),
-cancel := conjecture ( a / a -> 1 )
-    where ( a:dyad.type is number and a != 0 ),
-half := conjecture ( (a + a) / a -> 2 )
-    where ( a:dyad.type is number and a != 0 )
+twice :=
+    conjecture ( a + a -> 2 * a )
+    where ( a:type is number ),
+cancel :=
+    conjecture ( a / a -> 1 )
+    where ( a:type is number and a != 0 ),
+half :=
+    conjecture ( (a + a) / a -> 2 )
+    where ( a:type is number and a != 0 )
     proof (
         (a + a) / a
         -> twice(a + a) / a

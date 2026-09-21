@@ -1,5 +1,9 @@
 # the answer, computed the long way
-double := fn (x := i32 ?) -> i32 ( x + x ),
+double := fn (x := i32 ?) -> i32 (
+    x + x
+),
 mut sum := i32 0,
-for i in 0..7 ( sum = sum + i ),
+for i in 0..7 (
+    sum = sum + i
+),
 print «answer {double(sum)}»   # answer 42
