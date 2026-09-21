@@ -26,6 +26,7 @@ initMarginalia();
 initScrollbars();
 initAnalytics();
 initNotify();
+initShowcase();
 initCompare();
 if (document.getElementById('docs-app')) initDocs();
 if (document.getElementById('dl-grid')) initDownload();
@@ -154,6 +155,42 @@ function initMarginalia(): void {
 	};
 	fill();
 	new ResizeObserver(fill).observe(document.body);
+}
+
+// ── Showcase: tabs of examples, and a language picker under the listing ───────
+// Every tab x language listing is already in the page (build/showcase.ts); this
+// shows the one the two choices select and hides the rest, nothing more. With JS
+// off the first example stays up in Logos.
+function initShowcase(): void {
+	const root = document.querySelector<HTMLElement>('[data-showcase]');
+	if (!root) return;
+	const tabs = [...root.querySelectorAll<HTMLButtonElement>('.showcase__tab')];
+	const langs = [...root.querySelectorAll<HTMLButtonElement>('.showcase__lang')];
+	const listings = [...root.querySelectorAll<HTMLElement>('.showcase__listing')];
+	let example = tabs.find((t) => t.classList.contains('is-active'))?.dataset.example ?? '';
+	let lang = langs.find((l) => l.classList.contains('is-active'))?.dataset.lang ?? '';
+	const show = (): void => {
+		for (const t of tabs) {
+			const on = t.dataset.example === example;
+			t.classList.toggle('is-active', on);
+			t.setAttribute('aria-selected', String(on));
+		}
+		for (const l of langs) {
+			const on = l.dataset.lang === lang;
+			l.classList.toggle('is-active', on);
+			l.setAttribute('aria-pressed', String(on));
+		}
+		for (const el of listings) {
+			el.hidden = !(el.dataset.example === example && el.dataset.lang === lang);
+		}
+	};
+	root.addEventListener('click', (e) => {
+		const btn = (e.target as HTMLElement | null)?.closest<HTMLButtonElement>('.showcase__tab, .showcase__lang');
+		if (!btn) return;
+		if (btn.dataset.example) example = btn.dataset.example;
+		else if (btn.dataset.lang) lang = btn.dataset.lang;
+		show();
+	});
 }
 
 // ── Comparison matrix: scroll hints + floating header ─────────────────────────

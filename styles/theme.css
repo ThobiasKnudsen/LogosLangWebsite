@@ -618,7 +618,7 @@ a {
     border: 1px solid var(--white); /* a white line around the card */
     border-radius: 1rem;
     background: var(--margin-bg);
-    color: var(--bp-light);
+    color: var(--white); /* white too, like its line (it was purple for an hour) */
 }
 /* "everything" underlined (Thobias, 22 September 2026), the line tuned for the
    serif at display size: thin against the strokes, and clear of the descenders. */
@@ -627,14 +627,91 @@ a {
     text-decoration-thickness: 0.05em;
     text-underline-offset: 0.14em;
 }
-.hero__sub {
-    font-size: clamp(0.84rem, 1.28vw, 1.04rem);
-    line-height: 1.55;
-    /* Matched to the Download button's text color. */
+
+/* ── Showcase ─────────────────────────────────────────────────────────────────
+   Under the heading: a row of tabs, one per example program, the listing, and a
+   language picker beneath it, so the same program reads in Logos and then in a
+   language the visitor already knows (Thobias, 22 September 2026; it took the
+   place of the paragraph that sat under the heading). The markup, every tab x
+   language listing shipped hidden, is build/showcase.ts's; initShowcase shows
+   the pair the tabs and the picker select. Square like the matrix; only the
+   picker's chips are rounded, being buttons. */
+.showcase {
+    max-width: 46rem;
+    margin: clamp(2.5rem, 6vh, 4rem) auto 0;
+    padding-inline: var(--gutter);
+}
+.showcase__tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 0.35rem;
+    border-bottom: 1px solid var(--hairline);
+}
+.showcase__tab {
+    padding: 0.55rem 0.8rem;
+    margin-bottom: -1px; /* its own bottom line sits on the row's rule */
+    border: 0;
+    border-bottom: 2px solid transparent;
+    background: none;
+    font: inherit;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--muted);
+    cursor: pointer;
+}
+.showcase__tab:hover {
+    color: var(--heading);
+}
+.showcase__tab.is-active {
+    color: var(--heading);
+    border-bottom-color: var(--accent);
+}
+/* A fixed floor keeps the page from jumping as listings of different lengths
+   swap in; the longest is about fourteen lines. */
+.showcase__panel {
+    margin-top: 1rem;
+    min-height: 18rem;
+    border: 1px solid var(--hairline);
+    background: var(--code-bg);
+}
+.showcase__code {
+    margin: 0;
+    padding: 1rem 1.2rem;
+    overflow-x: auto;
+    font-family: var(--mono);
+    font-size: 0.85rem;
+    line-height: 1.6;
+    color: var(--text);
+    background: transparent;
+}
+.showcase__code code {
+    font: inherit;
+}
+.showcase__langs {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.4rem;
+    margin-top: 0.9rem;
+}
+.showcase__lang {
+    padding: 0.25rem 0.8rem;
+    border: 1px solid var(--hairline);
+    border-radius: 999px;
+    background: var(--surface);
+    font: inherit;
+    font-size: 0.8rem;
+    color: var(--heading);
+    cursor: pointer;
+}
+.showcase__lang:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+.showcase__lang.is-active {
+    background: var(--download-bg);
+    border-color: var(--download-fg);
     color: var(--download-fg);
-    max-width: 56ch;
-    /* Air between the two-line title and the paragraph, so the title stands alone. */
-    margin: 5rem 0 0;
 }
 /* ── Get-notified form ────────────────────────────────────────────────────────
    The intent-capture form in the hero and on the empty download page: an email

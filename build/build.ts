@@ -29,6 +29,7 @@ import {
   aboutPage,
 } from "./pages.ts";
 import { renderDocsMain } from "./docs-render.ts";
+import { showcaseHtml } from "./showcase.ts";
 import { fetchReleases } from "./fetch-releases.ts";
 import { fetchRoadmap } from "./fetch-roadmap.ts";
 
@@ -454,6 +455,8 @@ export async function build(): Promise<void> {
   // Falls back to content/roadmap.snapshot.json if GitHub is unreachable, so the
   // page never blanks (see fetch-roadmap.ts).
   const roadmap = await fetchRoadmap();
+  // The homepage showcase: every example in every language, highlighted once.
+  const showcase = await showcaseHtml();
 
   await writePage(
     "index.html",
@@ -484,7 +487,7 @@ export async function build(): Promise<void> {
           offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
         },
       ],
-      main: homePage(),
+      main: homePage(showcase),
     }),
   );
   await writePage(

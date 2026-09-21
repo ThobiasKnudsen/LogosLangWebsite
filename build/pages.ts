@@ -1,11 +1,13 @@
 // Inner HTML for the marketing pages. The homepage order: the hero is the identity,
 // "One language for everything" (the wordmark "Λόγος" stood above it until 22
-// September 2026), over one paragraph on the mechanism (one graph, checked
-// redefinition); then the honest comparison matrix. No code listing:
-// one ran down the homepage's right-hand side from 11 to 21 September 2026, and the
-// examples page has the same definitions. The reflections on the Logos live in the
-// page margins now (build/wisdom.ts).
+// September 2026, and a paragraph on the mechanism under it); then the showcase,
+// the same program in Logos and in other languages (build/showcase.ts); then the
+// honest comparison matrix. No code listing: one ran down the homepage's right-hand
+// side from 11 to 21 September 2026, and the examples page has the same
+// definitions. The reflections on the Logos live in the page margins
+// (build/wisdom.ts).
 import { escapeHtml } from "./templates.ts";
+import { highlightLogosLines } from "./highlight.ts";
 import {
   OS_ORDER,
   OS_LABELS,
@@ -250,74 +252,6 @@ const EXAMPLES: Example[] = [
     code: `total := 2 + 3 + 4`,
   },
 ];
-
-const LOGOS_KEYWORDS = new Set([
-  "fn",
-  "mut",
-  "immut",
-  "shared",
-  "if",
-  "else",
-  "for",
-  "while",
-  "and",
-  "or",
-  "xor",
-  "not",
-  "where",
-  "eval",
-  "self",
-  "error",
-  "undefined",
-  "in",
-  "break",
-  "is",
-  "true",
-  "false",
-]);
-// `@dyad` / `@void` tokenize as the `@` operator plus a bare identifier, so the
-// pointer type names appear here without their prefix.
-// `left` and `right` are the two associativity identities (ruled 9 September 2026),
-// keywords with nothing behind them, so they color like the other ground identities.
-const LOGOS_TYPES =
-  /^(?:[iu](?:8|16|32|64)|f32|f64|string|bool|void!?|dyad|logos|type|instance|lex|exec|scope|proof|conjecture|parsing_tape|callable|number|generic_number|array|left|right)$/;
-
-/** Minimal Logos highlighter for the fixed homepage sample: comments, «strings»,
- *  numbers, keywords, primitive types, and operators become spans; everything else
- *  (including whitespace) is escaped verbatim. Not a general lexer; just enough for
- *  marketing snippets this file controls. */
-function highlightLogosLines(source: string): string[] {
-  const TOKEN =
-    /«[^»]*»|\d[\d_]*(?:\.\d+)?|[A-Za-z_][A-Za-z0-9_@]*!?|:=|->|==|!=|<=|>=|[:=+\-*/%^<>.&@()[\],?!]/g;
-  const renderCode = (code: string): string => {
-    let out = "";
-    let idx = 0;
-    for (const m of code.matchAll(TOKEN)) {
-      out += escapeHtml(code.slice(idx, m.index));
-      const t = m[0];
-      if (t.startsWith("«"))
-        out += `<span class="tok-str">${escapeHtml(t)}</span>`;
-      else if (/^\d/.test(t)) out += `<span class="tok-num">${t}</span>`;
-      else if (/^[A-Za-z_]/.test(t))
-        out += LOGOS_KEYWORDS.has(t)
-          ? `<span class="tok-kw">${t}</span>`
-          : LOGOS_TYPES.test(t)
-            ? `<span class="tok-type">${t}</span>`
-            : escapeHtml(t);
-      else out += `<span class="tok-op">${escapeHtml(t)}</span>`;
-      idx = m.index + t.length;
-    }
-    return out + escapeHtml(code.slice(idx));
-  };
-  return source.split("\n").map((line) => {
-    const hash = line.indexOf("#");
-    if (hash < 0) return renderCode(line);
-    return (
-      renderCode(line.slice(0, hash)) +
-      `<span class="tok-comment">${escapeHtml(line.slice(hash))}</span>`
-    );
-  });
-}
 
 /** A listing's lines as blocks: each line is its own block so that a blank source
  *  line still takes a line's height, from .code-line's min-height; the lines carry
@@ -949,18 +883,20 @@ function compareHtml(hiddenIds: readonly string[]): string {
 // 2026). It was a two-column grid, prose down the left and one continuous code
 // listing down the right, from 11 September 2026 until the code was dropped.
 //
-// Two sections: the hero and the comparison matrix. The ladder of meta, the Logic
-// Graph figure, "Checked, not clever" and "Built from proven parts" sat between the
-// hero and the matrix until 21 September 2026, when Thobias cut them, and a
-// "Hear about the first build" signup (the notify form) closed the page until 22
-// September 2026, when he cut that too; the download page still carries the form.
-// The quotes that ran as a band under the hero moved into the page margins on 21
-// September 2026 (build/wisdom.ts).
-export function homePage(): string {
+// Three sections: the hero, the showcase (the same program in Logos and other
+// languages, rendered by build/showcase.ts and handed in by the build), and the
+// comparison matrix. The ladder of meta, the Logic Graph figure, "Checked, not
+// clever" and "Built from proven parts" sat between the hero and the matrix until
+// 21 September 2026, when Thobias cut them; a "Hear about the first build" signup
+// (the notify form) closed the page until 22 September 2026, when he cut that too
+// (the download page still carries the form), and the paragraph under the heading
+// went the same day, the showcase taking its place. The quotes that ran as a band
+// under the hero moved into the page margins on 21 September 2026 (build/wisdom.ts).
+export function homePage(showcase: string): string {
   return `<section class="hero">
   <h1 class="hero__headline">One language for <span class="hero__underline">everything</span></h1>
-  <p class="hero__sub">Logos is maximally meta. Its grammar, types, proofs, compiler and interpreter live in the same graph as your program, so your code can read and redefine any of them, and every change is checked. Meta used to mean unchecked and slow. Here it is neither.</p>
 </section>
+${showcase}
 ${compareHtml(HOME_HIDDEN)}`;
 }
 
