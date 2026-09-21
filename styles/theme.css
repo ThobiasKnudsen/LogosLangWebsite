@@ -1119,9 +1119,8 @@ a {
 /* ── Comparison matrix ────────────────────────────────────────────────────────
    "Next to its neighbors", at the foot of the homepage and on /compare/: Logos
    against eleven other languages.
-   One glyph per cell (has it / partial / no), colored green / yellow / red; the
-   not-done-yet disclaimer lives once in the lead paragraph, not per cell or in
-   the header. The table is as wide as the columns it shows; where that is more
+   One glyph per cell (has it / partial / no), colored green / yellow / red. No
+   lead paragraph: title, legend, chips, table, notes. The table is as wide as the columns it shows; where that is more
    than the screen, it scrolls horizontally and the .compare__shadows overlays
    (fade + chevron, toggled by initCompare) show WHICH direction holds more
    columns. The Logos column carries a faint accent wash. On the homepage each
@@ -1164,12 +1163,6 @@ a {
     color: var(--heading);
     text-align: center;
     margin: 0;
-}
-.compare__lead {
-    font-size: 0.95rem;
-    max-width: 64ch;
-    margin: 0.9rem auto 0;
-    text-align: center;
 }
 .compare__legend {
     list-style: none;

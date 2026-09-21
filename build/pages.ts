@@ -734,10 +734,12 @@ ${items}
 
 // ── Comparison matrix ─────────────────────────────────────────────────────────
 // Logos next to the languages a PL-literate visitor reaches for first. The Logos
-// column describes the design Logos is built toward (the lead paragraph carries the
-// not-done-yet disclaimer once, rather than per cell), and the table keeps the rows
-// where OTHER languages beat Logos (content-addressed code, ecosystem, tooling,
-// being usable at all). Verdicts for the other columns were researched and
+// column describes the design Logos is built toward, not software that runs today;
+// the "Usable today" row says so in the table's own terms, and the ladder's Logos
+// rung says it in words. The table keeps the rows where OTHER languages beat Logos
+// (content-addressed code, ecosystem, tooling, being usable at all). It had a lead
+// paragraph saying all this until Thobias cut it (21 September 2026): title,
+// legend, chips, table, notes. Verdicts for the other columns were researched and
 // adversarially fact-checked per language (July 2026); the numbered footnotes carry
 // the nuance a one-glyph cell cannot.
 //
@@ -1308,12 +1310,8 @@ function compareHtml(toggles?: { hidden: readonly string[] }): string {
       .join("\n    ")}
   </div>`
     : "";
-  const howTo = toggles
-    ? " The table starts with the closest neighbors; add any of the others from the row above it, or hide a column with its ×."
-    : "";
   return `<section class="compare" aria-label="How Logos compares to other languages">
   <h2 class="compare__title">Next to its neighbors</h2>
-  <p class="compare__lead">The first question a language-literate visitor asks is "why not C++, Rust, Zig, Lean, Julia, Python, TypeScript, or a Lisp?". Here is the honest answer. <strong>Logos is not done yet</strong>: its column is the design it is being built toward, not software you can run today, while every other column is what ships now. But read across the rows: nearly every capability in the Logos column is already a yes somewhere else here, so the hard part is not inventing any one of them, it is uniting them in one structure. Some rows are things other languages do well that Logos does not attempt at all.${howTo}</p>
   <ul class="compare__legend"><li class="is-yes"><span aria-hidden="true">✓</span> has it</li><li class="is-partial"><span aria-hidden="true">~</span> partial</li><li class="is-no"><span aria-hidden="true">✗</span> no</li></ul>${chips}
   <div class="compare__shadows" data-compare>
     <div class="compare__scroll">
@@ -1330,8 +1328,8 @@ function compareHtml(toggles?: { hidden: readonly string[] }): string {
 /** The matrix on its own page as well. It left the homepage when that became a
  *  two-column read (11 September 2026), since a 13-column table with an intrinsic
  *  floor of 82rem cannot share a page with anything, and went back to the foot of the
- *  homepage when the code column went (21 September 2026). It carries its own title
- *  and lead, so the page is the section. */
+ *  homepage when the code column went (21 September 2026). It carries its own title,
+ *  so the page is the section. */
 export function comparePage(): string {
   return compareHtml();
 }
