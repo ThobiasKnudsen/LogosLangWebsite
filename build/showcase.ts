@@ -339,7 +339,7 @@ pub fn main() void {
     std.debug.print("{}\\n", .{all});
 }`,
       c: `// no reflection; _Generic picks a branch by a static
-// type at compile time, and that is as close as it gets
+// type at compile time; that is as close as it gets
 #include <stdio.h>
 #define IS_INT(v) _Generic((v), int: 1, default: 0)
 
