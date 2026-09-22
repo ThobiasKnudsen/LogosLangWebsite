@@ -721,10 +721,10 @@ a {
     align-content: start;
 }
 /* A note on the pane's first line, centred, level with the language's name at
-   the right: "<Language> does not support this." with no code under it, or
-   "<Language> lacks part of this." over the code it does have. One form for
-   both, a rounded box outlined in the theme's orange (Thobias, 22 September
-   2026; the no-support note sat in the middle of the pane before). */
+   the right: "not supported" with no code under it, or "lacking" over the code
+   the language does have. One form for both, a rounded box outlined in the
+   theme's orange (Thobias, 22 September 2026; a sentence naming the language
+   before, and the no-support note sat in the middle of the pane before that). */
 .showcase__note {
     justify-self: center;
     margin: 0.2rem 0 0;

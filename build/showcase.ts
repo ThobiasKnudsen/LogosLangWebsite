@@ -182,12 +182,13 @@ export async function showcaseHtml(): Promise<string> {
   // A language with no file for the tab gets a note on the pane's first line
   // and no code; one whose file is marked lacking gets the same kind of note
   // above its code (Thobias, 22 September 2026: both notes in one form, on the
-  // line the language's name is on).
+  // line the language's name is on, and just the word: "not supported" or
+  // "lacking").
   const note = (text: string): string => `<p class="showcase__note">${escapeHtml(text)}</p>`;
   const pane = (ex: Example, lang: Lang): string => {
-    if (ex.none.includes(lang.id)) return note(`${lang.name} does not support this.`);
+    if (ex.none.includes(lang.id)) return note("not supported");
     const code = render(lang, ex.code[lang.id]!);
-    return ex.lacking.includes(lang.id) ? note(`${lang.name} lacks part of this.`) + code : code;
+    return ex.lacking.includes(lang.id) ? note("lacking") + code : code;
   };
   const [logos, ...others] = LANGS as [Lang, ...Lang[]];
   const tabs = examples
