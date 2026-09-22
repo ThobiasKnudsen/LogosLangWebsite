@@ -177,15 +177,25 @@ function initShowcase(): void {
 			t.classList.toggle('is-active', on);
 			t.setAttribute('aria-selected', String(on));
 		}
+		let name = '';
 		for (const l of langs) {
 			const on = l.dataset.lang === lang;
 			l.classList.toggle('is-active', on);
 			l.setAttribute('aria-pressed', String(on));
-			if (on && label) label.textContent = l.textContent;
+			if (on) name = l.textContent ?? '';
 		}
+		let lacking = false;
 		for (const el of listings) {
 			const side = el.dataset.lang === 'logos' || el.dataset.lang === lang;
-			el.hidden = !(el.dataset.example === example && side);
+			const shown = el.dataset.example === example && side;
+			el.hidden = !shown;
+			if (shown && el.dataset.lang === lang && el.hasAttribute('data-lacking')) lacking = true;
+		}
+		// The right pane's name, and "lacking" after it where the listing can do
+		// only part of what the tab shows (build/showcase.ts).
+		if (label) {
+			label.textContent = lacking ? `${name} · lacking` : name;
+			label.classList.toggle('is-lacking', lacking);
 		}
 	};
 	root.addEventListener('click', (e) => {

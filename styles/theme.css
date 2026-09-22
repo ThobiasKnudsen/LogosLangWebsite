@@ -764,6 +764,11 @@ a {
     text-transform: uppercase;
     color: var(--muted);
 }
+/* A listing that can do only part of what the tab shows: its name reads
+   "<Language> · lacking", in the same orange as the no-support box. */
+.showcase__pane-label.is-lacking {
+    color: var(--warn-text);
+}
 .showcase__code {
     margin: 0;
     padding: 1.9rem 1rem 1rem;

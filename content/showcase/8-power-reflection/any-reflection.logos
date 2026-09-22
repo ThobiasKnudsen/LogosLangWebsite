@@ -6,7 +6,14 @@ print «{(2 ^ 3).lhs} {(2 ^ 3).rhs}»  # 2 3, not run
 print «{e:start.rhs:dyad.type == ^}» # true: a ^ node
 print «{^.parse_rank > *.parse_rank}» # binds tighter
 print «{^.associativity == right}»   # true
-print «{^.arity}»                    # 2
 print «{^.instance}»                 # lhs rhs output
 print «{^.run}»                      # its run body
 print «{^.parse}»                    # its parse body
+
+# finding the arity:
+number_of_fields := ^.instance.length
+for i in ^.instance (
+    if i:name == «output» (number_of_fields -= 1)
+    if shared in i:gates (number_of_fields -= 1)
+)
+print «arity {number_of_fields}»     # arity 2
