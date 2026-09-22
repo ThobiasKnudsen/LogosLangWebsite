@@ -26,8 +26,9 @@ Edit the files here; `npm run dev` rebuilds on save.
   on that tab. Delete a file to say a language cannot do it; add one to say it
   can.
 - **A language that can do only part of it** keeps its file, named
-  `<name>.lacking.<ext>` (for example `any-reflection.lacking.py`); its pane is
-  then labelled "Python · lacking" in orange, beside the code.
+  `<name>.lacking.<ext>` (for example `any-reflection.lacking.py`); its pane
+  then says "Python lacks part of this." on its first line, above the code,
+  in the same box the no-support note uses.
 - **A folder becomes a tab once it has a `.logos` file**: Logos is always the
   left pane. Until then the build skips the folder with a warning.
 - **Other files are skipped** with a warning (an unknown extension, a second

@@ -78,7 +78,7 @@ interface Example {
   /** The languages without one: their pane carries a message instead of code. */
   none: string[];
   /** The languages whose file is named `<name>.lacking.<ext>`: they can do only
-   *  part of what the tab shows, and their pane says so beside the code
+   *  part of what the tab shows, and their pane says so above the code
    *  (Thobias, 22 September 2026: no other language reflects on as much as
    *  Logos, yet some can show something). */
   lacking: string[];
@@ -179,12 +179,16 @@ export async function showcaseHtml(): Promise<string> {
     });
     return html.replace('<pre class="shiki', '<pre class="showcase__code shiki');
   };
-  // A language with no file for the tab gets a message, centred in its pane,
-  // and no code.
-  const pane = (ex: Example, lang: Lang): string =>
-    ex.none.includes(lang.id)
-      ? `<div class="showcase__none"><p>${escapeHtml(lang.name)} does not support this.</p></div>`
-      : render(lang, ex.code[lang.id]!);
+  // A language with no file for the tab gets a note on the pane's first line
+  // and no code; one whose file is marked lacking gets the same kind of note
+  // above its code (Thobias, 22 September 2026: both notes in one form, on the
+  // line the language's name is on).
+  const note = (text: string): string => `<p class="showcase__note">${escapeHtml(text)}</p>`;
+  const pane = (ex: Example, lang: Lang): string => {
+    if (ex.none.includes(lang.id)) return note(`${lang.name} does not support this.`);
+    const code = render(lang, ex.code[lang.id]!);
+    return ex.lacking.includes(lang.id) ? note(`${lang.name} lacks part of this.`) + code : code;
+  };
   const [logos, ...others] = LANGS as [Lang, ...Lang[]];
   const tabs = examples
     .map(
@@ -192,10 +196,8 @@ export async function showcaseHtml(): Promise<string> {
         `<button type="button" class="showcase__tab${i === 0 ? " is-active" : ""}" role="tab" aria-selected="${i === 0}" data-example="${ex.id}">${escapeHtml(ex.label)}</button>`,
     )
     .join("\n      ");
-  // A lacking listing carries data-lacking; the client names the right pane
-  // "<Language> · lacking" from it.
   const listing = (ex: Example, lang: Lang, shown: boolean): string =>
-    `<div class="showcase__listing" data-example="${ex.id}" data-lang="${lang.id}"${ex.lacking.includes(lang.id) ? " data-lacking" : ""}${shown ? "" : " hidden"}>${pane(ex, lang)}</div>`;
+    `<div class="showcase__listing" data-example="${ex.id}" data-lang="${lang.id}"${shown ? "" : " hidden"}>${pane(ex, lang)}</div>`;
   const left = examples.map((ex, i) => listing(ex, logos, i === 0)).join("\n        ");
   const right = examples
     .flatMap((ex, i) => others.map((lang, j) => listing(ex, lang, i === 0 && j === 0)))
@@ -220,7 +222,7 @@ export async function showcaseHtml(): Promise<string> {
         ${left}
       </div>
       <div class="showcase__pane showcase__pane--other">
-        <span class="showcase__pane-label${examples[0]!.lacking.includes(others[0]!.id) ? " is-lacking" : ""}" data-lang-label>${escapeHtml(others[0]!.name)}${examples[0]!.lacking.includes(others[0]!.id) ? " · lacking" : ""}</span>
+        <span class="showcase__pane-label" data-lang-label>${escapeHtml(others[0]!.name)}</span>
         ${right}
       </div>
     </div>

@@ -3,8 +3,7 @@
 e := 2 ^ 3,
 print «{e}»                          # 8
 print «{(2 ^ 3).lhs} {(2 ^ 3).rhs}»  # 2 3, not run
-print «{e:start.rhs:dyad.type == ^}» # true: a ^ node
-print «{^.parse_rank > *.parse_rank}» # binds tighter
+print «{^.parse_rank > *.parse_rank}» # true, binds tighter
 print «{^.associativity == right}»   # true
 print «{^.instance}»                 # lhs rhs output
 print «{^.run}»                      # its run body
