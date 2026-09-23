@@ -6,7 +6,7 @@ print «{(2 ^ 3).lhs} {(2 ^ 3).rhs}»  # 2 3, not run
 print «{^.parse_rank > *.parse_rank}» # tighter
 print «{^.associativity == right}»   # true
 print «{^.instance}»                 # lhs rhs output
-print «{^.run}»                      # its run body
+print «{^.instance.run}»             # its run body
 print «{^.parse}»                    # its parse body
 
 # finding the arity:
