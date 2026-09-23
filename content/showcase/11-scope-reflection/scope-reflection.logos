@@ -1,5 +1,5 @@
 # a scope is a node: it knows the one it stands in and
-# holds one field, self, its nodes in order
+# holds one field, dyads, its nodes in order
 x := i32 1,
 g := (
     a := i32 1,
@@ -9,10 +9,10 @@ g := (
 ),
 s := g:start.rhs,   # g's := node, then its right side
 print «{s.scope == here.scope}»   # true: one up
-print «{s.self.size}»             # 4: four lines
-print «{s.self[0].lhs:name}»      # a
-print «{s.self[0].rhs:type == i32}» # true
-print «{s.self[1].rhs.lhs:name}»  # a, read in b
+print «{s.dyads.size}»            # 4: four lines
+print «{s.dyads[0].lhs:name}»     # a
+print «{s.dyads[0].rhs:type == i32}» # true
+print «{s.dyads[1].rhs.lhs:name}»  # a, read in b
 
 # caller: inside a constructor, where its word stood
 mut seen := here.scope,
