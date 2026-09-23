@@ -12,7 +12,7 @@ print «{s.scope == here.scope}»   # true: one up
 print «{s.self.size}»             # 4: four lines
 print «{s.self[0].lhs:name}»      # a
 print «{s.self[0].rhs:type == i32}» # true
-print «{s.self[1].rhs.lhs:name}»  # a: b's line reads it
+print «{s.self[1].rhs.lhs:name}»  # a, read in b
 
 # caller: inside a constructor, where its word stood
 mut seen := here.scope,
