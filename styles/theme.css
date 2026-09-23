@@ -685,19 +685,22 @@ a {
 .showcase__tabs {
     display: flex;
     flex-wrap: wrap;
-    border-bottom: 1px solid var(--hairline); /* the one line before the code */
+    /* The one line before the code, drawn inside the row: the last row's tabs
+       lay their own bottom lines on it, and a short last row leaves it running
+       on to the right. */
+    box-shadow: inset 0 -1px var(--hairline);
     background: var(--surface);
 }
 /* Each tab a cell with a line on all four sides (Thobias, 23 September 2026; a
-   line between neighbours only, the day before). Neighbours share one line:
-   every tab pulls a pixel left and up, over the box's or its neighbour's line,
-   and a pixel down so its 2px bottom, transparent unless active, sits on the
-   row's rule, which shows through it. */
+   line between neighbours only, the day before, and for an hour the bottom
+   line was the row's rule showing through, which a tab above a shorter second
+   row never touched). Every tab draws its own four lines; neighbours share
+   one, each tab pulling a pixel left and up over the line beside or above it,
+   and the last row's bottom lines fall on the row's rule. */
 .showcase__tab {
     padding: 0.65rem 1rem;
-    margin: -1px 0 -1px -1px;
+    margin: -1px 0 0 -1px;
     border: 1px solid var(--hairline);
-    border-bottom: 2px solid transparent;
     background: none;
     font: inherit;
     font-size: 0.85rem;
@@ -710,7 +713,10 @@ a {
 }
 .showcase__tab.is-active {
     color: var(--heading);
-    border-bottom-color: var(--accent);
+    /* The accent takes the bottom line's place, two pixels deep, the padding
+       giving one up so the tab keeps its height. */
+    border-bottom: 2px solid var(--accent);
+    padding-bottom: calc(0.65rem - 1px);
 }
 /* Two panes of equal width; a fixed floor keeps the page from jumping as
    listings of different lengths swap in (the longest is about fourteen lines).
