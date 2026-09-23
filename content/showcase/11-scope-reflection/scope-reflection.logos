@@ -9,7 +9,7 @@ g := (
     y
 ),
 
-# caller: in a constructor, the scope its word stood in
+# caller: inside a constructor, where its word stood
 mut seen := here.scope,
 w := type (
     parse = ( seen = caller.scope, tape.remove(0) )
