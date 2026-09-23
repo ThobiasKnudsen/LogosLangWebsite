@@ -1,0 +1,19 @@
+# a scope is a node that knows the one it stands in;
+# here is the spot a line is written at, and a name
+# knows the scope that declared it
+x := i32 1,
+print «{x:scope == here.scope}»   # true: x lives here
+g := (
+    y := i32 2,
+    print «{here.scope.scope == x:scope}» # up: true
+    here.scope             # the scope itself
+),
+print «{g.scope == here.scope}»   # true: g's parent
+
+# caller: inside a constructor, where its word stood
+mut seen := here.scope,
+w := type (
+    parse = ( seen = caller.scope, tape.remove(0) )
+),
+h := ( z := i32 3, w, here.scope ),   # w used in h
+print «{seen == h}»   # true: the use site
