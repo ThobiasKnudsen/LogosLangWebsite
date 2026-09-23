@@ -4,5 +4,7 @@ const std = @import("std");
 
 pub fn main() void {
     const here = @src();
-    std.debug.print("{s}:{d}\n", .{here.file, here.line});
+    std.debug.print("{s}:{d}\n", .{
+        here.file, here.line,
+    });
 }
