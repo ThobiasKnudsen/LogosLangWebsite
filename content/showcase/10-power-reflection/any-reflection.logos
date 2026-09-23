@@ -3,16 +3,16 @@
 e := 2 ^ 3,
 print «{e}»                          # 8
 print «{(2 ^ 3).lhs} {(2 ^ 3).rhs}»  # 2 3, not run
-print «{^.parse_rank > *.parse_rank}» # true, binds tighter
+print «{^.parse_rank > *.parse_rank}» # tighter
 print «{^.associativity == right}»   # true
 print «{^.instance}»                 # lhs rhs output
 print «{^.run}»                      # its run body
 print «{^.parse}»                    # its parse body
 
 # finding the arity:
-number_of_fields := ^.instance.length
+mut n := ^.instance.length,
 for i in ^.instance (
-    if i:name == «output» (number_of_fields -= 1)
-    if shared in i:gates (number_of_fields -= 1)
-)
-print «arity {number_of_fields}»     # arity 2
+    if i:name == «output» (n -= 1)
+    if shared is i:gate (n -= 1)
+),
+print «arity {n}»                    # arity 2

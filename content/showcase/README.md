@@ -39,5 +39,6 @@ Edit the files here; `npm run dev` rebuilds on save.
   `build/highlight.ts`.
 
 The Logos listings follow the LogosLang repo's `examples/`, `docs/` and
-`language_sketch.logos`. `print «… {value}»` is the designed spelling for
-output; the seed prints a file's tail expression instead.
+`language_sketch.logos`. `print «… {value}»` is the output word (DESIGN.md,
+›The command line is Logos source‹); the seed prints a file's tail expression
+instead.

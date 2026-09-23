@@ -1,5 +1,5 @@
-# a value's type is read through the dyad view,
-# and types compare by identity
+# a value's type is read with :type, since it is not
+# one of its own fields; types compare by identity
 x := i32 5,
 
 same := x:type == i32,     # true

@@ -1,5 +1,5 @@
 # alloc returns an owning pointer and writes the
 # teardown into this scope itself: `defer free a`
-a := alloc i32 40,
-b := own a,   # moves ownership; a's free no-ops
+a := alloc 1 of i32 40,
+b := own a,   # ownership and its free move to b
 print «b {b@}»   # b 40

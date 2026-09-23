@@ -1,0 +1,10 @@
+# a macro is a constructor: lex turns text into tape
+# cells, and the constructor splices them in
+twice := type (
+    parse_rank = *.parse_rank + 1,
+    parse = (
+        tape.insert(1, lex «* 2»),
+        tape.remove(0)
+    )
+),
+print «{3 + 4 twice}»   # 11: 4 twice is 4 * 2

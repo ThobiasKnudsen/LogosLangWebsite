@@ -1,0 +1,5 @@
+# a literal is an exact fraction until a typed place
+# takes it; only then does it become a machine number
+print «{0.1 + 0.2 == 0.3}»   # true
+x := f64 0.1,
+print «{x + 0.2 == 0.3}»     # false: now an f64

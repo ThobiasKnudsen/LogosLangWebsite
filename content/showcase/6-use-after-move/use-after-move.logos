@@ -1,0 +1,6 @@
+# own moves the value and ends the name on that line;
+# the parse refuses a later use, nothing waits for run
+a := alloc 1 of i32 40,
+b := own a,
+print «{b@}»   # 40
+print «{a@}»   # error: `a` is dead here

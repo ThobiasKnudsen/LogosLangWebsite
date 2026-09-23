@@ -19,12 +19,12 @@
 // The Logos listings are taken from the LogosLang repo's own examples/ directory,
 // docs (docs/v0.0.4) and language sketch, which is what the bootstrap seed runs
 // today: functions, loops, `-> type` functions resolved at parse time, the drop
-// model (alloc, own, `@`), `.compile()`, the dyad view (`x:dyad.type`), and
-// conjectures with proofs (language_sketch.logos p1, p3, p4; DESIGN.md's ruling
-// that a proof applies as a rewrite). Two spellings are Thobias's own, ahead of
-// the seed: `mut` on reassigned locals, and `print «…»` for output, with `{…}` in
-// the string interpolating a value (the seed prints a file's tail expression). The
-// other languages are written as their idiomatic equivalents.
+// model (alloc, own, `@`), `.compile()`, the type read (`x:type`, ruled 23
+// September 2026), and conjectures with proofs (language_sketch.logos p1, p3, p4;
+// DESIGN.md's ruling that a proof applies as a rewrite). `print «…»` is the output
+// word (DESIGN.md, 23 September 2026), `{…}` in the string interpolating a value;
+// the seed prints a file's tail expression instead. The other languages are
+// written as their idiomatic equivalents.
 //
 // Every tab x language pair is rendered at build time (Shiki for the other
 // languages, the site's own tokenizer for Logos, build/highlight.ts) and shipped
