@@ -5,13 +5,13 @@ print «{e}»                          # 8
 print «{(2 ^ 3).lhs} {(2 ^ 3).rhs}»  # 2 3, not run
 print «{^.parse_rank > *.parse_rank}» # tighter
 print «{^.associativity == right}»   # true
-print «{^.instance}»                 # lhs rhs output
-print «{^.instance.run}»             # its run body
+print «{^.fields}»                   # lhs rhs output
+print «{^.fields.run}»               # its run body
 print «{^.parse}»                    # its parse body
 
 # finding the arity:
-mut n := ^.instance.length,
-for i in ^.instance (
+mut n := ^.fields.length,
+for i in ^.fields (
     if i:name == «output» (n -= 1)
     if shared is i:gate (n -= 1)
 ),

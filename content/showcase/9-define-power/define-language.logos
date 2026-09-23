@@ -1,7 +1,7 @@
 # the language defines itself: a power operator `^`,
 # written in ordinary Logos and used in the same file
 ^ := type (
-    instance = (
+    fields = (
         lhs := ?,
         rhs := i32 ?,
         output := type ?,
