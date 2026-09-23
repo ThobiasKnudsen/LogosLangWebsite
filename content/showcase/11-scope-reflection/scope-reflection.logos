@@ -6,14 +6,14 @@ print «{x:scope == here.scope}»   # true: x lives here
 g := (
     y := i32 2,
     print «{here.scope.scope == x:scope}» # up: true
-    here.scope             # the scope itself
+    y
 ),
-print «{g.scope == here.scope}»   # true: g's parent
 
-# caller: inside a constructor, where its word stood
+# caller: in a constructor, the scope its word stood in
 mut seen := here.scope,
 w := type (
     parse = ( seen = caller.scope, tape.remove(0) )
 ),
-h := ( z := i32 3, w, here.scope ),   # w used in h
-print «{seen == h}»   # true: the use site
+h := ( z := i32 3, w, z ),   # w used inside h
+print «{seen == here.scope}»   # false: used in h
+print «{seen.scope == here.scope}» # true: one up
