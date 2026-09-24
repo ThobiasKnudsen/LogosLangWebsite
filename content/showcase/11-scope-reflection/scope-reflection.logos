@@ -4,11 +4,11 @@ x := i32 1,
 g := (
     a := i32 1,
     b := a + 1,
-    print «{here.scope.scope == x:scope}» # up: true
+    print «{here.scope.back == x:scope}»  # up: true
     b
 ),
 s := g:start.rhs,   # g's := node, then its right side
-print «{s.scope == here.scope}»   # true: one up
+print «{s.back == here.scope}»    # true: one up
 print «{s.dyads.size}»            # 4: four lines
 print «{s.dyads[0].lhs:name}»     # a
 print «{s.dyads[0].rhs:type == i32}» # true
@@ -20,4 +20,4 @@ w := type (
     parse = ( seen = caller.scope, tape.remove(0) )
 ),
 h := ( z := i32 3, w, z ),   # w used inside h
-print «{seen.scope == here.scope}» # true: one up
+print «{seen.back == here.scope}»  # true: one up
