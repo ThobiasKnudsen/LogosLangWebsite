@@ -47,46 +47,29 @@ function notifyFormHtml(source: string): string {
 // ── The examples ──────────────────────────────────────────────────────────────
 // One definition per example, each with a title and a line of prose, on the examples
 // page (Thobias, 15 September 2026). Joined by blank lines, their `code` fields were
-// also one continuous file down the homepage's right-hand side, as if the homepage
-// were a single Logos source read top to bottom (Thobias, 11 September 2026), until
-// the homepage dropped its code on 21 September 2026.
+// also one continuous file down the homepage's right-hand side until the homepage
+// dropped its code on 21 September 2026.
 //
 // The examples are the language defining itself, in the order dependency demands:
-// the dyad, the self-classifying `logos`, `type` (which reads its own bracket), `(`
-// (the scope opener and the eager-segment driver), and finally `+`, an ordinary
-// operator built out of all of it. Every definition is lifted from a REAL file in the
-// sibling repo rather than written for the website (LogosLang/identities/dyad.logos,
-// type.logos and open_parenthesis.logos) with their comments stripped and the
-// alignment regularised. Two placeholders had to be filled: `(`'s parse_rank is
-// literally `…` in the source ("near the top of the axis; `,` sits above it") and
-// `+` has no source file at all. Those two numbers, 9.0 and 4.0, are the only
-// invented values here; DESIGN.md pins no table of ranks, only that the axis is an
-// f64 where higher binds tighter and fractional values let a new operator slot
-// between two existing ones.
-//
-// Sourced from LogosLang/DESIGN.md and LogosLang/identities/*.logos (September 2026):
-//   - `instance (…)` declaring the per-instance fields, and the filled slots written
-//     with `=` (a slot the type declared is filled, not redeclared), from
-//     identities/type.logos, which also dates `parse_rank`: it was spelled
-//     `precedence` until 10 September 2026.
-//   - `tape[0]:dyad.type = +` first, which initializes the value so its fields are
-//     available to write (the constructor ruling of 9 September 2026).
-//   - The operand check is the membership ruling of 8 September 2026: `is` is
-//     membership in a collection (`x is c`, a plain boolean operator like `==`, no
-//     proof machinery), and `number` is the collection of the numeric types the
-//     library defines, so "a is a number" is `a:dyad.type is number`. That is the
-//     spelling of "is a" in a language with no inheritance, where `==` on types is
-//     identity. The and-group distributes, so one line covers both operands.
-//   - `lhs` / `rhs` rather than DESIGN.md's `.operands` collection: ruled for `+` by
-//     Thobias, 11 September 2026, and it keeps the `+` example and the homepage's
-//     Logic Graph figure telling the same story.
-// The one invented value is the 4.0. DESIGN.md pins no table of ranks, only that the
-// axis is an f64 where higher binds tighter and fractional values let a new operator
-// slot between two existing ones without renumbering.
+// the dyad, `type` (the ground, an instance of itself, which reads its own bracket),
+// `scope`, `(` (the scope opener and the eager-segment driver), `fn`, `^` (an operator
+// built out of all of it, the v0.1.0 demo, which runs in the seed) and `proof`. Every
+// definition is lifted from a REAL file in the sibling repo (LogosLang/identities/
+// dyad.logos, type.logos, scope.logos, open_parenthesis.logos, fn.logos, power.logos,
+// proof.logos) with its comments stripped, its alignment regularised, its fields
+// block first (ruled 20 September 2026) and in the spellings DESIGN.md rules as of
+// 24 September 2026, which the seed does not all carry yet (LogosLang issues #139,
+// #141, #142, #143): `x:type` for a value's type, `fields = (…)` for the block, `back`
+// for a scope's link up, `dyads` for its nodes, and `run` among the slots of instances
+// only, so `type`'s own predeclaration has no `run`. One placeholder is filled: `(`'s
+// parse_rank is literally `…` in the source ("near the top of the axis; `,` sits above
+// it") and 9.0 is invented for it; `fn`'s stays `…` as the sketch leaves it. DESIGN.md
+// pins no table of ranks, only that the axis is an f64 where higher binds tighter and
+// fractional values let a new operator slot between two existing ones.
 interface Example {
   /** The anchor on the examples page. */
   id: string;
-  /** The identifier being defined; shown in mono, so `(` and `+` read as code. */
+  /** The identifier being defined; shown in mono, so `(` and `^` read as code. */
   title: string;
   /** A line or two on what the definition does, from the source file's own comments
    *  (LogosLang/identities/*.logos). Build-controlled HTML: may carry <code>. */
@@ -99,38 +82,29 @@ const EXAMPLES: Example[] = [
     id: "dyad",
     title: "dyad",
     lead: "The one node the Logic Graph is made of: a type and a value. Its <code>type</code> field is itself a dyad, so the first definition already refers to itself.",
-    code: `dyad := type (instance (type := @dyad ?, value := @void ?))`,
-  },
-  {
-    id: "logos",
-    title: "logos",
-    lead: "The language, defined as an instance of itself. There is nothing above it in the graph.",
-    code: `logos := logos (logos)`,
+    code: `dyad := type (fields = (type := @dyad ?, value := @void ?))`,
   },
   {
     id: "type",
     title: "type",
-    lead: "What every type carries, declared once as slots, and the same slots filled for <code>type</code> itself. Its constructor reads its own bracket: it opens the definition scope, drives the bracket's parse the way <code>(</code> does, and replaces its own cell with the finished type.",
+    lead: "The ground: an instance of itself and the definition word. Its fields block declares, once, the slots every type fills with <code>=</code>; its bare lines say how its own spelling parses, reading its bracket and replacing its cell with the finished type. Runs in the seed today.",
     code: `type := type (
-  instance (
+  fields = (
     parse_rank    := f64 ?
-    lex_rank      := f64 ?
     associativity := ?
-    constructor   := fn (tape := parsing_tape ?) -> void ?
-    destructor    := ?
-    code          := ?
+    parse         := parse ?
+    drop          := drop ?
+    fields        := fields ?
   )
 
   parse_rank    = f64 2.0
   associativity = left
-
-  constructor = fn (tape := parsing_tape ?) -> void (
+  parse = (
     if tape[1] != lex «(»[0]
       error «type must be followed by (»
-
-    definition := scope ?
-    (.constructor(tape.recenter(1))
-    tape[0] = dyad (type, definition)
+    (.parse(tape.recenter(1))
+    tape[0] = this
+    tape.is_constructed[0] = true
     tape.remove(1)
   )
 )`,
@@ -138,29 +112,14 @@ const EXAMPLES: Example[] = [
   {
     id: "scope",
     title: "scope",
-    lead: "A scope is an array of dyads: the expressions constructed inside one bracket. Its constructor is still a hole; <code>(</code> is what fills a scope.",
+    lead: "A scope is a node that holds its nodes in order, <code>dyads</code>, and the scope it stands in, <code>back</code>, null at the arche. Its parse is still a hole; <code>(</code> is what fills a scope.",
     code: `scope := type (
-  constructor = fn (tape := parsing_tape ?) -> void ( ? )
+  fields = (
+    dyads := array dyad ()
+    back  := @scope ?
+  )
 
-  instance (
-    self := array dyad ()
-  )
-)`,
-  },
-  {
-    id: "fn",
-    title: "fn",
-    lead: "A function is a type like any other: an input type, an output, the body the graph can read, the compiled code it lowers to, and the size of its frame. <code>run</code> jumps to the compiled code when there is some and walks the body when there is not, so interpretation is not a second machine.",
-    code: `fn := type (
-  instance (
-    compile := fn () -> void ?
-    run     := fn () -> void ?
-    input   := type ?
-    output  := ?
-    body    := ?
-    bcode   := callable ?
-    frame   := u64 ?
-  )
+  parse = ( ? )
 )`,
   },
   {
@@ -170,11 +129,10 @@ const EXAMPLES: Example[] = [
     code: `( := type (
   parse_rank    = f64 9.0
   associativity = left
-
-  constructor = fn (tape := parsing_tape ?) -> void (
-    body  := array @dyad ()
-    first := 1
-    i     := 1
+  parse = (
+    body      := array @dyad ()
+    mut first := 1
+    mut i     := 1
 
     while true (
       cell := tape[i]
@@ -183,7 +141,7 @@ const EXAMPLES: Example[] = [
         while true (
           k := highest_unconstructed(tape, first, i)
           if k == ? break
-          tape[k].constructor(tape.recenter(k))
+          tape[k].parse(tape.recenter(k))
         )
         for k in first..i (
           if not tape.is_constructed[k]
@@ -193,49 +151,74 @@ const EXAMPLES: Example[] = [
         if cell == lex «)»[0] break
         first = i + 1
       ) else if cell.parse_rank >= (.parse_rank (
-        cell.constructor(tape.recenter(i))
+        cell.parse(tape.recenter(i))
       )
       i = i + 1
     )
 
     tape[0] = dyad (scope, body)
+    tape.is_constructed[0] = true
     for k in 1..i+1 ( tape.remove(1) )
   )
 )`,
   },
   {
-    id: "plus",
-    title: "+",
-    lead: "An ordinary operator, built out of everything above it. Its constructor checks that the cell on each side is a number, fills its own dyad with them as <code>lhs</code> and <code>rhs</code>, and removes both from the tape.",
-    code: `+ := type (
-  instance (
-    lhs := @dyad ?
-    rhs := @dyad ?
+    id: "fn",
+    title: "fn",
+    lead: "A function is a type in the same shape as any operator: its parameters are its instance fields, its declared result its <code>output</code>, its body its <code>run</code>. What the sketch declares besides is what the seed's <code>fn</code> carries: the input type, the compiled code and the frame size, with <code>compile</code> lowering the body to machine code. A call jumps to the code when there is some and walks the body when there is not.",
+    code: `fn := type (
+  fields = (
+    shared parse_rank    = …
+    shared associativity = left
+    shared parse         = ( ? )
+    shared compile       := fn () -> void ( ? )
+    input  := type ?
+    output := ?
+    bcode  := callable ?
+    frame  := u64 ?
   )
 
-  parse_rank    = f64 4.0
-  associativity = left
+  parse = ( ? )
+)`,
+  },
+  {
+    id: "power",
+    title: "^",
+    lead: "An operator built out of all of the above, and the v0.1.0 demo: the language defines itself. Its fields block says what a <code>^</code> node holds and does, the operands as named fields, the output the parse writes per node, the run every node shares; its bare lines say where it binds and what happens when <code>^</code> stands on the tape. Runs in the seed today, compiled with <code>f.compile()</code>.",
+    code: `^ := type (
+  fields = (
+    lhs := ?,
+    rhs := i32 ?,
+    output := type ?,
+    shared run = (
+      mut r := this.output 1,
+      for 0..this.rhs ( r = r * this.lhs ),
+      r
+    )
+  ),
 
-  constructor = fn (tape := parsing_tape ?) -> void (
-    if not ((tape[-1] and tape[1]):dyad.type is number)
-      error «+ takes a number on each side»
-
-    tape[0]:dyad.type = +
-    tape[0]:dyad.value.lhs = tape[-1]
-    tape[0]:dyad.value.rhs = tape[1]
-    tape.remove(1)
+  parse_rank = *.parse_rank + 1,
+  associativity = right,
+  parse = (
+    this.lhs = tape[-1],
+    this.rhs = tape[1],
+    this.output = tape[-1]:type,
+    tape[0] = this,
+    tape.is_constructed[0] = true,
+    tape.remove(1),
     tape.remove(-1)
   )
-)`,
+),
+f := fn (x := i32 ?) -> i32 ( x ^ 3 + 1 ),
+f.compile(),
+f(2)   # 9`,
   },
   {
     id: "proof",
     title: "proof",
-    lead: "A proof is a rewrite rule together with its evidence: the holes it quantifies over, the premises that must hold, a pattern and its replacement, the derivation from one to the other, and the world of axioms it rests on. Its constructor is still a hole.",
+    lead: "A proof is a rewrite rule together with its evidence: the holes it quantifies over, the premises that must hold, a pattern and its replacement, the derivation from one to the other, and the world of axioms it rests on. Its parse is still a hole.",
     code: `proof := type (
-  constructor = fn (tape := parsing_tape ?) -> void ( ? )
-
-  instance (
+  fields = (
     holes       := array dyad ()
     premises    := array dyad ()
     pattern     := dyad ?
@@ -243,13 +226,9 @@ const EXAMPLES: Example[] = [
     derivation  := ?
     world       := array @proof ()
   )
+
+  parse = ( ? )
 )`,
-  },
-  {
-    id: "total",
-    title: "total",
-    lead: "With <code>+</code> defined, this is ordinary code: three numbers and two operators, parsed by the machinery above.",
-    code: `total := 2 + 3 + 4`,
   },
 ];
 
@@ -277,7 +256,7 @@ export function examplesPage(): string {
   ).join("\n");
   return `<section class="examples">
   <h1 class="examples__title">Examples</h1>
-  <p class="examples__lead">The language defining itself, one definition at a time, in the order that dependency demands: the dyad, the self-classifying <code>logos</code>, <code>type</code>, the scope opener <code>(</code>, and <code>+</code>, an ordinary operator built out of all of it. The definitions come from the language's own <a href="${GITHUB}" target="_blank" rel="noopener noreferrer">source files</a> with their comments stripped, except <code>+</code>, which has no file yet. None of it runs yet; the <a href="/roadmap/">roadmap</a> says where things stand.</p>
+  <p class="examples__lead">The language defining itself, one definition at a time, in the order that dependency demands: the dyad, the ground <code>type</code>, <code>scope</code>, the scope opener <code>(</code>, <code>fn</code>, the operator <code>^</code> built out of all of it, and <code>proof</code>. The definitions come from the language's own <a href="${GITHUB}" target="_blank" rel="noopener noreferrer">source files</a> with their comments stripped, in the spellings the design rules today. <code>type</code> and <code>^</code> run in the seed; the others are sketches the seed still realises in Rust. The <a href="/roadmap/">roadmap</a> says where things stand.</p>
 ${items}
 </section>`;
 }
