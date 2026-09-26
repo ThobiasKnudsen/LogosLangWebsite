@@ -1,3 +1,4 @@
+// lacking: `Point::DIMS` cannot be read through a value
 // a struct holds the fields; an associated const is
 // read through the type only, never through a value
 struct Point { x: i32, y: i32 }

@@ -1,3 +1,4 @@
+// lacking: prefix only; `4 TWICE` cannot be written
 // a macro rewrites text before the compiler reads it;
 // prefix only, never `4 TWICE`
 #include <stdio.h>

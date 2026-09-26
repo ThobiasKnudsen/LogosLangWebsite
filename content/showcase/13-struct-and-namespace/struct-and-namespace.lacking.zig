@@ -1,3 +1,4 @@
+// lacking: `Point.dims` cannot be read through a value
 // a struct is also a namespace: a decl inside it is
 // read through the type, never through a value
 const std = @import("std");

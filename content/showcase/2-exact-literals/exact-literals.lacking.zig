@@ -1,3 +1,4 @@
+// lacking: no exact literals, not even at compile time
 // a literal is a float from the start, even at
 // compile time, where it is an f128
 const std = @import("std");

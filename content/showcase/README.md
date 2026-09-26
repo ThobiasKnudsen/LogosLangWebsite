@@ -27,6 +27,12 @@ Edit the files here; `npm run dev` rebuilds on save.
 - **A language that can do only part of it** keeps its file, named
   `<name>.lacking.<ext>` (for example `any-reflection.lacking.py`); its pane
   is then marked "lacking" on its first line, above the code, in the same box.
+  Its first line says what exactly it lacks, as a comment in the language's
+  own syntax starting with `lacking:` (for example
+  `# lacking: call frames at run time; the lexical scopes are not values`).
+  The build moves that line out of the code and into the note, which reads
+  "lacking: " and the rest of the line. Without it the note says only
+  "lacking", and the build warns.
 - **A folder becomes a tab once it has a `.logos` file**: Logos is always the
   left pane. Until then the build skips the folder with a warning.
 - **Other files are skipped** with a warning (an unknown extension, a second

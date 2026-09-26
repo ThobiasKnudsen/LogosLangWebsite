@@ -1,3 +1,4 @@
+;; lacking: a namespace to look names up in; the scopes are not values
 ;; a namespace lists what a spot can name; the scopes
 ;; a line stands in are not values, hygiene keeps them
 #lang racket

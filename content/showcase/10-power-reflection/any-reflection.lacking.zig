@@ -1,3 +1,4 @@
+// lacking: parameters and return type only; the body cannot be read
 // @typeInfo reads a function's parameters and return
 // type at compile time; its body cannot be read
 const std = @import("std");

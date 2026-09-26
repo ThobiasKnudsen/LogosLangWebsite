@@ -1,3 +1,4 @@
+// lacking: `Point.dims` cannot be read through an instance
 // a class holds fields; a static member is read
 // through the class, not through an instance
 class Point {

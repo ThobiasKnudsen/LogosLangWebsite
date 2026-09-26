@@ -1,3 +1,4 @@
+// lacking: no exact literals; 0.1 is a double
 // a literal is a double from the start
 #include <stdio.h>
 

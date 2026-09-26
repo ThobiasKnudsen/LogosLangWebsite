@@ -1,3 +1,4 @@
+-- lacking: Int base and Nat exponent only: no floats, no negative or fractional exponent
 -- a new operator is a notation, written in Lean and
 -- used in the same file
 def power (b : Int) : Nat → Int

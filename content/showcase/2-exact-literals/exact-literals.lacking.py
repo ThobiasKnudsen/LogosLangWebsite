@@ -1,3 +1,4 @@
+# lacking: 0.1 is a float; exact needs Fraction and a string
 # a literal is a float; exactness is a library type
 from fractions import Fraction as F
 

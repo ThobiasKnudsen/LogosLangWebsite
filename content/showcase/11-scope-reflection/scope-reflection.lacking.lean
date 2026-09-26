@@ -1,3 +1,4 @@
+-- lacking: names in scope, only in a metaprogram; the scopes above are not values
 -- inside a metaprogram, the local context is a value:
 -- the names in scope, in order; nothing above them
 import Lean

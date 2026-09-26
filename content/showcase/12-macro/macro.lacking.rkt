@@ -1,3 +1,4 @@
+;; lacking: prefix only; `4 twice` cannot be written
 ;; a macro rewrites syntax, written in Racket and used
 ;; in the same file; prefix, as every form is a list
 #lang racket

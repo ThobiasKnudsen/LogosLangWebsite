@@ -1,3 +1,4 @@
+# lacking: call frames at run time; the lexical scopes are not values
 # the call stack is reachable as frames at run time;
 # the lexical scopes themselves are not values
 import inspect

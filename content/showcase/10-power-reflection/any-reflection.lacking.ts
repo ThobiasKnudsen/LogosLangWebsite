@@ -1,3 +1,4 @@
+// lacking: name, arity and source text only; the types are erased
 // a function is an object: its name, arity and source
 // text can be read back; its types are erased
 function power(b: number, n: number): number {

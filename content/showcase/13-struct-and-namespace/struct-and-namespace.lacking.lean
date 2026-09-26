@@ -1,3 +1,4 @@
+-- lacking: `Point.dims` cannot be read through a value
 -- a structure holds the fields; a definition in its
 -- namespace is read through the name, not a value
 structure Point where

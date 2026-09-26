@@ -747,9 +747,13 @@ a {
    the right: "not supported" with no code under it, or "lacking" over the code
    the language does have. One form for both, a rounded box outlined in the
    theme's orange (Thobias, 22 September 2026; a sentence naming the language
-   before, and the no-support note sat in the middle of the pane before that). */
+   before, and the no-support note sat in the middle of the pane before that).
+   The lacking note carries a message (26 September 2026), so it wraps, kept
+   clear of the language's name on both sides so it stays centred. */
 .showcase__note {
     justify-self: center;
+    max-width: calc(100% - 13rem);
+    text-align: center;
     margin: 0.2rem 0 0;
     padding: 0.25rem 0.8rem;
     border: 1px solid var(--warn-border);

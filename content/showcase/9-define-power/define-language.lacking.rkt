@@ -1,3 +1,4 @@
+;; lacking: no precedence, one operator per parenthesis; the math is the built-in expt
 ;; a module can redefine application itself, so
 ;; (x ^ 3) reads the operator between its operands
 #lang racket

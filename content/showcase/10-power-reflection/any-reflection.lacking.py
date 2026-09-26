@@ -1,3 +1,4 @@
+# lacking: source comes back as text and bytecode, not nodes; an expression runs before it can be read
 # a function is an object: its signature, its source
 # and its bytecode can all be read back
 import inspect, dis

@@ -1,3 +1,4 @@
+-- lacking: read only from a metaprogram, not by the running program
 -- a definition is a term the environment holds, and a
 -- metaprogram reads its type and its body back
 import Lean

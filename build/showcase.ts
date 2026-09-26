@@ -80,9 +80,16 @@ interface Example {
   /** The languages whose file is named `<name>.lacking.<ext>`: they can do only
    *  part of what the tab shows, and their pane says so above the code
    *  (Thobias, 22 September 2026: no other language reflects on as much as
-   *  Logos, yet some can show something). */
-  lacking: string[];
+   *  Logos, yet some can show something). Each maps to what exactly it lacks,
+   *  from the file's `lacking:` first line (Thobias, 26 September 2026), or to
+   *  "" when the file has none. */
+  lacking: Partial<Record<string, string>>;
 }
+
+/** A lacking file's first line, a comment in its language's syntax, that says
+ *  what the language lacks: `// lacking: …`, `# lacking: …`, `-- lacking: …`
+ *  or `;; lacking: …`. The build moves it from the code into the pane's note. */
+const LACKING_LINE = /^\s*(?:\/\/|#|--|;+)\s*lacking:\s*(.*?)\s*$/;
 
 /** A folder's name split into its ordering number, if it has one, and the rest. */
 function parseDirName(dir: string): { order: number; rest: string } {
@@ -112,7 +119,7 @@ async function loadExamples(): Promise<Example[]> {
     let id = words.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "tab";
     while (ids.has(id)) id += "-2";
     const code: Partial<Record<string, string>> = {};
-    const lacking: string[] = [];
+    const lacking: Partial<Record<string, string>> = {};
     for (const file of (await fs.readdir(path.join(SHOWCASE_DIR, dir))).sort()) {
       const full = path.join(SHOWCASE_DIR, dir, file);
       if (file.startsWith(".")) continue;
@@ -129,14 +136,28 @@ async function loadExamples(): Promise<Example[]> {
         console.warn(`content/showcase/${dir}/${file}: skipped, the folder already has a ${lang.name} file`);
         continue;
       }
-      const source = (await fs.readFile(full, "utf8")).replace(/\s+$/, "");
+      let source = (await fs.readFile(full, "utf8")).replace(/\s+$/, "");
+      // A lacking file's `lacking:` first line is the note's text, not code, so
+      // it leaves the listing and the line-length check below.
+      let firstLine = 1;
+      if (file.slice(0, -lang.ext.length).endsWith(".lacking")) {
+        const newline = source.indexOf("\n");
+        const m = LACKING_LINE.exec(newline === -1 ? source : source.slice(0, newline));
+        if (m && m[1]) {
+          lacking[lang.id] = m[1];
+          source = newline === -1 ? "" : source.slice(newline + 1);
+          firstLine = 2;
+        } else {
+          lacking[lang.id] = "";
+          console.warn(`content/showcase/${dir}/${file}: no "lacking: …" comment on the first line, so the note says only "lacking"`);
+        }
+      }
       source.split("\n").forEach((line, i) => {
         if (line.length > MAX_LINE) {
-          console.warn(`content/showcase/${dir}/${file}:${i + 1}: ${line.length} characters; a half-width pane holds about ${MAX_LINE}`);
+          console.warn(`content/showcase/${dir}/${file}:${i + firstLine}: ${line.length} characters; a half-width pane holds about ${MAX_LINE}`);
         }
       });
       code[lang.id] = source;
-      if (file.slice(0, -lang.ext.length).endsWith(".lacking")) lacking.push(lang.id);
     }
     if (code.logos === undefined) {
       console.warn(`content/showcase/${dir}: no .logos file yet, so no tab; the left pane is always Logos`);
@@ -182,13 +203,15 @@ export async function showcaseHtml(): Promise<string> {
   // A language with no file for the tab gets a note on the pane's first line
   // and no code; one whose file is marked lacking gets the same kind of note
   // above its code (Thobias, 22 September 2026: both notes in one form, on the
-  // line the language's name is on, and just the word: "not supported" or
-  // "lacking").
+  // line the language's name is on). The lacking note names what exactly is
+  // lacking (Thobias, 26 September 2026): "lacking: " and the file's message.
   const note = (text: string): string => `<p class="showcase__note">${escapeHtml(text)}</p>`;
   const pane = (ex: Example, lang: Lang): string => {
     if (ex.none.includes(lang.id)) return note("not supported");
     const code = render(lang, ex.code[lang.id]!);
-    return ex.lacking.includes(lang.id) ? note("lacking") + code : code;
+    const lacking = ex.lacking[lang.id];
+    if (lacking === undefined) return code;
+    return note(lacking ? `lacking: ${lacking}` : "lacking") + code;
   };
   const [logos, ...others] = LANGS as [Lang, ...Lang[]];
   const tabs = examples

@@ -1,3 +1,4 @@
+;; lacking: name and arity only; the body is gone once compiled
 ;; a procedure's name and arity can be read back;
 ;; its body cannot, once compiled
 #lang racket
