@@ -4,15 +4,15 @@ x := i32 1,
 g := (
     a := i32 1,
     b := a + 1,
-    print «{here.scope.back == x:scope}»  # up: true
+    print «{here.scope.back == x:scope}»,  # up: true
     b
 ),
 s := g:start.rhs,   # g's := node, then its right side
-print «{s.back == here.scope}»    # true: one up
-print «{s.dyads.size}»            # 4: four lines
-print «{s.dyads[0].lhs:name}»     # a
-print «{s.dyads[0].rhs:type == i32}» # true
-print «{s.dyads[1].rhs.lhs:name}»  # a, read in b
+print «{s.back == here.scope}»,    # true: one up
+print «{s.dyads.size}», # 5: comments are nodes
+print «{s.dyads[0].lhs:name}»,     # a
+print «{s.dyads[0].rhs:type == i32}», # true
+print «{s.dyads[1].rhs.lhs:name}»,  # a, read in b
 
 # caller: inside a constructor, where its word stood
 mut seen := here.scope,
