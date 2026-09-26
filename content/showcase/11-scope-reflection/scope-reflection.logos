@@ -17,7 +17,9 @@ print «{s.dyads[1].rhs.lhs:name}»  # a, read in b
 # caller: inside a constructor, where its word stood
 mut seen := here.scope,
 w := type (
-    parse = ( seen = caller.scope, tape.remove(0) )
+    share parse = (
+        seen = caller.scope, tape.remove(0)
+    )
 ),
 h := ( z := i32 3, w, z ),   # w used inside h
 print «{seen.back == here.scope}»  # true: one up

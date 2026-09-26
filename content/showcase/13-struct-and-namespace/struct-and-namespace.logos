@@ -1,11 +1,9 @@
 # one word for both: an unmarked member is a place per
-# instance, a shared one is one place, read both ways
+# instance, a share one is one place, read both ways
 point := type (
-    fields = (
-        x := i32 ?,
-        y := i32 ?,
-        shared dims := i32 2
-    )
+    x := i32 ?,
+    y := i32 ?,
+    share dims := i32 2
 ),
 p := point (1, 2),
-print «{p.x} {point.fields.dims} {p.dims}»   # 1 2 2
+print «{p.x} {point.dims} {p.dims}»   # 1 2 2

@@ -1,29 +1,28 @@
 # the language defines itself: a power operator `^`,
 # written in ordinary Logos and used in the same file
 ^ := type (
-    fields = (
-        lhs := ?,
-        rhs := i32 ?,
-        output := type ?,
-        shared run = (
-            mut r := this.output 1,
-            for 0..this.rhs ( r = r * this.lhs ),
-            r
-        )
-    ),
+    lhs := ?,
+    rhs := i32 ?,
+    output_type := type ?,
 
-    parse_rank = *.parse_rank + 1,
-    associativity = right,
-    parse = (
-        this.lhs = tape[-1],
-        this.rhs = tape[1],
-        this.output = tape[-1]:type,
-        tape[0] = this,
+    share parse_rank = *.parse_rank + 1,
+    share associativity = right,
+    share parse = (
+        tape[0]:type = ^,
+        tape[0].lhs = tape[-1],
+        tape[0].rhs = tape[1],
+        tape[0].output_type = tape[-1]:type,
         tape.is_constructed[0] = true,
         tape.remove(1),
         tape.remove(-1)
+    ),
+    share run = (
+        mut r := output_type 1,
+        for 0..rhs ( r = r * lhs ),
+        r
     )
 ),
+
 f := fn (x := i32 ?) -> i32 ( x ^ 3 + 1 ),
 f.compile(),
 print «{f(2)}»   # 9

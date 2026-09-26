@@ -14,7 +14,7 @@
 //   tok-type     the ground types (i32, f64, dyad, number, array, …)
 //   tok-fn       an identity being called (`double(…)`, a rule `twice(…)`, a
 //                method `.compile()`) and the builtins that act as one
-//                (print, alloc, own, drop, free, defer, share, take, eval, error)
+//                (print, alloc, own, drop, free, defer, take, eval, error)
 //   tok-def      an identity at its definition: left of `:=`, left of a spaced
 //                `:` (declare), or a loop variable after `for`
 //   tok-field    an identity read off another with `.` (`.type`, `.value`)
@@ -36,7 +36,7 @@ const KEYWORDS = new Set([
   "scope",
   "mut",
   "immut",
-  "shared",
+  "share",
   "if",
   "else",
   "for",
@@ -50,7 +50,6 @@ const KEYWORDS = new Set([
   "is",
   "break",
   "self",
-  "this",
   "undefined",
   "true",
   "false",
@@ -64,7 +63,6 @@ const BUILTINS = new Set([
   "drop",
   "free",
   "defer",
-  "share",
   "take",
   "eval",
   "error",
