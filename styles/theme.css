@@ -733,12 +733,15 @@ a {
        full height (the hidden listings make no boxes). */
     display: grid;
     grid-template-rows: minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr);
 }
 /* The shown listing is a grid too, packed from the top, so a note and the code
    under it stack; `:not([hidden])` keeps `hidden` in force. */
 .showcase__listing:not([hidden]) {
     display: grid;
     align-content: start;
+    /* One column that may shrink below its widest line, so the code scrolls sideways. */
+    grid-template-columns: minmax(0, 1fr);
 }
 /* A note on the pane's first line, centred, level with the language's name at
    the right: "not supported" with no code under it, or "lacking" over the code
