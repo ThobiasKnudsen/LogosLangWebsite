@@ -1,13 +1,8 @@
-// Inner HTML for the marketing pages. The homepage order: the hero is the identity,
-// "One language for everything" (the wordmark "Λόγος" stood above it until 22
-// September 2026), with two sentences under it saying what Logos is (a paragraph on
-// the mechanism stood there until 22 September 2026, and these since 28 September
-// 2026); then the showcase,
-// the same program in Logos and in other languages (build/showcase.ts); then the
-// honest comparison matrix. No code listing: one ran down the homepage's right-hand
-// side from 11 to 21 September 2026, and the examples page has the same
-// definitions. The reflections on the Logos live in the page margins
-// (build/wisdom.ts).
+// Inner HTML for the marketing pages. The homepage is three sections: the hero, the
+// one heading "One language for everything"; the showcase, the same program in Logos
+// and in other languages (build/showcase.ts); and the comparison matrix. The
+// examples page holds the definitions. The reflections on the Logos live in the page
+// margins (build/wisdom.ts).
 import { escapeHtml } from "./templates.ts";
 import { highlightLogosLines } from "./highlight.ts";
 import {
@@ -27,8 +22,7 @@ import { depmapHtml, DEFAULT_ASPECT } from "./roadmap-render.ts";
 const GITHUB = "https://github.com/ThobiasKnudsen/LogosLang";
 
 // ── Get-notified form ─────────────────────────────────────────────────────────
-// The intent-capture form on the (empty) download page; it closed the homepage too
-// until 22 September 2026.
+// The intent-capture form on the (empty) download page.
 // Posts to the subscribe Pages Function (functions/api/subscribe.ts); client/main.ts
 // (initNotify) upgrades it to an inline fetch with a status line, and with JS off
 // the function answers with a small HTML page instead, so the form never dead-ends.
@@ -48,9 +42,7 @@ function notifyFormHtml(source: string): string {
 
 // ── The examples ──────────────────────────────────────────────────────────────
 // One definition per example, each with a title and a line of prose, on the examples
-// page (Thobias, 15 September 2026). Joined by blank lines, their `code` fields were
-// also one continuous file down the homepage's right-hand side until the homepage
-// dropped its code on 21 September 2026.
+// page (Thobias, 15 September 2026).
 //
 // The examples are the language defining itself, in the order dependency demands:
 // the dyad, `type` (the ground, an instance of itself, which reads its own bracket),
@@ -291,17 +283,14 @@ ${items}
 // column describes the design Logos is built toward, not software that runs today;
 // the "Usable today" row says so in the table's own terms. The table keeps the rows
 // where OTHER languages beat Logos (content-addressed code, ecosystem, tooling,
-// being usable at all). It had a lead paragraph saying all this until Thobias cut
-// it (21 September 2026): title, legend, chips, table. Verdicts for the other
-// columns were researched and adversarially fact-checked per language (July 2026);
-// the numbered notes carry the nuance a one-glyph cell cannot, and each opens from
-// its number in the cell (a popover; they were a list under the table until 21
-// September 2026).
+// being usable at all). No lead paragraph: title, legend, chips, table. Verdicts
+// for the other columns were researched and adversarially fact-checked per language
+// (July 2026); the numbered notes carry the nuance a one-glyph cell cannot, and
+// each opens from its number in the cell as a popover.
 //
 // The reader chooses the columns (Thobias, 21 September 2026): a × in each language
 // header hides that column, a chip row above the table adds it back, and the choice
-// is kept in localStorage. (A /compare/ page showed all eleven, without the
-// toggles, until Thobias cut it on 22 September 2026.)
+// is kept in localStorage.
 
 type CompareVerdict = "yes" | "partial" | "no";
 interface CompareCell {
@@ -850,8 +839,7 @@ function compareHtml(hiddenIds: readonly string[]): string {
       .join("");
     return `<tr><th scope="row" class="compare__cap">${row.label}<span class="compare__sub">${row.sub}</span></th>${cells}</tr>`;
   }).join("");
-  // One popover per note, after the table; a number in a cell opens its note
-  // (Thobias, 21 September 2026: the notes were a numbered list under the table).
+  // One popover per note, after the table; a number in a cell opens its note.
   const notes = COMPARE_NOTES.map(
     (note, i) =>
       `<div class="compare__note" id="compare-note-${i + 1}" popover><span class="compare__note-num" aria-hidden="true">${i + 1}</span>${note}</div>`,
@@ -883,27 +871,13 @@ function compareHtml(hiddenIds: readonly string[]): string {
 </section>`;
 }
 
-// The homepage is one column of sections, each sizing itself (Thobias, 21 September
-// 2026). It was a two-column grid, prose down the left and one continuous code
-// listing down the right, from 11 September 2026 until the code was dropped.
-//
-// Three sections: the hero, the showcase (the same program in Logos and other
+// The homepage is one column of three sections, each sizing itself (Thobias, 21
+// September 2026): the hero, the showcase (the same program in Logos and other
 // languages, rendered by build/showcase.ts and handed in by the build), and the
-// comparison matrix. The ladder of meta, the Logic Graph figure, "Checked, not
-// clever" and "Built from proven parts" sat between the hero and the matrix until
-// 21 September 2026, when Thobias cut them; a "Hear about the first build" signup
-// (the notify form) closed the page until 22 September 2026, when he cut that too
-// (the download page still carries the form), and the paragraph under the heading
-// went the same day, the showcase taking its place. The quotes that ran as a band
-// under the hero moved into the page margins on 21 September 2026 (build/wisdom.ts).
-//
-// Two sentences stand under the heading again since 28 September 2026 (Thobias,
-// for search and answer engines: the page's own answer to "what is Logos", which
-// a heading alone cannot give): the definition first, then what it is built for.
+// comparison matrix. The quotes live in the page margins (build/wisdom.ts).
 export function homePage(showcase: string): string {
   return `<section class="hero">
   <h1 class="hero__headline">One language for <span class="hero__underline">everything</span></h1>
-  <p class="hero__sub">Logos is a systems programming language in which the program, its types, its proofs, its grammar and its compiler are one graph the language itself can read and rewrite, with every change checked before it runs. It is built to rewrite as freely as Smalltalk, prove as strictly as Lean and run as fast as Rust, for a world where machines write most of the code.</p>
 </section>
 ${showcase}
 ${compareHtml(HOME_HIDDEN)}`;

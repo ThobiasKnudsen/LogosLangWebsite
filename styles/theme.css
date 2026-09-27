@@ -613,10 +613,8 @@ a {
 
 /* ── Hero ─────────────────────────────────────────────────────────────────── */
 .hero {
-    /* Room above the headline: clearly below the dock, not hugging it, and a
-       little higher than it sat before 22 September 2026 (clamp(4rem, 16vh,
-       5rem) then). The side padding is the phone gutter every other homepage
-       section keeps. */
+    /* Room above the headline: clearly below the dock, not hugging it. The side
+       padding is the phone gutter every other homepage section keeps. */
     padding-top: clamp(3rem, 12vh, 3.5rem);
     padding-inline: 1.25rem;
     display: flex;
@@ -624,12 +622,9 @@ a {
     align-items: center;
     text-align: center;
 }
-/* The one heading, "One language for everything" (Thobias, 22 September 2026;
-   the wordmark "Λόγος" stood above it as a first line from 26 August until then,
-   at clamp(1.28rem, 4.4vw, 3.4rem) with the identity line at 80% of that). A
+/* The one heading, "One language for everything" (Thobias, 22 September 2026). A
    rounded card in the margins' colour, the darker of the page's two, with the
-   text in the brand's light blue-purple, the logo's own colour. (For an hour it
-   was the other way round: purple card, ink text.) */
+   text in the brand's light blue-purple, the logo's own colour. */
 .hero__headline {
     font-family: var(--serif);
     font-size: clamp(1.4rem, 4.5vw, 3.5rem);
@@ -642,7 +637,7 @@ a {
     border: 1px solid var(--white); /* a white line around the card */
     border-radius: 1rem;
     background: var(--margin-bg);
-    color: var(--bp-light); /* the logo's light blue-purple (white for an hour) */
+    color: var(--bp-light); /* the logo's light blue-purple */
 }
 /* "everything" underlined (Thobias, 22 September 2026), the line tuned for the
    serif at display size: thin against the strokes, and clear of the descenders. */
@@ -651,34 +646,20 @@ a {
     text-decoration-thickness: 0.05em;
     text-underline-offset: 0.14em;
 }
-/* The two sentences under the heading (Thobias, 28 September 2026): the page's
-   own answer to what Logos is, for readers and answer engines alike. Body text,
-   centred under the card, a comfortable measure. A paragraph on the mechanism
-   stood here until 22 September 2026 (.hero__sub then too, 5rem below a two-line
-   title, in the Download button's text colour). */
-.hero__sub {
-    font-size: clamp(0.95rem, 1.4vw, 1.1rem);
-    line-height: 1.6;
-    color: var(--text);
-    max-width: 62ch;
-    margin: 1.75rem 0 0;
-}
 
 /* ── Showcase ─────────────────────────────────────────────────────────────────
    Under the heading: a language picker, then one box, line to line across the
    column, holding a row of tabs (one per example program) and, under a single
    rule, two code panes: Logos on the left, always, and on the right the language
-   the picker selects (Thobias, 22 September 2026; it took the place of the
-   paragraph under the heading, and for an hour was one pane with Logos in the
-   picker). The markup, every tab x language listing shipped hidden, is
+   the picker selects (Thobias, 22 September 2026). The markup, every tab x
+   language listing shipped hidden, is
    build/showcase.ts's; initShowcase shows the pair the tabs and the picker
    select. Square like the matrix, and like the matrix it drops its own side
    borders where the margin lines stand in; only the picker's chips are rounded,
    being buttons. */
 .showcase {
     max-width: none;
-    /* Twice the air it first had under the heading (Thobias, 22 September 2026;
-       clamp(2.5rem, 6vh, 4rem) before). */
+    /* Generous air under the heading (Thobias, 22 September 2026). */
     margin: clamp(5rem, 12vh, 8rem) auto 0;
     padding-inline: var(--gutter);
 }
