@@ -50,9 +50,16 @@ page.
 - **Bundling**: [esbuild](https://esbuild.github.io) bundles `client/main.ts` and
   `styles/theme.css` into `dist/assets/`, with self-hosted fonts emitted to
   `dist/assets/fonts/`.
-- **SEO / AI discovery**: every page emits canonical + Open Graph/Twitter tags and
-  schema.org JSON-LD; the build also writes `sitemap.xml` and an
-  [`llms.txt`](https://llmstxt.org) map so AI answer-engines can read the site.
+- **SEO / AI discovery**: every page emits a Latin-script `<title>` ("… | Logos"),
+  a description under about 155 characters, canonical + Open Graph/Twitter tags and
+  schema.org JSON-LD (WebSite and SoftwareApplication on the home page, Article on
+  the vision page, TechArticle plus BreadcrumbList on every docs page, ProfilePage
+  on the about page, all naming the same `AUTHOR` Person from `build/templates.ts`);
+  an older docs version of a page the latest version still has canonicalises to the
+  latest, so versions never compete; the build also writes `sitemap.xml` and an
+  [`llms.txt`](https://llmstxt.org) map so AI answer-engines can read the site. The
+  shell preloads the two fonts every page paints first, and `public/_headers` lets
+  browsers cache the hashed `/assets/*` files for a year.
 - **Fonts** (self-hosted via Fontsource): Figtree (UI/body), EB Garamond (serif +
   the Greek `Λόγος` wordmark), JetBrains Mono (code).
 - **Theme tokens** live in `styles/theme.css`. The site is served dark only for now

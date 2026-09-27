@@ -1,0 +1,5 @@
+# Cloudflare Pages headers. The bundled CSS, JS and fonts carry a content hash in
+# their file name (build/build.ts), so a file at a given URL never changes and a
+# browser may keep it for a year without asking; a new deploy links new names.
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable

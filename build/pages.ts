@@ -904,7 +904,8 @@ ${compareHtml(HOME_HIDDEN)}`;
 
 export function visionPage(): string {
   return `<article class="vision">
-  <p class="vision__lead">Logos is built on a single commitment: <strong>radical unification</strong>. Every piece of logic the system contains, your programs, their types, their proofs, the compilation rules, the optimization passes, the compiler itself, the documentation, and the language's own parsing rules, lives in one data structure: the <strong>Logic Graph</strong>. There is no separation between "the language" and "what is written in it."</p>
+  <h1 class="vision__title">Vision</h1>
+  <p class="vision__lead">Logos is a systems programming language in which everything lives in one structure, the <strong>Logic Graph</strong>: the program, its types and proofs, the compilation rules and optimization passes, the compiler itself, the documentation, and the language's own parsing rules. The language reads, checks and rewrites that structure, so there is no separation between "the language" and "what is written in it." That single commitment is <strong>radical unification</strong>.</p>
 
   <p>The bet is that the boundaries we take for granted (language versus compiler, code versus specification, program versus proof, source versus tooling) are accidents of how systems were historically built, not necessities. Collapse them and what is left is simpler at its core, more expressive in what it can state, and more honest about what it is.</p>
 

@@ -14,14 +14,35 @@ export const OG_IMAGE = '/og.png';
 const SITE_NAME = 'Logos';
 const DEFAULT_DESC = 'Logos: the maximally meta programming language. Program, types, proofs, grammar and compiler are one graph that code can read and redefine, with every change checked.';
 
+// The author, as schema.org sees him: on the home page's WebSite and
+// SoftwareApplication, on every docs article, and as the about page's ProfilePage.
+// One person behind every page is what search engines and answer engines read as
+// expertise and provenance (E-E-A-T), so the same object goes everywhere.
+export const AUTHOR = {
+	'@type': 'Person',
+	name: 'Thobias Melfjord Knudsen',
+	url: `${SITE_URL}/about/`,
+	sameAs: [
+		'https://github.com/ThobiasKnudsen',
+		'https://no.linkedin.com/in/thobias-melfjord-knudsen-510084320',
+		'https://x.com/thobknu',
+	],
+};
+
 // Hashed asset URLs, set by the build after bundling (build/build.ts) so a fresh
 // deploy never serves stale CSS/JS from a cached fixed filename. Defaults are the
-// unhashed names so anything calling page() without a build still resolves.
+// unhashed names so anything calling page() without a build still resolves. The
+// preloaded fonts are the two every page paints first (the Latin sans for the
+// body, the Latin serif for headings and the wordmark); preloading them lets the
+// browser fetch them before it has parsed the stylesheet, which is what the
+// largest-contentful-paint measurement waits on.
 let ASSET_CSS = '/assets/theme.css';
 let ASSET_JS = '/assets/main.js';
-export function setAssetUrls(cssHref: string, jsHref: string): void {
+let PRELOAD_FONTS: string[] = [];
+export function setAssetUrls(cssHref: string, jsHref: string, preloadFonts: string[] = []): void {
 	ASSET_CSS = cssHref;
 	ASSET_JS = jsHref;
+	PRELOAD_FONTS = preloadFonts;
 }
 
 // Analytics is first-party and cookieless: the client beacon (initAnalytics in
@@ -147,7 +168,10 @@ export interface PageOptions {
 
 export function page(opts: PageOptions): string {
 	const desc = opts.description ?? DEFAULT_DESC;
-	const title = opts.title === 'Λόγος' ? 'Λόγος' : `${opts.title} | Λόγος`;
+	// The <title> is in Latin script, "Logos", since that is what anyone searches
+	// for; the Greek wordmark stays on the page. The home page's title is its own
+	// (build/build.ts), every other page's is its name with the site's after it.
+	const title = opts.path === '/' ? opts.title : `${opts.title} | ${SITE_NAME}`;
 	const chrome = opts.header === 'none' ? '' : `${dockHtml(opts.active)}\n${marginsHtml()}`;
 
 	// Canonical / og:url: prefer an explicit canonical path, else this page's own
@@ -163,7 +187,12 @@ export function page(opts: PageOptions): string {
 		`\n<meta property="og:title" content="${escapeHtml(title)}" />` +
 		`\n<meta property="og:description" content="${escapeHtml(desc)}" />` +
 		(canonUrl ? `\n<meta property="og:url" content="${escapeHtml(canonUrl)}" />` : '') +
-		(ogImage ? `\n<meta property="og:image" content="${escapeHtml(ogImage)}" />` : '') +
+		(ogImage
+			? `\n<meta property="og:image" content="${escapeHtml(ogImage)}" />` +
+				`\n<meta property="og:image:width" content="1200" />` +
+				`\n<meta property="og:image:height" content="630" />` +
+				`\n<meta property="og:image:alt" content="Logos: one language for everything" />`
+			: '') +
 		`\n<meta name="twitter:card" content="${ogImage ? 'summary_large_image' : 'summary'}" />` +
 		`\n<meta name="twitter:title" content="${escapeHtml(title)}" />` +
 		`\n<meta name="twitter:description" content="${escapeHtml(desc)}" />` +
@@ -172,6 +201,9 @@ export function page(opts: PageOptions): string {
 	const jsonLd = opts.jsonLd
 		? `\n<script type="application/ld+json">${JSON.stringify(opts.jsonLd).replace(/</g, '\\u003c')}</script>`
 		: '';
+	const preloads = PRELOAD_FONTS.map(
+		(href) => `\n<link rel="preload" href="${escapeHtml(href)}" as="font" type="font/woff2" crossorigin />`
+	).join('');
 
 	return `<!doctype html>
 <html lang="en" data-theme="${THEME}">
@@ -180,7 +212,7 @@ export function page(opts: PageOptions): string {
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>${escapeHtml(title)}</title>
 <meta name="description" content="${escapeHtml(desc)}" />
-<link rel="icon" href="/favicon.svg" />${canonical}${social}
+<link rel="icon" href="/favicon.svg" />${canonical}${social}${preloads}
 <link rel="stylesheet" href="${ASSET_CSS}" />${jsonLd}
 </head>
 <body class="${opts.bodyClass ?? ''}">

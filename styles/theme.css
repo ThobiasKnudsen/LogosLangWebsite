@@ -1323,6 +1323,13 @@ a {
     font-size: 1.05rem;
     line-height: 1.7;
 }
+/* The page's one heading, as the examples and about pages have theirs. */
+.vision__title {
+    font-family: var(--serif);
+    font-size: clamp(2rem, 5vw, 3rem);
+    color: var(--heading);
+    margin: 0 0 1.25rem;
+}
 .vision__lead {
     font-size: 1.3rem;
     line-height: 1.6;

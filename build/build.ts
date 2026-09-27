@@ -16,7 +16,7 @@ import {
   type DocPage,
 } from "./version.ts";
 import { renderMarkdown, parseFrontmatter } from "./markdown.ts";
-import { page, SITE_URL, THEME, absUrl, setAssetUrls } from "./templates.ts";
+import { page, SITE_URL, THEME, AUTHOR, absUrl, setAssetUrls } from "./templates.ts";
 import {
   examplesPage,
   homePage,
@@ -136,7 +136,11 @@ async function copyDir(src: string, dest: string): Promise<void> {
 
 /** Strip HTML tags and collapse whitespace for a ~155-char meta description. */
 function metaDescription(html: string): string {
+  // The page's own heading is its <title> already; the description starts with the
+  // first sentence of the article, which is what a search result or an answer
+  // engine quotes.
   const text = html
+    .replace(/^\s*<h1[^>]*>[\s\S]*?<\/h1>/, " ")
     .replace(/<[^>]+>/g, " ")
     .replace(/&amp;/g, "&")
     .replace(/&lt;/g, "<")
@@ -273,6 +277,10 @@ async function renderDocs(docsDir: string): Promise<{
     });
     const docTitle = opts.docTitle ?? opts.page.title;
     const docDesc = metaDescription(html);
+    // The breadcrumb is Docs › page; the /docs/ landing is the first page again, so
+    // it carries the one crumb.
+    const crumbs = [{ name: "Docs", item: absUrl("/docs/") }];
+    if (!opts.docTitle) crumbs.push({ name: docTitle, item: absUrl(opts.canonical) });
     await writePage(
       opts.urlPath,
       page({
@@ -283,22 +291,40 @@ async function renderDocs(docsDir: string): Promise<{
         footer: false,
         canonical: opts.canonical,
         description: docDesc,
-        jsonLd: {
-          "@context": "https://schema.org",
-          "@type": "TechArticle",
-          headline: docTitle,
-          name: docTitle,
-          description: docDesc,
-          url: absUrl(opts.canonical),
-          inLanguage: "en",
-          isPartOf: { "@type": "WebSite", name: "Logos", url: SITE_URL },
-        },
+        jsonLd: [
+          {
+            "@context": "https://schema.org",
+            "@type": "TechArticle",
+            headline: docTitle,
+            name: docTitle,
+            description: docDesc,
+            url: absUrl(opts.canonical),
+            inLanguage: "en",
+            version: opts.versionStr,
+            author: AUTHOR,
+            isPartOf: { "@type": "WebSite", name: "Logos", url: SITE_URL },
+          },
+          {
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            itemListElement: crumbs.map((c, i) => ({
+              "@type": "ListItem",
+              position: i + 1,
+              name: c.name,
+              item: c.item,
+            })),
+          },
+        ],
         main,
       }),
     );
   };
 
-  // Versioned permalink for every page in every version.
+  // Versioned permalink for every page in every version. An older version of a page
+  // the latest version still has points its canonical at the latest, so the
+  // versions never compete in search for the same page and the one that ranks is
+  // the current one; a page only an older version has keeps its own.
+  const latestPaths = new Set(latest.pages.map((p) => p.path));
   for (const tree of sorted) {
     const isLatest = tree.versionStr === latestStr;
     for (const pg of tree.pages) {
@@ -307,7 +333,9 @@ async function renderDocs(docsDir: string): Promise<{
         versionStr: tree.versionStr,
         isLatest,
         page: pg,
-        canonical: pageUrl(tree.versionStr, pg.path, isLatest),
+        canonical: latestPaths.has(pg.path)
+          ? `/docs/${pg.path}/`
+          : pageUrl(tree.versionStr, pg.path, isLatest),
       });
     }
   }
@@ -354,6 +382,8 @@ async function bundleAssets(): Promise<{
   cssHref: string;
   jsHref: string;
   dashHref: string;
+  /** The Latin sans and serif files, for the shell to preload (build/templates.ts). */
+  preloadFonts: string[];
 }> {
   const assetsDir = path.join(DIST, "assets");
   const hrefOf = (
@@ -394,10 +424,22 @@ async function bundleAssets(): Promise<{
     metafile: true,
     logLevel: "silent",
   });
+  // The two fonts every page paints first, by their Fontsource file names; the
+  // hashed output name comes from the metafile like the stylesheet's does.
+  const fontHref = (prefix: string): string => {
+    const key = Object.keys(css.metafile.outputs).find((k) => {
+      const base = path.basename(k);
+      return base.startsWith(prefix) && base.endsWith(".woff2");
+    });
+    if (!key) throw new Error(`bundleAssets: no ${prefix}*.woff2 font emitted`);
+    return `/assets/fonts/${path.basename(key)}`;
+  };
+  const preloadFonts = ["figtree-latin-wght-normal-", "eb-garamond-latin-wght-normal-"].map(fontHref);
   return {
     jsHref: hrefOf(js.metafile, (b) => b.startsWith("main-") && b.endsWith(".js"), "main.js"),
     dashHref: hrefOf(js.metafile, (b) => b.startsWith("dashboard-") && b.endsWith(".js"), "dashboard.js"),
     cssHref: hrefOf(css.metafile, (b) => b.endsWith(".css"), "theme.css"),
+    preloadFonts,
   };
 }
 
@@ -433,10 +475,15 @@ export async function build(): Promise<void> {
 
   // Bundle first so the hashed asset URLs are known before any page is rendered.
   const assets = await bundleAssets();
-  setAssetUrls(assets.cssHref, assets.jsHref);
+  setAssetUrls(assets.cssHref, assets.jsHref, assets.preloadFonts);
 
+  // Page descriptions stay under about 155 characters: what a search result shows
+  // whole, and the first thing an answer engine reads about a page.
+  const homeTitle = "Logos: one language for everything";
   const homeDesc =
-    "Logos is the maximally meta programming language: a self-hosting systems language in which the program, its types, its proofs, its grammar and its compiler are nodes in one graph, the Logic Graph, and the same checked operations that run code can read and redefine any of them.";
+    "Logos is a systems programming language whose program, types, proofs, grammar and compiler are one graph the language itself reads, checks and rewrites.";
+  const visionDesc =
+    "What Logos is and why: a systems language whose program, types, proofs, grammar and compiler are one graph, built for a world where machines write the code.";
   const roadmapDesc =
     "Where Logos actually stands: an honest map of what runs today versus the still-planned pieces of the vision, from the bootstrap seed to proofs as rewrite rules.";
   const examplesDesc =
@@ -461,7 +508,7 @@ export async function build(): Promise<void> {
   await writePage(
     "index.html",
     page({
-      title: "Λόγος",
+      title: homeTitle,
       active: "",
       path: "/",
       description: homeDesc,
@@ -470,20 +517,24 @@ export async function build(): Promise<void> {
           "@context": "https://schema.org",
           "@type": "WebSite",
           name: "Logos",
-          alternateName: "Λόγος",
+          alternateName: ["LogosLang", "Λόγος"],
           url: SITE_URL,
           description: homeDesc,
+          author: AUTHOR,
         },
         {
           "@context": "https://schema.org",
           "@type": "SoftwareApplication",
           name: "Logos",
-          alternateName: "Λόγος",
+          alternateName: ["LogosLang", "Λόγος"],
           applicationCategory: "DeveloperApplication",
           operatingSystem: "Windows, macOS, Linux",
           url: SITE_URL,
           downloadUrl: absUrl("/download/"),
           description: homeDesc,
+          author: AUTHOR,
+          license: "https://www.apache.org/licenses/LICENSE-2.0",
+          codeRepository: "https://github.com/ThobiasKnudsen/LogosLang",
           offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
         },
       ],
@@ -496,8 +547,17 @@ export async function build(): Promise<void> {
       title: "Vision",
       active: "vision",
       path: "/vision/",
-      description:
-        "Radical unification: why Logos puts programs, types, proofs, compilation, and the compiler itself in one structure.",
+      description: visionDesc,
+      jsonLd: {
+        "@context": "https://schema.org",
+        "@type": "Article",
+        headline: "The vision: one language for everything",
+        description: visionDesc,
+        url: absUrl("/vision/"),
+        inLanguage: "en",
+        author: AUTHOR,
+        isPartOf: { "@type": "WebSite", name: "Logos", url: SITE_URL },
+      },
       main: visionPage(),
     }),
   );
@@ -548,6 +608,20 @@ export async function build(): Promise<void> {
       active: "about",
       path: "/about/",
       description: aboutDesc,
+      // The page is who builds Logos, so it is his profile page in schema.org's
+      // terms, and the Person here is the author every other page names.
+      jsonLd: {
+        "@context": "https://schema.org",
+        "@type": "ProfilePage",
+        url: absUrl("/about/"),
+        description: aboutDesc,
+        mainEntity: {
+          ...AUTHOR,
+          image: absUrl("/thobias.jpg"),
+          jobTitle: "Creator of the Logos programming language",
+          knowsAbout: ["Programming languages", "Compilers", "Systems programming"],
+        },
+      },
       main: aboutPage(),
     }),
   );
@@ -589,12 +663,8 @@ export async function build(): Promise<void> {
   // Discovery files: sitemap of canonical URLs, and llms.txt pointing AI
   // answer-engines at the same content with one-line summaries.
   const marketing = [
-    { path: "/", title: "Logos: Maximally Meta", desc: homeDesc },
-    {
-      path: "/vision/",
-      title: "Vision",
-      desc: "Radical unification: programs, types, proofs, compilation, and the compiler in one structure.",
-    },
+    { path: "/", title: homeTitle, desc: homeDesc },
+    { path: "/vision/", title: "Vision", desc: visionDesc },
     { path: "/roadmap/", title: "Roadmap", desc: roadmapDesc },
     { path: "/examples/", title: "Examples", desc: examplesDesc },
     { path: "/playground/", title: "Playground", desc: playgroundDesc },
