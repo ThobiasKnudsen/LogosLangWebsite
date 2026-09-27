@@ -10,22 +10,30 @@ import { escapeHtml } from "./templates.ts";
 // Rendered in English (italic, EB Garamond) so visitors actually
 // understand them; the sources are Greek and Latin, and the renderings here are our
 // own, kept plain on purpose (Thobias, 2026-08-26) rather than literal. Greek
-// antiquity, the Stoics, and the Latin Fathers (Vulgate John, Augustine, Anselm,
-// Aquinas) meet on the one Word, Λόγος / Verbum, through which all things are made
-// and known. Attributions name only the person (and "John 1:1" / "Hebrews 4:12"
-// alone, so the set reads as antiquity rather than as a denominational
-// statement). Sources, in order:
+// antiquity, the Stoics, and the Fathers (Vulgate John, Justin, Clement, Augustine,
+// Maximus, Anselm, Aquinas) meet on the one Word, Λόγος / Verbum, through which all
+// things are made and known. Attributions name only the person (and "John 1:1" /
+// "Psalm 33:6" / "Hebrews 4:12" alone, so the set reads as antiquity rather than as
+// a denominational statement; Justin's line is the one that says the word
+// Christians, kept at Thobias's choice, 2026-09-27). Sources, in order:
 // John 1:1 (Vulgate); Heraclitus, Fragment 1 (DK B1); Gorgias, Encomium of Helen 8;
-// Augustine, De Trinitate 15.11.20; Anselm, Monologion 30; Heraclitus, Fragment 50
-// (DK B50); Aristotle, Politics 1253a; Epictetus, Discourses 1.1; Cicero, De
-// Officiis 1.50; Plato, Sophist 263e; Heraclitus, Fragment 45 (DK B45); Seneca,
-// Epistles 115.2; Clement of Alexandria, Protrepticus 1.5; Isocrates, Nicocles 7;
-// Thomas Aquinas, Summa Theologiae I.34.3; Augustine, De Trinitate 6.10.11; Philo
-// of Alexandria; Heraclitus, Fragment 2 (DK B2); Cleanthes, Hymn to Zeus 12-13;
-// Hebrews 4:12; Heraclitus, Fragment 115 (DK B115); "verba volant, scripta manent"
-// is a traditional Latin proverb with no single ancient source; the "Stoic
-// tradition" line's exact source is uncertain, swap in a precise citation when you
-// have one.
+// Augustine, De Trinitate 15.11.20; Anselm, Monologion 30; Maximus the Confessor,
+// Ambiguum 7 (PG 91:1081); Heraclitus, Fragment 50 (DK B50); Aristotle, Politics
+// 1253a; Epictetus, Discourses 1.1; Psalm 33:6 (32:6 in the Septuagint, whose Greek
+// has λόγῳ); Cicero, De Officiis 1.50; Plato, Sophist 263e; Heraclitus, Fragment 45
+// (DK B45); Marcus Aurelius, Meditations 7.9; Seneca, Epistles 115.2; Philo of
+// Alexandria, De Opificio Mundi 24; Clement of Alexandria, Protrepticus 1.5;
+// Aristotle, Topics 1.5, 101b38; Isocrates, Nicocles 7; Thomas Aquinas, Summa
+// Theologiae I.34.3; Plato, Theaetetus 201c-d (the definition of knowledge that
+// Socrates goes on to test); Augustine, De Trinitate 6.10.11; Philo of Alexandria,
+// De Fuga et Inventione 112; Heraclitus, Fragment 2 (DK B2); Cleanthes, Hymn to Zeus
+// 12-13; Hebrews 4:12; Justin Martyr, First Apology 46; Heraclitus, Fragment 115 (DK
+// B115); the "Stoic tradition" line's exact source is uncertain, swap in a precise
+// citation when you have one (Zeno as reported in Diogenes Laertius 7.134, "the
+// Logos in matter, which acts, and that is God", is the nearest). The seven lines
+// from Maximus, Psalm 33, Marcus Aurelius, Philo's De Opificio, the Topics, the
+// Theaetetus and Justin were added on 27 September 2026, when the Latin proverb
+// "verba volant, scripta manent" was dropped as the one line not about the Logos.
 // Each quote carries explicit "\n" line breaks, the stanza it was written as; in a
 // margin too narrow for those lines the CSS wraps the text as prose instead, and
 // the breaks collapse to spaces. Wherever the source word is λόγος (or
@@ -35,11 +43,12 @@ import { escapeHtml } from "./templates.ts";
 // Greek for the same idea, are rendered "Logos" as well, so that every line says
 // something about the Logos itself. Augustine's "verbum quod foris sonat" is Logos
 // too: he uses one word for the outer and the inner, and says the name belongs more
-// properly to the inner. Only the ordinary plural "words" stays English, in Anselm's
-// contrast and the proverb. Heraclitus appears five times because he is where the
-// word begins; his fragments are spaced out along the sequence. The Aristotle line
-// keeps its internal "…", which marks a real elision between two clauses of the
-// Politics.
+// properly to the inner. Maximus's plural λόγοι stays Greek as "logoi", the same
+// word in the plural: the principle of each single thing, all of them held in the
+// one Logos. Only the ordinary plural "words" stays English, in Anselm's contrast.
+// Heraclitus appears five times because he is where the word begins; his fragments
+// are spaced out along the sequence. The Aristotle line from the Politics keeps its
+// internal "…", which marks a real elision between two clauses.
 const WISDOM: { text: string; author: string }[] = [
   {
     text: "In the beginning was the Logos,\nand the Logos was with God,\nand the Logos was God.",
@@ -62,6 +71,10 @@ const WISDOM: { text: string; author: string }[] = [
     author: "Anselm",
   },
   {
+    text: "The one Logos is many logoi,\nand the many logoi are one Logos.",
+    author: "Maximus the Confessor",
+  },
+  {
     text: "Listen not to me but to the Logos,\nand you will find it wise to agree:\nall things are one.",
     author: "Heraclitus",
   },
@@ -72,6 +85,10 @@ const WISDOM: { text: string; author: string }[] = [
   {
     text: "Every other ability judges only its own subject.\nThe Logos alone judges itself,\nand all the others.",
     author: "Epictetus",
+  },
+  {
+    text: "By the Logos of the Lord\nthe heavens were made.",
+    author: "Psalm 33:6",
   },
   {
     text: "The bond of human fellowship\nis Logos.",
@@ -86,12 +103,24 @@ const WISDOM: { text: string; author: string }[] = [
     author: "Heraclitus",
   },
   {
+    text: "One world made of all things,\none God through all,\none substance, one law,\none Logos shared by every thinking being,\nand one truth.",
+    author: "Marcus Aurelius",
+  },
+  {
     text: "Logos is the face of the soul.",
     author: "Seneca",
   },
   {
+    text: "The world as thought is nothing other\nthan the Logos of God as he makes it,\njust as the city in the architect's mind\nis nothing other than his plan to build it.",
+    author: "Philo of Alexandria",
+  },
+  {
     text: "The Logos tuned the whole world into harmony\nand turned the clashing elements\ninto one symphony.",
     author: "Clement of Alexandria",
+  },
+  {
+    text: "A definition is a Logos\nthat says what a thing is.",
+    author: "Aristotle",
   },
   {
     text: "Logos that is true, lawful and just\nis the image\nof a good and faithful soul.",
@@ -100,6 +129,10 @@ const WISDOM: { text: string; author: string }[] = [
   {
     text: "God knows himself and all things in one act,\nso his single Logos expresses\nnot the Father alone, but every creature.",
     author: "Thomas Aquinas",
+  },
+  {
+    text: "True belief with a Logos is knowledge;\nwithout a Logos\nit stands outside knowledge.",
+    author: "Plato",
   },
   {
     text: "The Logos is the art of God,\nfull of every living pattern,\nand none of them ever changes.",
@@ -122,12 +155,12 @@ const WISDOM: { text: string; author: string }[] = [
     author: "Hebrews 4:12",
   },
   {
-    text: "The soul has a Logos\nthat grows itself.",
-    author: "Heraclitus",
+    text: "Those who lived with the Logos were Christians,\neven when they were called atheists,\nlike Socrates and Heraclitus among the Greeks.",
+    author: "Justin Martyr",
   },
   {
-    text: "Spoken words fly away,\nwritten words remain.",
-    author: "Latin proverb",
+    text: "The soul has a Logos\nthat grows itself.",
+    author: "Heraclitus",
   },
   {
     text: "God is nothing other\nthan mind and Logos.",
