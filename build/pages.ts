@@ -1,6 +1,8 @@
 // Inner HTML for the marketing pages. The homepage order: the hero is the identity,
 // "One language for everything" (the wordmark "Λόγος" stood above it until 22
-// September 2026, and a paragraph on the mechanism under it); then the showcase,
+// September 2026), with two sentences under it saying what Logos is (a paragraph on
+// the mechanism stood there until 22 September 2026, and these since 28 September
+// 2026); then the showcase,
 // the same program in Logos and in other languages (build/showcase.ts); then the
 // honest comparison matrix. No code listing: one ran down the homepage's right-hand
 // side from 11 to 21 September 2026, and the examples page has the same
@@ -894,9 +896,14 @@ function compareHtml(hiddenIds: readonly string[]): string {
 // (the download page still carries the form), and the paragraph under the heading
 // went the same day, the showcase taking its place. The quotes that ran as a band
 // under the hero moved into the page margins on 21 September 2026 (build/wisdom.ts).
+//
+// Two sentences stand under the heading again since 28 September 2026 (Thobias,
+// for search and answer engines: the page's own answer to "what is Logos", which
+// a heading alone cannot give): the definition first, then what it is built for.
 export function homePage(showcase: string): string {
   return `<section class="hero">
   <h1 class="hero__headline">One language for <span class="hero__underline">everything</span></h1>
+  <p class="hero__sub">Logos is a systems programming language in which the program, its types, its proofs, its grammar and its compiler are one graph the language itself can read and rewrite, with every change checked before it runs. It is built to rewrite as freely as Smalltalk, prove as strictly as Lean and run as fast as Rust, for a world where machines write most of the code.</p>
 </section>
 ${showcase}
 ${compareHtml(HOME_HIDDEN)}`;

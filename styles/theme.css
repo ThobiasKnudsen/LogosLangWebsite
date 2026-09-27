@@ -651,6 +651,18 @@ a {
     text-decoration-thickness: 0.05em;
     text-underline-offset: 0.14em;
 }
+/* The two sentences under the heading (Thobias, 28 September 2026): the page's
+   own answer to what Logos is, for readers and answer engines alike. Body text,
+   centred under the card, a comfortable measure. A paragraph on the mechanism
+   stood here until 22 September 2026 (.hero__sub then too, 5rem below a two-line
+   title, in the Download button's text colour). */
+.hero__sub {
+    font-size: clamp(0.95rem, 1.4vw, 1.1rem);
+    line-height: 1.6;
+    color: var(--text);
+    max-width: 62ch;
+    margin: 1.75rem 0 0;
+}
 
 /* ── Showcase ─────────────────────────────────────────────────────────────────
    Under the heading: a language picker, then one box, line to line across the
