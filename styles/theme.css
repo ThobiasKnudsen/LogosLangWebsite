@@ -684,10 +684,8 @@ a {
     box-shadow: inset 0 -1px var(--hairline);
     background: var(--surface);
 }
-/* Each tab a cell with a line on all four sides (Thobias, 23 September 2026; a
-   line between neighbours only, the day before, and for an hour the bottom
-   line was the row's rule showing through, which a tab above a shorter second
-   row never touched). Every tab draws its own four lines; neighbours share
+/* Each tab a cell with a line on all four sides (Thobias, 23 September 2026).
+   Every tab draws its own four lines; neighbours share
    one, each tab pulling a pixel left and up over the line beside or above it,
    and the last row's bottom lines fall on the row's rule. */
 .showcase__tab {
@@ -796,7 +794,7 @@ a {
 .showcase__code code {
     font: inherit;
 }
-/* The picker sits above the box (it sat under it for an hour). */
+/* The picker sits above the box. */
 .showcase__langs {
     display: flex;
     flex-wrap: wrap;
@@ -886,8 +884,7 @@ a {
    Code floats on the page: no card, no frame, no tinted ground, no heading, just the
    lines held by one open bracket down their left side (Thobias, 11 September 2026).
    Tokens are colored by the build's small highlighter (highlightLogosLines in
-   build/pages.ts) via the --tok-* vars. The examples page places it (.example__code);
-   the homepage's code column did too, until 21 September 2026. */
+   build/pages.ts) via the --tok-* vars. The examples page places it (.example__code). */
 .listing {
     /* The bracket's arm length, which is also the air it keeps on all four sides:
        from the stem to the first character, and from each arm to the line nearest it
@@ -960,8 +957,8 @@ a {
     font-style: italic;
 }
 /* ── Comparison matrix ────────────────────────────────────────────────────────
-   "Comparison Matrix", at the foot of the homepage (it had a page of its own,
-   /compare/, until 22 September 2026): Logos against eleven other languages.
+   "Comparison Matrix", at the foot of the homepage: Logos against eleven other
+   languages.
    One glyph per cell (has it / partial / no), colored green / yellow / red. No
    lead paragraph: title, legend, chips, table, notes. The table is as wide as the columns it shows; where that is more
    than the screen, it scrolls horizontally and the .compare__shadows overlays
@@ -1066,7 +1063,7 @@ a {
     color: var(--heading);
 }
 /* The chip row above the table: one button, the language's name, per hidden
-   language (it read "+ Name" until 22 September 2026). A chip is
+   language. A chip is
    .is-off while its column shows, and the row is .is-empty when nothing is hidden;
    initCompare keeps both in step with the columns. */
 .compare__chips {
