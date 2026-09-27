@@ -56,16 +56,20 @@ function notifyFormHtml(source: string): string {
 // built out of all of it, the v0.1.0 demo, which runs in the seed) and `proof`. Every
 // definition is lifted from a REAL file in the sibling repo (LogosLang/identities/
 // dyad.logos, type.logos, scope.logos, open_parenthesis.logos, fn.logos, power.logos,
-// proof.logos) with its comments stripped, its alignment regularised, its fields
-// block first (ruled 20 September 2026) and in the spellings DESIGN.md rules as of
-// 24 September 2026, which the seed does not all carry yet (LogosLang issues #139,
-// #141, #142, #143): `x:type` for a value's type, `fields = (…)` for the block, `back`
-// for a scope's link up, `dyads` for its nodes, and `run` among the slots of instances
-// only, so `type`'s own predeclaration has no `run`. One placeholder is filled: `(`'s
-// parse_rank is literally `…` in the source ("near the top of the axis; `,` sits above
-// it") and 9.0 is invented for it; `fn`'s stays `…` as the sketch leaves it. DESIGN.md
-// pins no table of ranks, only that the axis is an f64 where higher binds tighter and
-// fractional values let a new operator slot between two existing ones.
+// proof.logos) with its comments stripped, its alignment regularised and its
+// spellings brought to what DESIGN.md rules as of 27 September 2026, which the
+// sketches and the seed do not all carry yet: a type body describes one level (the
+// `fields = (…)` block went on 25 September), `share` marks the slot fills and the
+// members stored once, there is no `this` (a parse stamps its own cell,
+// `tape[0]:type = T`, and fills the node's fields through it), `output_type`, a list
+// in square brackets (`array dyad []`), `,` between every two expressions, and
+// `compile f` in place of `f.compile()` (27 September). Where DESIGN.md names no
+// spelling the file's stands: the bare `error «…»` keeps its spelling until an error
+// category is ruled for it. Two placeholders: `(`'s parse_rank is literally `…` in
+// the source ("near the top of the axis; `,` sits above it") and 9.0 is invented for
+// it; `fn`'s stays `…` as the sketch leaves it. DESIGN.md pins no table of ranks,
+// only that the axis is an f64 where higher binds tighter and fractional values let
+// a new operator slot between two existing ones.
 interface Example {
   /** The anchor on the examples page. */
   id: string;
@@ -82,29 +86,27 @@ const EXAMPLES: Example[] = [
     id: "dyad",
     title: "dyad",
     lead: "The one node the Logic Graph is made of: a type and a value. Its <code>type</code> field is itself a dyad, so the first definition already refers to itself.",
-    code: `dyad := type (fields = (type := @dyad ?, value := @void ?))`,
+    code: `dyad := type (type := @dyad ?, value := @void ?)`,
   },
   {
     id: "type",
     title: "type",
-    lead: "The ground: an instance of itself and the definition word. Its fields block declares, once, the slots every type fills with <code>=</code>; its bare lines say how its own spelling parses, reading its bracket and replacing its cell with the finished type. Runs in the seed today.",
+    lead: "The ground: an instance of itself and the definition word. Its body declares, once, the slots every type fills with <code>=</code>, and then fills its own: how its spelling parses, reading its bracket and making its own cell the finished type. Runs in the seed today.",
     code: `type := type (
-  fields = (
-    parse_rank    := f64 ?
-    associativity := ?
-    parse         := parse ?
-    drop          := drop ?
-    fields        := fields ?
-  )
+  parse_rank    := f64 ?,
+  associativity := ?,
+  parse         := parse ?,
+  run           := run ?,
+  drop          := drop ?,
 
-  parse_rank    = f64 2.0
-  associativity = left
-  parse = (
+  share parse_rank    = f64 2.0,
+  share associativity = left,
+  share parse = (
     if tape[1] != lex «(»[0]
-      error «type must be followed by (»
-    (.parse(tape.recenter(1))
-    tape[0] = this
-    tape.is_constructed[0] = true
+      error «type must be followed by (»,
+    tape[0]:type = type,
+    (.parse(tape.recenter(1)),
+    tape.is_constructed[0] = true,
     tape.remove(1)
   )
 )`,
@@ -114,12 +116,9 @@ const EXAMPLES: Example[] = [
     title: "scope",
     lead: "A scope is a node that holds its nodes in order, <code>dyads</code>, and the scope it stands in, <code>back</code>, null at the arche. Its parse is still a hole; <code>(</code> is what fills a scope.",
     code: `scope := type (
-  fields = (
-    dyads := array dyad ()
-    back  := @scope ?
-  )
-
-  parse = ( ? )
+  dyads := array dyad [],
+  back  := @scope ?,
+  share parse = ( ? )
 )`,
   },
   {
@@ -127,37 +126,38 @@ const EXAMPLES: Example[] = [
     title: "(",
     lead: "The scope opener is the driver of the parse. Constructed the moment it is lexed, it reads its interior one cell at a time: a cell that binds at least as tightly as <code>(</code> is constructed on the spot, and at each <code>,</code> or the closing <code>)</code> the rest of the segment is constructed highest rank first. The constructed cells, in order, become the scope.",
     code: `( := type (
-  parse_rank    = f64 9.0
-  associativity = left
-  parse = (
-    body      := array @dyad ()
-    mut first := 1
-    mut i     := 1
+  share parse_rank    = f64 9.0,
+  share associativity = left,
+  share parse = (
+    body      := array @dyad [],
+    mut first := 1,
+    mut i     := 1,
 
     while true (
-      cell := tape[i]
+      cell := tape[i],
 
       if cell == lex «)»[0] or cell == lex «,»[0] (
         while true (
-          k := highest_unconstructed(tape, first, i)
-          if k == ? break
+          k := highest_unconstructed(tape, first, i),
+          if k == ? break,
           tape[k].parse(tape.recenter(k))
-        )
+        ),
         for k in first..i (
           if not tape.is_constructed[k]
-            error «unconstructed cell at a segment boundary»
+            error «unconstructed cell at a segment boundary»,
           body.push(tape[k])
-        )
-        if cell == lex «)»[0] break
+        ),
+        if cell == lex «)»[0] break,
         first = i + 1
       ) else if cell.parse_rank >= (.parse_rank (
         cell.parse(tape.recenter(i))
-      )
+      ),
       i = i + 1
-    )
+    ),
 
-    tape[0] = dyad (scope, body)
-    tape.is_constructed[0] = true
+    tape[0]:type = scope,
+    tape[0].dyads = body,
+    tape.is_constructed[0] = true,
     for k in 1..i+1 ( tape.remove(1) )
   )
 )`,
@@ -165,52 +165,78 @@ const EXAMPLES: Example[] = [
   {
     id: "fn",
     title: "fn",
-    lead: "A function is a type in the same shape as any operator: its parameters are its instance fields, its declared result its <code>output</code>, its body its <code>run</code>. What the sketch declares besides is what the seed's <code>fn</code> carries: the input type, the compiled code and the frame size, with <code>compile</code> lowering the body to machine code. A call jumps to the code when there is some and walks the body when there is not.",
+    lead: "A function is a type in the same shape as any operator: its parameters are its fields, its declared result its <code>output_type</code>, its body its <code>run</code>, with a call's defaults for where it binds and how it parses. What the sketch declares besides is what the seed's <code>fn</code> carries: the input type, the compiled code and the frame size. <code>compile f</code> lowers the body to machine code, and a call jumps to the code when there is some and walks the body when there is not.",
     code: `fn := type (
-  fields = (
-    shared parse_rank    = …
-    shared associativity = left
-    shared parse         = ( ? )
-    shared compile       := fn () -> void ( ? )
-    input  := type ?
-    output := ?
-    bcode  := callable ?
-    frame  := u64 ?
-  )
+  input       := type ?,
+  output_type := ?,
+  bcode       := callable ?,
+  frame       := u64 ?,
 
-  parse = ( ? )
+  share parse_rank    = …,
+  share associativity = left,
+  share parse         = ( ? )
 )`,
   },
   {
     id: "power",
     title: "^",
-    lead: "An operator built out of all of the above, and the v0.1.0 demo: the language defines itself. Its fields block says what a <code>^</code> node holds and does, the operands as named fields, the output the parse writes per node, the run every node shares; its bare lines say where it binds and what happens when <code>^</code> stands on the tape. Runs in the seed today, compiled with <code>f.compile()</code>.",
-    code: `^ := type (
-  fields = (
-    lhs := ?,
-    rhs := i32 ?,
-    output := type ?,
-    shared run = (
-      mut r := this.output 1,
-      for 0..this.rhs ( r = r * this.lhs ),
-      r
-    )
-  ),
+    lead: "An operator built out of all of the above, and the v0.1.0 demo: the language defines itself. Its body says what a <code>^</code> node holds, the operands as named fields and the output the parse writes per node; where it binds and which way it associates; what happens when <code>^</code> stands on the tape, a parse over the cells around it that makes its own cell the new node; and what every node computes, a <code>run</code> over its fields by name, over integers and floats with any real exponent, <code>exp</code> and <code>ln</code> being ordinary Logos functions in their own files. Runs in the seed today, compiled with <code>compile f</code>.",
+    code: `import ln.logos,
+import exp.logos,
 
-  parse_rank = *.parse_rank + 1,
-  associativity = right,
-  parse = (
-    this.lhs = tape[-1],
-    this.rhs = tape[1],
-    this.output = tape[-1]:type,
-    tape[0] = this,
+^ := type (
+  lhs := ?,
+  rhs := ?,
+  output_type := type ?,
+
+  share parse_rank = *.parse_rank + 1,
+  share associativity = right,
+  share parse = (
+    tape[0]:type = ^,
+    tape[0].lhs = tape[-1],
+    tape[0].rhs = tape[1],
+    if tape[-1]:type == f64 or tape[1]:type == f64 (
+      tape[0].output_type = f64
+    ) else if tape[-1]:type == f32 or tape[1]:type == f32 (
+      tape[0].output_type = f32
+    ) else if tape[1]:type == rational_number and not (tape[1]:type ⊆ i64) (
+      tape[0].output_type = f64
+    ) else (
+      tape[0].output_type = tape[-1]:type
+    ),
     tape.is_constructed[0] = true,
     tape.remove(1),
     tape.remove(-1)
+  ),
+
+  share run = (
+    if (f64(rhs) == f64(i64(rhs))) (
+      mut power := output_type 1,
+      mut times := i64(rhs),
+      mut factor := output_type(lhs),
+      if times < 0 (
+        if not (output_type == (f64 or f32 or rational_number))
+          error «a negative exponent of a whole number is not whole: write the base as a float»,
+        factor = output_type 1 / factor,
+        times = 0 - times
+      ),
+      for 0..times ( power = power * factor ),
+      power
+    ) else if (output_type == (f64 or f32)) (
+      real_base := f64(lhs),
+      if real_base < 0.0
+        error «a negative base has no real power for a fractional exponent»,
+      if real_base == 0.0
+        output_type 0
+      else
+        output_type (exp(f64(rhs) * ln(real_base)))
+    ) else
+      error «a fractional exponent needs a float result»
   )
 ),
+
 f := fn (x := i32 ?) -> i32 ( x ^ 3 + 1 ),
-f.compile(),
+compile f,
 f(2)   # 9`,
   },
   {
@@ -218,16 +244,13 @@ f(2)   # 9`,
     title: "proof",
     lead: "A proof is a rewrite rule together with its evidence: the holes it quantifies over, the premises that must hold, a pattern and its replacement, the derivation from one to the other, and the world of axioms it rests on. Its parse is still a hole.",
     code: `proof := type (
-  fields = (
-    holes       := array dyad ()
-    premises    := array dyad ()
-    pattern     := dyad ?
-    replacement := dyad ?
-    derivation  := ?
-    world       := array @proof ()
-  )
-
-  parse = ( ? )
+  holes       := array dyad [],
+  premises    := array dyad [],
+  pattern     := dyad ?,
+  replacement := dyad ?,
+  derivation  := ?,
+  world       := array @proof [],
+  share parse = ( ? )
 )`,
   },
 ];
@@ -885,32 +908,61 @@ export function visionPage(): string {
 
   <p>The bet is that the boundaries we take for granted (language versus compiler, code versus specification, program versus proof, source versus tooling) are accidents of how systems were historically built, not necessities. Collapse them and what is left is simpler at its core, more expressive in what it can state, and more honest about what it is.</p>
 
+  <h2>Why now: machines write the code</h2>
+  <p>The unification idea is old. A reflective, rewritable structure that carries its own types and proofs was a luxury while humans wrote code, which is part of why its closest ancestors stayed niche. When models write most code it becomes a requirement. A model editing text pushes a guess through a fragile toolchain and hopes. A model editing the Logic Graph rewrites a structure that already carries scopes, types, borrow states and proofs, and gets machine-checked feedback that the change is correct and safe before it runs. A non-human author most needs machine-checked correctness and least reliably supplies it.</p>
+  <p>The target is the union of Smalltalk and Lean on a systems base: rewrite as freely as Smalltalk, check as strictly as Lean, run as fast as Rust, in one structure. The claim is testable. As soon as the preview exists, a model given the graph and its checked feedback is measured against the same model on an established text language.</p>
+
   <h2>One structure, all the way down</h2>
   <p>The Logic Graph is the primary representation. It holds the program with every piece of semantic information attached (resolved scopes, inferred types, borrow states, propagated capabilities), the rules that governed its parsing, the standard library, and the compiler's own logic. Navigation is uniform: the same operations you run on your own code traverse any subgraph, including the compiler's.</p>
 
+  <h2>One cell, one evaluation rule</h2>
+  <p>Every node in the graph is a <strong>dyad</strong>: a pointer to a type and a pointer to a value, sixteen bytes. The type says how the value is read, and following type pointers always ends at <code>type</code>, whose type is itself. To evaluate a dyad, read its type: if it is a function, run it on the value; if it carries a <code>run</code> body, run that over the node's fields; otherwise the dyad is data. Operators, field access and <code>if</code> are all functions, and operands arrive unevaluated, so <code>if</code> runs only the branch it takes without being a special form.</p>
+  <p>A function is a type in that same shape, and so is an operator: <code>^ := type (…)</code> declares its operands as fields and fills its <code>parse_rank</code>, its associativity, a <code>parse</code> that builds the node from the cells around it, and a <code>run</code> that computes it. The parser is in the graph. There is no grammar file, and defining new syntax is writing a type.</p>
+
+  <h2>One pass</h2>
+  <p>Source becomes graph one token at a time, and each expression runs as soon as it is built. Lexing, parsing and running interleave in one pass, so compile-time evaluation is ordinary interpretation that happens earlier: a function can return a type, a declaration can take the type it computed, and an <code>if</code> whose condition is known drops the untaken branch before it is parsed. Comptime runs without I/O, so a build is a pure function of its source. There is no <code>main</code>: the top level is the program, and everything after <code>logos</code> on the command line is one line of Logos source. The binary has no subcommands and no compile flags; what compiles, links and builds is decided inside the source.</p>
+
   <h2>A tiny seed that self-hosts</h2>
-  <p>A small Rust bootstrap seed starts the system. Everything beyond, the full type system, the borrow checker, the rewriting engine, the optimization passes, the standard library, is written in Logos and processed by the seed until the system compiles itself. The seed stays small enough to audit by hand, and eventually to verify.</p>
+  <p>A small Rust bootstrap seed starts the system: a parser producing graph nodes, an evaluator for them, enough type machinery to check the kernel, a path to Cranelift. Everything beyond, the full type system, the borrow checker, the rewriting engine, the optimization passes, the standard library, is written in Logos and processed by the seed until the system compiles itself. The seed ships every primitive as <code>native</code>, callable machine code with no Logos source, and self-hosting replaces them with Logos one at a time; the set shrinks toward a floor that can never have source, such as allocation and syscalls. The seed stays small enough to audit by hand, and eventually to verify.</p>
 
   <h2>Interpret by default, compile on demand</h2>
-  <p>Logic Graph code is interpreted by default. Freeze a region and it can be JIT-compiled with Cranelift, staying fully reflectable through the Logic Graph it was compiled from. Because interpreting and compiling produce the same result, the choice is only ever about whether the speedup is worth the cost of compiling, never about what the code means.</p>
+  <p>Logic Graph code is interpreted by default. Write <code>compile f</code> and the function is JIT-compiled with Cranelift: the next call jumps to machine code, and the compiled function stays fully reflectable through the graph it came from. Any function can be compiled, mutable code included; a structural edit to compiled code drops the compiled form and falls back to interpretation. Because interpreting and compiling produce the same result, the choice is only ever about whether the speedup is worth the cost of compiling, never about what the code means.</p>
 
   <h2>Memory safety without a garbage collector</h2>
-  <p>Logos is a serious systems language. Memory is managed by a borrow checker with lexical lifetimes, explicit ownership, and moves, with no garbage collector and no runtime cost. One rule covers every case: among references that are live at the same time and overlap, there may be many readers or a single writer, never both. That same reader-writer rule is also what governs visibility, borrowing, and reflection, so they are one mechanism rather than three separate features.</p>
+  <p>Logos is a serious systems language. Memory is managed by a borrow checker with lexical lifetimes, explicit ownership, and moves, with no garbage collector and no runtime cost. One rule covers every case: among references that are live at the same time and overlap, there may be many readers or a single writer, never both. Borrows are tracked per place, a field, an element, a predicate-defined set of indices, so exclusive and shared borrows of disjoint parts coexist.</p>
+
+  <h2>Nothing is destroyed behind your back</h2>
+  <p>Locals live on the stack and go away with their scope. The heap is explicit: <code>alloc n of T v</code> returns an owning pointer and writes its own teardown, <code>defer free</code>, into the scope that owns it, as ordinary graph structure that reflection can read. Any constructor may do the same, and a type whose fields carry teardowns must write its own <code>drop</code>. <code>own x</code> moves ownership and ends the name on that line; <code>drop x</code> runs the destructor now. Both are decided at parse, so a use after a move is refused before anything runs, and there is no run-time drop flag. Because teardown is structure rather than hidden glue, "every alloc reaches a free on every path" is a fact the proof layer can prove over the graph.</p>
+
+  <h2>Gates: one rule for read and write</h2>
+  <p>Visibility, mutability, borrowing and reflection are one primitive: a read or write capability over a place, granted to a scope. A declared name is private and immutable unless its declaration says otherwise. <code>pub</code> widens reading, <code>mut</code> allows writing, <code>immut</code> takes it back, <code>lock</code> seals the set for good, and <code>share</code> marks one place stored once with a type or a function instead of once per value. Gates are fail-closed predicates: only an explicit <code>true</code> permits, and an unknown stays visible as an obligation a later proof can discharge. Access is decided lexically at elaboration, never looked up by running code, so being called by a holder grants nothing. There is no shadowing anywhere.</p>
+
+  <h2>Errors are values</h2>
+  <p>A fallible function returns <code>T!</code>, the value or an error, and its caller handles it with <code>match</code> or passes it on with <code>try</code>: one visible word per call site, no exceptions, no hidden propagation. Every error names a category declared in a scope, <code>error.not_found «…»</code>, so two libraries' categories never collide, and the error value carries one element per hop from the raise to the handler, each with its exact graph location and an optional value. A broken invariant is not an error but a fault: <code>abort «…»</code> cancels the task, its pending teardowns run, and the diagnostic is the reason.</p>
 
   <h2>One rewriting engine</h2>
   <p>Compiler optimization, computer algebra, and your own transformations are one operation: take a fragment, apply rewrite rules, and extract the form that minimizes a cost function, using equality saturation over an e-graph. The same engine serves the compiler's <code>x + 0 → x</code> and the mathematician's <code>sin²(θ) + cos²(θ) → 1</code>.</p>
 
-  <h2>Pay only for what you verify</h2>
-  <p>A systems programmer gets the base type system and a borrow checker. Beyond that the strata are opt-in: refinement types and pre/post-conditions, then termination measures, then full dependent types and proof terms checked by a small trusted kernel. Parts of a program can be verified while the rest stays lower.</p>
+  <h2>Proofs are rewrite rules</h2>
+  <p>A systems programmer gets the base type system and a borrow checker. Beyond that the strata are opt-in: refinement types and pre/post-conditions discharged by an SMT solver, then termination measures, then proofs, and parts of a program can be verified while the rest stays lower. A proof is written as mathematics is: <code>double := conjecture ( a + a == 2 * a ) where ( a:type is number )</code> states a boolean over holes, and calling it, <code>double(x + x)</code>, yields the other side of the fact. A derivation is a chain of relations, each step citing its rule, checked by a small trusted core that demands totality. Because a rule is its own proof, simplification provably preserves what it rewrites, and a verified computer algebra system comes out as a library. Every proof carries the set of axioms it rests on, so contradictory theories coexist in one graph and combine only where their union stays consistent.</p>
+
+  <h2>Capabilities are positions, not modes</h2>
+  <p>A section is a region of code defined by which names reach it, and the root section, the arche, is the scope a run starts in. The effect identities, files, network, clock, environment and <code>extern</code>, the door out of the graph, reach a section only as references deliberately handed down, so what a dependency can do is read off what it was given. Pure computation is ambient. An effectful program's invocation names its authority, <code>logos import ./app.logos, main(fs)</code>: the shell line is the grant, visible in history. Nothing asks "which mode am I in"; there is only what a scope can name.</p>
 
   <h2>Concurrency the compiler checks</h2>
   <p>Two shapes cover the common cases. <code>parallel for</code> distributes work over disjoint indices, a pattern the borrow checker recognizes and proves race-free; stackless <code>async</code> tasks handle I/O-bound concurrency on executor pools you control, pausing only at an explicit <code>.await</code> so suspension is always visible in the source. Reading shared graph structure across threads is an ordinary shared borrow, so the standard library and every definition can be read by many threads at once, while writes are exclusive and concurrent mutation of the same node is a compile-time error.</p>
+
+  <h2>Languages inside the language</h2>
+  <p>A grammar is data, so a language is a type: <code>language (…)</code> opens a closed section holding five names, and every other word it uses is declared, fetched from Logos through the door <code>logos (…)</code> or given a meaning of its own. A constructor's parse is unrestricted code, so surfaces as irregular as natural language are in scope: hosted text parses to data, ambiguity is represented rather than searched, and a sentence denotes a proposition the proof layer checks. Englogos, a regular human language whose grammar is Logic Graph constructors from the start, is the far-horizon direction on the same substrate.</p>
 
   <h2>The compiler is a library</h2>
   <p>Above the seed, the borrow checker, type checker, rewriting engine, optimization passes, and the lowerings from Logic Graph to native code are themselves Logos programs and themselves subgraphs. Adding an optimization is library work; targeting a new platform is implementing the backend interface and contributing rules. The grammar lives in the graph too, so a new operator, constructor, or macro is ordinary library work rather than a change to the language itself.</p>
 
   <h2>The tooling is Logos too</h2>
   <p>Because so much is already in the Logic Graph, the tooling is thinner and richer than its equivalents elsewhere. A Logos-written language server brings highlighting, errors, autocomplete, go-to-definition, and refactoring to any LSP editor; the documentation generator works from the same graph that holds types, signatures, examples, capabilities, and proofs; and a structural editor that operates directly on Logic Graphs is the long-term goal. The Smalltalk vision of a fully malleable system, applied to a modern systems language.</p>
+
+  <h2>What ships when</h2>
+  <p>Versions are named <code>vX.Y.Z</code>. What runs today is the bootstrap seed, a small Rust program that turns Logos source into the Logic Graph, interprets it, and compiles the functions you ask it to. <strong>v0.1.0</strong> is the preview and the first public milestone, built to show the language defining itself: a power operator written in ordinary Logos, used in the same file and compiled with <code>compile f</code>. Error values, <code>pub</code> and <code>mut</code> are in it; the borrow checker, the rewriting engine and verification come after. <strong>v1.0.0</strong> is the release and the stability promise. The standard library and the proof layer ship inside it, because a minimal core whose gaps are filled downstream is how languages fragment.</p>
 </article>`;
 }
 
@@ -1018,9 +1070,9 @@ export function downloadPage(releases: Release[]): string {
 // execution is stubbed, but the version picker and editor are live, so only the
 // load+evaluate harness in client/main.ts needs swapping in later.
 
-const PLAYGROUND_SAMPLE = `// Logos: declare, infer, reassign
-a := 32
-a = a + 1
+const PLAYGROUND_SAMPLE = `# declare, then write: mut lets = write the name
+mut a := 32,
+a = a + 1,
 a`;
 
 export function playgroundPage(releases: Release[]): string {

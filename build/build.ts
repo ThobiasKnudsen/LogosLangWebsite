@@ -438,9 +438,9 @@ export async function build(): Promise<void> {
   const homeDesc =
     "Logos is the maximally meta programming language: a self-hosting systems language in which the program, its types, its proofs, its grammar and its compiler are nodes in one graph, the Logic Graph, and the same checked operations that run code can read and redefine any of them.";
   const roadmapDesc =
-    "Where Logos actually stands: an honest map of what runs today versus the still-planned pieces of the vision, from the self-hosting seed to dependent-type proofs.";
+    "Where Logos actually stands: an honest map of what runs today versus the still-planned pieces of the vision, from the bootstrap seed to proofs as rewrite rules.";
   const examplesDesc =
-    "Logos defining itself, one definition at a time: the dyad, the self-classifying logos, type, the scope opener and an ordinary operator built out of all of it, each with a line of prose and lifted from the language's own source.";
+    "Logos defining itself, one definition at a time: the dyad, the ground type that classifies itself, the scope and its opener, fn, the operator ^ built out of all of it, and proof, each with a line of prose and lifted from the language's own source.";
   const playgroundDesc =
     "An in-browser Logos playground is on the way: evaluate expressions and watch the same engine the compiler uses rewrite them live.";
   const downloadDesc =

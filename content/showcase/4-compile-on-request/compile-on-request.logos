@@ -9,5 +9,5 @@ sum_to := fn (n := i64 ?) -> i64 (
     ),
     s
 ),
-sum_to.compile(),
+compile sum_to,
 print «{sum_to(1000000)}»

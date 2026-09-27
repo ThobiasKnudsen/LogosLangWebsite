@@ -19,7 +19,7 @@
 // The Logos listings are taken from the LogosLang repo's own examples/ directory,
 // docs (docs/v0.0.4) and language sketch, which is what the bootstrap seed runs
 // today: functions, loops, `-> type` functions resolved at parse time, the drop
-// model (alloc, own, `@`), `.compile()`, the type read (`x:type`, ruled 23
+// model (alloc, own, `@`), `compile f`, the type read (`x:type`, ruled 23
 // September 2026), the scope spine (`here`, `caller`, `x:scope`), and conjectures with proofs (language_sketch.logos p1, p3, p4;
 // DESIGN.md's ruling that a proof applies as a rewrite). `print «…»` is the output
 // word (DESIGN.md, 23 September 2026), `{…}` in the string interpolating a value;

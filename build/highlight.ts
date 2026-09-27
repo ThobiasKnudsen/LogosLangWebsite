@@ -9,12 +9,13 @@
 //   tok-str      «…», with {…} inside it an interpolation: the braces as
 //                operators and the expression coloured as code
 //   tok-num      a number literal
-//   tok-kw       the structural words: fn, type, conjecture, proof, instance,
+//   tok-kw       the structural words: fn, type, conjecture, proof, language,
 //                the control words, the gate words, the boolean words
 //   tok-type     the ground types (i32, f64, dyad, number, array, …)
 //   tok-fn       an identity being called (`double(…)`, a rule `twice(…)`, a
-//                method `.compile()`) and the builtins that act as one
-//                (print, alloc, own, drop, free, defer, take, eval, error)
+//                member `.at(…)`) and the builtins that act as one on what
+//                follows them (print, alloc, own, drop, free, defer, compile,
+//                try, import, lex, error, abort)
 //   tok-def      an identity at its definition: left of `:=`, left of a spaced
 //                `:` (declare), or a loop variable after `for`
 //   tok-field    an identity read off another with `.` (`.type`, `.value`)
@@ -30,12 +31,14 @@ import { escapeHtml } from "./templates.ts";
 const KEYWORDS = new Set([
   "fn",
   "type",
-  "instance",
+  "language",
   "conjecture",
   "proof",
   "scope",
+  "pub",
   "mut",
   "immut",
+  "lock",
   "share",
   "if",
   "else",
@@ -43,19 +46,22 @@ const KEYWORDS = new Set([
   "while",
   "in",
   "where",
+  "return",
+  "match",
   "and",
   "or",
   "xor",
   "not",
   "is",
   "break",
-  "self",
   "undefined",
   "true",
   "false",
 ]);
 // Identities that act as functions on what follows them: output, the drop model
-// (docs/reference/memory), evaluation and errors.
+// (DESIGN.md ›Memory and concurrency‹), compilation (`compile f`, 27 September
+// 2026), the quote readers (`lex «…»`, `regex «…»`), loading, evaluation and the
+// error words (`error.X «…»` raises a value, `abort «…»` is the fault).
 const BUILTINS = new Set([
   "print",
   "alloc",
@@ -63,18 +69,23 @@ const BUILTINS = new Set([
   "drop",
   "free",
   "defer",
-  "take",
+  "compile",
+  "try",
+  "import",
+  "lex",
+  "regex",
   "eval",
   "error",
+  "abort",
 ]);
 // `@dyad` / `@void` tokenize as the `@` operator plus a bare identifier, so the
 // pointer type names appear here without their prefix. `left` and `right` are the
 // two associativity identities (ruled 9 September 2026), ground identities too.
 const TYPES =
-  /^(?:[iu](?:8|16|32|64)|f32|f64|string|bool|void!?|dyad|logos|lex|exec|parsing_tape|callable|number|generic_number|array|left|right)$/;
+  /^(?:[iu](?:8|16|32|64)|f32|f64|string|bool|void!?|dyad|logos|exec|parsing_tape|callable|number|rational_number|generic_number|array|square_brackets|binding|left|right)$/;
 
 const TOKEN =
-  /«[^»]*»|\d[\d_]*(?:\.\d+)?|[A-Za-z_][A-Za-z0-9_]*!?|:=|->|==|!=|<=|>=|\.\.|[:=+\-*/%^<>.&@()[\]{},?!]/g;
+  /«[^»]*»|\d[\d_]*(?:\.\d+)?|[A-Za-z_][A-Za-z0-9_]*!?|:=|->|==|!=|<=|>=|\.\.|[:=+\-*/%^<>.&@()[\]{},?!⊆≡]/g;
 
 const span = (cls: string, html: string): string =>
   `<span class="${cls}">${html}</span>`;
