@@ -68,7 +68,6 @@ export function escapeHtml(s: string): string {
 // '/playground/' } when real in-browser execution lands.
 const NAV = [
 	{ key: 'vision', label: 'Vision', href: '/vision/' },
-	{ key: 'roadmap', label: 'Roadmap', href: '/roadmap/' },
 	{ key: 'examples', label: 'Examples', href: '/examples/' },
 	{ key: 'docs', label: 'Docs', href: '/docs/' },
 	{ key: 'about', label: 'About', href: '/about/' },

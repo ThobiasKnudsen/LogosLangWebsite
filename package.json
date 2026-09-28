@@ -8,7 +8,6 @@
     "build": "tsx build/build.ts",
     "test:docs-model": "tsx build/version.test.ts",
     "test:releases": "tsx build/releases.test.ts",
-    "test:roadmap": "tsx build/roadmap.test.ts",
     "db:create": "wrangler d1 create logos-analytics",
     "db:schema": "wrangler d1 execute logos-analytics --file db/schema.sql --remote",
     "db:schema:local": "wrangler d1 execute logos-analytics --file db/schema.sql --local"

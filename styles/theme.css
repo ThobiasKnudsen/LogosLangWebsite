@@ -47,8 +47,8 @@
        40% of the way from --bg toward white. */
     --margin-bg: #fefbee;
     /* The cream, darkened back toward the raw gruvbox cream (#fbf1c7): the
-       raised-surface tint for the dock, buttons, banner, roadmap nodes, and docs
-       controls. --surface-frost is the same tone at 85% for the frosted panels
+       raised-surface tint for the dock, buttons, banner, and docs controls.
+       --surface-frost is the same tone at 85% for the frosted panels
        that float over scrolling text (dock, docs logo, snapnav, consent). */
     --surface: #faf4e0;
     --surface-frost: rgba(251, 248, 227, 0.75);
@@ -82,18 +82,11 @@
     --scroll-hint: rgba(22, 22, 15, 0.16);
     --ok-bg: #e7f3ea;
     --ok-text: #2b6b34;
-    --metro-main: var(--accent);
-    --line-parse: #2a82bd;
-    --line-exec: #c0392b;
-    --line-compile: #c96a1f;
-    --line-memory: #2c8f52;
-    --line-proofs: #6f5de0;
-    --line-interop: #c8466f;
-    --line-tooling: #1a9088;
+    --no-text: #c0392b;
     /* Code tokens for the Logos listings (build/highlight.ts; see .listing and
        the showcase): GitHub's light palette, the one Shiki paints the other
        languages in, so Logos beside them reads as one scheme (Thobias, 22
-       September 2026; the roadmap line hues before that). */
+       September 2026). */
     --tok-kw: #cf222e;
     --tok-fn: #8250df;
     --tok-type: #0550ae;
@@ -137,14 +130,7 @@
     --scroll-hint: rgba(0, 0, 0, 0.55);
     --ok-bg: #16291a;
     --ok-text: #8ce0a0;
-    --metro-main: var(--accent);
-    --line-parse: #5cb0ec;
-    --line-exec: #e2685a;
-    --line-compile: #e8964a;
-    --line-memory: #54c47e;
-    --line-proofs: #9d8dff;
-    --line-interop: #ec7ba0;
-    --line-tooling: #3fc3b8;
+    --no-text: #e2685a;
     /* GitHub's dark palette, as Shiki's github-dark paints the other panes. */
     --tok-kw: #ff7b72;
     --tok-fn: #d2a8ff;
@@ -1042,7 +1028,7 @@ a {
     color: var(--warn-text);
 }
 .compare__legend .is-no > span {
-    color: var(--line-exec);
+    color: var(--no-text);
 }
 /* The hide button in each language header: a plain × after the name, in the
    header's muted color, darkening on hover. */
@@ -1257,7 +1243,7 @@ a {
     color: var(--warn-text);
 }
 .compare__cell.is-no {
-    color: var(--line-exec);
+    color: var(--no-text);
 }
 /* A note's number in a cell: a small raised button in the accent, and the whole
    of what the reader sees of the note until it is clicked. */
@@ -1484,266 +1470,6 @@ a {
     margin: 1.25rem 0 0;
 }
 
-/* ── Roadmap ──────────────────────────────────────────────────────────────── */
-.roadmap {
-    max-width: 60rem;
-    margin-inline: auto;
-    padding: clamp(2rem, 6vw, 4rem) 1.5rem 5rem;
-}
-.roadmap__title {
-    font-family: var(--serif);
-    font-size: clamp(2rem, 5vw, 3rem);
-    margin: 0;
-    color: var(--heading);
-}
-.roadmap__lead {
-    font-size: 1.2rem;
-    line-height: 1.6;
-    color: var(--muted);
-    margin: 1rem 0 2.75rem;
-    max-width: 52ch;
-}
-
-/* ── Roadmap milestones + dependency graph ──────────────────────────────────
-   The roadmap groups the project's GitHub issues into milestone bands (built by
-   bandedMap). Each milestone is a horizontal finish line; its issues sit above it
-   with arrows from a blocker down to what it unblocks, and later milestones sit
-   below. Status colours: done = green, ready = accent, blocked = amber. */
-.chip {
-    display: inline-block;
-    font-size: 0.68rem;
-    font-weight: 600;
-    letter-spacing: 0.03em;
-    text-transform: uppercase;
-    padding: 0.26rem 0.58rem;
-    line-height: 1.2;
-}
-.chip--done {
-    background: var(--ok-bg);
-    color: var(--ok-text);
-}
-.chip--ready {
-    background: var(--code-bg);
-    color: var(--accent);
-    box-shadow: inset 0 0 0 1px var(--accent);
-}
-.chip--blocked {
-    background: var(--warn-bg);
-    color: var(--warn-text);
-}
-
-.depmap-legend {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1.1rem;
-    list-style: none;
-    margin: 0 0 1.75rem;
-    padding: 0;
-    font-size: 0.82rem;
-    color: var(--muted);
-}
-.depmap-legend li {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-}
-.depmap-legend li::before {
-    content: "";
-    width: 0.7rem;
-    height: 0.7rem;
-}
-.depmap-legend .is-done::before {
-    background: var(--ok-text);
-}
-.depmap-legend .is-ready::before {
-    background: var(--accent);
-}
-.depmap-legend .is-blocked::before {
-    background: var(--warn-border);
-}
-
-/* The dependency map: HTML node cards positioned over an SVG edge layer (the build
-   computes the coordinates, see bandedMap in build/pages.ts). Cards are opaque, so an
-   edge passing nearby never shows through; scrolls horizontally when wider than the
-   page. */
-.depmap-scroll {
-    overflow-x: auto;
-    /* Never a vertical scrollbar: the box grows with the graph, so the only vertical
-	   overflow is the sliver the horizontal scrollbar itself eats, and letting that
-	   spawn a second bar (classic-scrollbar platforms) helps no one. */
-    overflow-y: clip;
-    /* No visible horizontal scrollbar either (`scrollbar-color` inherits, so the
-	   page's auto-hiding thumb would light this one up on every page scroll). The
-	   graph still pans by wheel, trackpad, and touch, like the wisdom frieze. */
-    scrollbar-width: none; /* Firefox */
-    /* As wide as the article, inside the page column's margin lines (it spanned
-       the whole window until the margins came, 21 September 2026). `safe center`
-       centres the graph when it fits and left-aligns it (so nothing is clipped)
-       when it is wider than the box and needs to scroll. */
-    padding-bottom: 0.5rem;
-    display: flex;
-    justify-content: safe center;
-}
-.depmap-scroll::-webkit-scrollbar {
-    display: none; /* WebKit/Blink */
-}
-.depmap {
-    position: relative;
-    flex: none;
-}
-.depmap__edges {
-    position: absolute;
-    inset: 0;
-    overflow: visible;
-    pointer-events: none;
-}
-.depedge {
-    fill: none;
-    stroke: var(--hairline);
-    stroke-width: 2;
-}
-#dep-arrow path {
-    fill: var(--muted);
-}
-.depnode {
-    position: absolute;
-    box-sizing: border-box;
-    display: block;
-    /* The inline width is the build-time layout width; never let a card be wider than
-	   the window, so on a phone it caps to the viewport and wraps a little taller. */
-    max-width: calc(100vw - 3rem);
-    padding: 0.55rem 0.75rem;
-    border: 1px solid var(--hairline);
-    border-left: 3px solid var(--hairline);
-    background: var(
-        --surface
-    ); /* opaque: edges passing near a card must not show through */
-    overflow: visible;
-    text-decoration: none;
-    color: inherit;
-    transition:
-        border-color 0.15s ease,
-        box-shadow 0.15s ease;
-}
-.depnode:hover {
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
-}
-.depnode__num {
-    font-family: var(--mono, monospace);
-    font-size: 0.72rem;
-    color: var(--muted);
-    flex-shrink: 0;
-}
-.depnode__title {
-    font-family: var(--sans);
-    font-size: 0.95rem;
-    font-weight: 600;
-    line-height: 1.25;
-    color: var(--heading);
-    margin: 0.1rem 0 0.3rem;
-}
-.depnode__desc {
-    margin: 0;
-    font-size: 0.82rem;
-    line-height: 1.4;
-    color: var(--muted);
-}
-/* Top row of a node: the issue number, then its GitHub label chips to the right (all
-   labels except `roadmap`; colours come from each label's own GitHub colour, inline).
-   Wraps to a new row when the tags do not fit. */
-.depnode__top {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.28rem 0.4rem;
-}
-.deplabel {
-    font-size: 0.66rem;
-    font-weight: 600;
-    line-height: 1.2;
-    padding: 0.12rem 0.44rem;
-    white-space: nowrap;
-}
-.depnode--done {
-    border-left-color: var(--ok-text);
-}
-.depnode--done:hover {
-    border-color: var(--ok-text);
-}
-.depnode--ready {
-    border-left-color: var(--accent);
-}
-.depnode--ready:hover {
-    border-color: var(--accent);
-}
-.depnode--blocked {
-    border-left-color: var(--warn-border);
-}
-.depnode--blocked:hover {
-    border-color: var(--warn-border);
-}
-
-/* Milestone "finish line": a full-width dashed rule with a label pill on the left.
-   Positioned absolutely (like the nodes) at the band boundary; the issues of the
-   milestone sit above it, later milestones below. */
-.msline {
-    position: absolute;
-    box-sizing: border-box;
-    display: flex;
-    align-items: center;
-    gap: 0.85rem;
-}
-.msline__line {
-    flex: 1;
-    height: 0;
-    border-top: 2px dashed var(--accent);
-    opacity: 0.7;
-}
-.msline__label {
-    display: inline-flex;
-    align-items: baseline;
-    gap: 0.5rem;
-    padding: 0.3rem 0.7rem;
-    background: var(--code-bg);
-    box-shadow: inset 0 0 0 1px var(--accent);
-    text-decoration: none;
-    white-space: nowrap;
-}
-.msline__flag {
-    font-size: 0.62rem;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--muted);
-}
-.msline__title {
-    font-family: var(--serif);
-    font-size: 1rem;
-    font-weight: 600;
-    color: var(--heading);
-}
-.msline__meta {
-    font-size: 0.75rem;
-    color: var(--muted);
-}
-.msline--closed .msline__line {
-    border-top-color: var(--ok-text);
-}
-.msline--closed .msline__label {
-    box-shadow: inset 0 0 0 1px var(--ok-text);
-}
-/* Portrait windows (client re-render, build/roadmap-render.ts): no room for a label
-   gutter beside the graph, so the pill stacks above its rule instead. */
-.msline--stack {
-    flex-direction: column;
-    align-items: flex-start;
-    justify-content: flex-end;
-    gap: 0.4rem;
-}
-.msline--stack .msline__line {
-    flex: none;
-    width: 100%;
-}
 /* ── Footer ───────────────────────────────────────────────────────────────── */
 .site-footer {
     display: flex;

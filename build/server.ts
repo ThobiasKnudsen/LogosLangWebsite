@@ -85,7 +85,7 @@ const STUB_SESSIONS: StubSession[] = [
 		lat: 52.52, lon: 13.4, device: 'Mobile', browser: 'Safari', os: 'iOS', ref: null, agoMin: 40,
 		pages: [
 			{ path: '/', title: 'Λόγος', dwell: 15, scroll: 50 },
-			{ path: '/roadmap/', title: 'Roadmap', dwell: 61, scroll: 75 },
+			{ path: '/vision/', title: 'Vision', dwell: 61, scroll: 75 },
 		],
 	},
 	{
@@ -123,7 +123,7 @@ const STUB_SESSIONS: StubSession[] = [
 		pages: [
 			{ path: '/', title: 'Λόγος', dwell: 0, scroll: 0 },
 			{ path: '/vision/', title: 'Vision', dwell: 0, scroll: 0 },
-			{ path: '/roadmap/', title: 'Roadmap', dwell: 0, scroll: 0 },
+			{ path: '/examples/', title: 'Examples', dwell: 0, scroll: 0 },
 			{ path: '/download/', title: 'Download', dwell: 0, scroll: 0 },
 		],
 	},
@@ -194,7 +194,7 @@ interface StubClient {
 const STUB_CLIENTS: StubClient[] = [
 	{ bot: true, bot_name: 'ClaudeBot', city: 'Ashburn', region: 'Virginia', country: 'US', lat: 39.04, lon: -77.49, asorg: 'Amazon', device: 'Desktop', browser: 'Other', os: 'Other', hits: [{ agoMin: 5, path: '/', status: 200 }, { agoMin: 6, path: '/docs/', status: 200 }] },
 	{ bot: true, bot_name: 'Claude-User', city: 'London', region: 'England', country: 'GB', lat: 51.51, lon: -0.13, asorg: 'Cloudflare', device: 'Desktop', browser: 'Other', os: 'Other', hits: [{ agoMin: 8, path: '/', status: 200 }] },
-	{ bot: true, bot_name: 'GPTBot', city: 'Des Moines', region: 'Iowa', country: 'US', lat: 41.6, lon: -93.6, asorg: 'Microsoft', device: 'Desktop', browser: 'Other', os: 'Other', hits: [{ agoMin: 22, path: '/vision/', status: 200 }, { agoMin: 24, path: '/roadmap/', status: 200 }, { agoMin: 400, path: '/docs/', status: 200 }] },
+	{ bot: true, bot_name: 'GPTBot', city: 'Des Moines', region: 'Iowa', country: 'US', lat: 41.6, lon: -93.6, asorg: 'Microsoft', device: 'Desktop', browser: 'Other', os: 'Other', hits: [{ agoMin: 22, path: '/vision/', status: 200 }, { agoMin: 24, path: '/examples/', status: 200 }, { agoMin: 400, path: '/docs/', status: 200 }] },
 	{ bot: true, bot_name: 'Googlebot', city: 'Mountain View', region: 'California', country: 'US', lat: 37.42, lon: -122.08, asorg: 'Google', device: 'Desktop', browser: 'Other', os: 'Other', hits: [{ agoMin: 48, path: '/download/', status: 200 }] },
 	{ bot: true, bot_name: 'PerplexityBot', city: 'San Francisco', region: 'California', country: 'US', lat: 37.77, lon: -122.42, asorg: 'Cloudflare', device: 'Desktop', browser: 'Other', os: 'Other', hits: [{ agoMin: 70, path: '/about/', status: 200 }] },
 	{ bot: true, bot_name: 'bingbot', city: 'Dublin', region: 'Leinster', country: 'IE', lat: 53.35, lon: -6.26, asorg: 'Microsoft', device: 'Desktop', browser: 'Other', os: 'Other', hits: [{ agoMin: 130, path: '/nope/', status: 404 }] },
@@ -650,15 +650,7 @@ async function main(): Promise<void> {
 	const docsDir = localDocsDir();
 	const watcher = chokidar.watch(
 		['content', 'styles', 'client', 'build', 'public', ...(docsDir ? [docsDir] : [])],
-		{
-			cwd: ROOT,
-			ignoreInitial: true,
-			// The build itself writes content/roadmap.snapshot.json after a successful
-			// roadmap fetch. Watching it would make every rebuild schedule the next one
-			// (an endless rebuild loop), and the build that wrote it has already rendered
-			// that data, so there is never a reason to rebuild on its change.
-			ignored: (p) => path.basename(p) === 'roadmap.snapshot.json',
-		},
+		{ cwd: ROOT, ignoreInitial: true },
 	);
 	let timer: NodeJS.Timeout | null = null;
 	watcher.on('all', () => {

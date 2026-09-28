@@ -16,8 +16,6 @@ import {
   type Os,
   type Asset,
 } from "./releases.ts";
-import { type Roadmap } from "./roadmap.ts";
-import { depmapHtml, DEFAULT_ASPECT } from "./roadmap-render.ts";
 
 const GITHUB = "https://github.com/ThobiasKnudsen/LogosLang";
 
@@ -273,7 +271,7 @@ export function examplesPage(): string {
   ).join("\n");
   return `<section class="examples">
   <h1 class="examples__title">Examples</h1>
-  <p class="examples__lead">The language defining itself, one definition at a time, in the order that dependency demands: the dyad, the ground <code>type</code>, <code>scope</code>, the scope opener <code>(</code>, <code>fn</code>, the operator <code>^</code> built out of all of it, and <code>proof</code>. The definitions come from the language's own <a href="${GITHUB}" target="_blank" rel="noopener noreferrer">source files</a> with their comments stripped, in the spellings the design rules today. <code>type</code> and <code>^</code> run in the seed; the others are sketches the seed still realises in Rust. The <a href="/roadmap/">roadmap</a> says where things stand.</p>
+  <p class="examples__lead">The language defining itself, one definition at a time, in the order that dependency demands: the dyad, the ground <code>type</code>, <code>scope</code>, the scope opener <code>(</code>, <code>fn</code>, the operator <code>^</code> built out of all of it, and <code>proof</code>. The definitions come from the language's own <a href="${GITHUB}" target="_blank" rel="noopener noreferrer">source files</a> with their comments stripped, in the spellings the design rules today. <code>type</code> and <code>^</code> run in the seed; the others are sketches the seed still realises in Rust.</p>
 ${items}
 </section>`;
 }
@@ -969,7 +967,7 @@ export function aboutPage(): string {
   <h2 class="about__subhead">The evidence it can be built</h2>
   <p>A project this size stands or falls on whether its builder finishes hard things, so here is the record. <a href="https://github.com/ThobiasKnudsen/LogosMath" target="_blank" rel="noopener noreferrer">LogosMath</a> is where it began: a working math application with its own small language, built to go further than symbolic tools like Wolfram Alpha and Matlab. <a href="https://github.com/ThobiasKnudsen/Memra" target="_blank" rel="noopener noreferrer">Memra</a> is the agent memory system from the second road; in my benchmarks it came close to the best available. Military service produced a high-resolution offline <a href="https://github.com/ThobiasKnudsen/Map" target="_blank" rel="noopener noreferrer">map</a> in C++, and a recent <a href="https://github.com/ThobiasKnudsen/verztable" target="_blank" rel="noopener noreferrer">Zig hash table</a> runs almost as fast as the fastest published.</p>
   <p>At NTNU, in the Algorithms and Data Structures course (one of the university's hardest, around 900 students), my solutions were the fastest in most of the weekly challenges through the autumn of 2025. And this year, my teammate and I placed first in Norway's first national championship in AI, out of more than 1,100 teams; the <a href="https://github.com/JardarIversen/ainm-2026" target="_blank" rel="noopener noreferrer">solution</a> is on GitHub.</p>
-  <p>Logos itself is the turn from the math application to the language underneath it: one language for everything, built on a single commitment, radical unification. The program, its types, its proofs, the compiler, and the grammar itself all live in one structure. It is a serious systems language, with a borrow checker, native compilation, and no garbage collector, reaching also for machine-checked proofs and self-reflection. It does not run yet; a small Rust bootstrap seed is all there is so far, and the <a href="/roadmap/">roadmap</a> tracks it honestly.</p>
+  <p>Logos itself is the turn from the math application to the language underneath it: one language for everything, built on a single commitment, radical unification. The program, its types, its proofs, the compiler, and the grammar itself all live in one structure. It is a serious systems language, with a borrow checker, native compilation, and no garbage collector, reaching also for machine-checked proofs and self-reflection. It does not run yet; a small Rust bootstrap seed is all there is so far.</p>
   <p class="about__coda">Sometimes I suspect that a complete meta-language, where each word is defined using all other words, is the closest one can get to reflecting on how God works.</p>
   <p class="about__cta">If it interests you, you are welcome to follow along on GitHub: star the <a href="https://github.com/ThobiasKnudsen/LogosLang" target="_blank" rel="noopener noreferrer">seed</a>, watch the language take shape, and word of the first build will come there.</p>
 </article>`;
@@ -1016,7 +1014,6 @@ export function downloadPage(releases: Release[]): string {
   <p class="download__notify-note">Emails for the most important builds only; you will not be spammed. Removal any time; see <a href="/privacy/">Privacy</a>.</p>
   <div class="download__empty-actions">
     <a class="logos-btn logos-btn--ghost" href="${GITHUB}/releases" target="_blank" rel="noopener noreferrer">Watch releases on GitHub</a>
-    <a class="logos-btn logos-btn--ghost" href="/roadmap/">See the roadmap</a>
   </div>
 </section>`;
   }
@@ -1064,7 +1061,6 @@ export function playgroundPage(releases: Release[]): string {
   <h1 class="playground__title">Playground</h1>
   <p class="playground__lead">An in-browser Logos playground is on the way. It runs the real Logos runtime compiled to WebAssembly, right here with no install, and arrives with the first release that ships a WASM build.</p>
   <div class="playground__empty-actions">
-    <a class="logos-btn logos-btn--ghost" href="/roadmap/">See the roadmap</a>
     <a class="logos-btn logos-btn--ghost" href="/download/">Downloads</a>
   </div>
 </section>`;
@@ -1148,29 +1144,5 @@ export function privacyPage(): string {
 
   <h2>Changes</h2>
   <p>We may update this page as the site evolves; material changes will be reflected here.</p>
-</article>`;
-}
-
-// The map itself renders in build/roadmap-render.ts, shared with the client: the
-// static page is baked at DEFAULT_ASPECT (a landscape window) so it works with JS
-// off, and the raw roadmap rides along in a JSON island so client/main.ts can
-// re-render the same layout at the visitor's real window ratio.
-export function roadmapPage(roadmap: Roadmap): string {
-  const map = depmapHtml(roadmap, DEFAULT_ASPECT);
-  if (!map) {
-    return `<article class="roadmap">
-  <h1 class="roadmap__title">Roadmap</h1>
-  <p class="roadmap__lead">The roadmap is generated from the project's GitHub milestones and issues, and will appear here once they're published.</p>
-</article>`;
-  }
-  const lead = `The roadmap is generated directly from the <a href="${GITHUB}" target="_blank" rel="noopener noreferrer">LogosLang GitHub repository</a>: every node below is an issue labelled <code>roadmap</code>, and every dashed line is a milestone. A milestone is a finish line: the issues above it are the work that gets Logos there, and everything below it comes later. Arrows point from a piece of work down to the work it unblocks.`;
-  const legend = `<ul class="depmap-legend"><li class="is-done">Done</li><li class="is-ready">Ready</li><li class="is-blocked">Blocked</li></ul>`;
-  const baked = JSON.stringify(roadmap).replace(/</g, "\\u003c");
-  return `<article class="roadmap">
-  <h1 class="roadmap__title">Roadmap</h1>
-  <p class="roadmap__lead">${lead}</p>
-  ${legend}
-  ${map}
-  <script type="application/json" id="logos-roadmap">${baked}</script>
 </article>`;
 }

@@ -21,7 +21,6 @@ import {
   examplesPage,
   homePage,
   visionPage,
-  roadmapPage,
   downloadPage,
   playgroundPage,
   privacyPage,
@@ -31,7 +30,6 @@ import {
 import { renderDocsMain } from "./docs-render.ts";
 import { showcaseHtml } from "./showcase.ts";
 import { fetchReleases } from "./fetch-releases.ts";
-import { fetchRoadmap } from "./fetch-roadmap.ts";
 
 export const ROOT = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -484,8 +482,6 @@ export async function build(): Promise<void> {
     "Logos is a systems programming language whose program, types, proofs, grammar and compiler are one graph the language itself reads, checks and rewrites.";
   const visionDesc =
     "What Logos is and why: a systems language whose program, types, proofs, grammar and compiler are one graph, built for a world where machines write the code.";
-  const roadmapDesc =
-    "Where Logos actually stands: an honest map of what runs today versus the still-planned pieces of the vision, from the bootstrap seed to proofs as rewrite rules.";
   const examplesDesc =
     "Logos defining itself, one definition at a time: the dyad, the ground type that classifies itself, the scope and its opener, fn, the operator ^ built out of all of it, and proof, each with a line of prose and lifted from the language's own source.";
   const playgroundDesc =
@@ -498,10 +494,6 @@ export async function build(): Promise<void> {
   // Released builds, baked into the download page. Never fails the build (see
   // fetch-releases.ts); a release fires a deploy hook that rebuilds this page.
   const releases = await fetchReleases();
-  // Roadmap stations, generated from LogosLang's `roadmap`-labelled GitHub issues.
-  // Falls back to content/roadmap.snapshot.json if GitHub is unreachable, so the
-  // page never blanks (see fetch-roadmap.ts).
-  const roadmap = await fetchRoadmap();
   // The homepage showcase: every example in every language, highlighted once.
   const showcase = await showcaseHtml();
 
@@ -559,16 +551,6 @@ export async function build(): Promise<void> {
         isPartOf: { "@type": "WebSite", name: "Logos", url: SITE_URL },
       },
       main: visionPage(),
-    }),
-  );
-  await writePage(
-    "roadmap/index.html",
-    page({
-      title: "Roadmap",
-      active: "roadmap",
-      path: "/roadmap/",
-      description: roadmapDesc,
-      main: roadmapPage(roadmap),
     }),
   );
   await writePage(
@@ -665,7 +647,6 @@ export async function build(): Promise<void> {
   const marketing = [
     { path: "/", title: homeTitle, desc: homeDesc },
     { path: "/vision/", title: "Vision", desc: visionDesc },
-    { path: "/roadmap/", title: "Roadmap", desc: roadmapDesc },
     { path: "/examples/", title: "Examples", desc: examplesDesc },
     { path: "/playground/", title: "Playground", desc: playgroundDesc },
     { path: "/download/", title: "Download", desc: downloadDesc },

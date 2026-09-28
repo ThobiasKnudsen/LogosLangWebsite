@@ -17,8 +17,6 @@ import {
 	type Os,
 	type Asset,
 } from '../build/releases.ts';
-import { depmapHtml, DEFAULT_ASPECT } from '../build/roadmap-render.ts';
-import type { Roadmap } from '../build/roadmap.ts';
 
 initNavMenu();
 initDockHide();
@@ -31,50 +29,6 @@ initCompare();
 if (document.getElementById('docs-app')) initDocs();
 if (document.getElementById('dl-grid')) initDownload();
 if (document.getElementById('pg-run')) initPlayground();
-if (document.getElementById('logos-roadmap')) initRoadmap();
-
-// ── Roadmap: fit the dependency map's cards to the window ────────────────────
-// The build bakes the map at DEFAULT_ASPECT (a typical landscape window), which is
-// what a JS-off visitor keeps. With JS on, re-run the same layout (shared module
-// build/roadmap-render.ts, data from the #logos-roadmap JSON island) so each card
-// targets the visitor's real width:height ratio: roughly 16:9 on a desktop, tall
-// cards on a portrait phone. Re-renders on resize/rotation, debounced, and only
-// when the ratio actually moved enough to change the layout visibly.
-function initRoadmap(): void {
-	const island = document.getElementById('logos-roadmap');
-	if (!island || !document.querySelector('.depmap-scroll')) return;
-	let roadmap: Roadmap;
-	try {
-		roadmap = JSON.parse(island.textContent || '') as Roadmap;
-	} catch {
-		return; // baked static map stays in place
-	}
-
-	const windowAspect = (): number =>
-		Math.min(2.6, Math.max(0.4, window.innerWidth / window.innerHeight));
-
-	let rendered = DEFAULT_ASPECT; // what the server baked
-	const render = (): void => {
-		const aspect = windowAspect();
-		if (Math.abs(aspect - rendered) < 0.05) return;
-		const scroll = document.querySelector<HTMLElement>('.depmap-scroll');
-		const html = depmapHtml(roadmap, aspect);
-		if (!scroll || !html) return;
-		scroll.outerHTML = html; // depmapHtml includes the .depmap-scroll wrapper
-		rendered = aspect;
-		// When the map is wider than the window (phones), start centered on the
-		// graph's spine rather than on its left edge.
-		const next = document.querySelector<HTMLElement>('.depmap-scroll');
-		if (next) next.scrollLeft = (next.scrollWidth - next.clientWidth) / 2;
-	};
-
-	render();
-	let timer = 0;
-	window.addEventListener('resize', () => {
-		clearTimeout(timer);
-		timer = window.setTimeout(render, 150);
-	});
-}
 
 // ── Nav dropdown (hamburger) ──────────────────────────────────────────────────
 // On narrow screens the inline nav is hidden and this button reveals the same
@@ -136,7 +90,7 @@ function initDockHide(): void {
 // from the top. A page taller than that stack would leave the rest of the margin
 // empty, so the sequence is repeated, in order, until the column overflows the
 // margin's height; the overflow is clipped. Re-done whenever the page's height
-// changes (fonts arriving, the roadmap re-rendering, a matrix column toggled),
+// changes (fonts arriving, a matrix column toggled),
 // which the body's ResizeObserver reports. The reveal itself is CSS (theme.css).
 function initMarginalia(): void {
 	const sides = [...document.querySelectorAll<HTMLElement>('.margin')];

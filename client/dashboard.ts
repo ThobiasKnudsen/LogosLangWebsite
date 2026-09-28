@@ -319,7 +319,7 @@ function injectStyles(): void {
 	.adm-tl li::before { content: ""; position: absolute; left: -5px; top: 0.6rem; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
 	.adm-tl time { display: block; font-size: 0.72rem; color: var(--muted); }
 	.adm-tag--ok { color: var(--ok-text, #2b6b34); border-color: var(--ok-text, #2b6b34); }
-	.adm-tag--bad { color: var(--line-exec, #c0392b); border-color: var(--line-exec, #c0392b); }
+	.adm-tag--bad { color: var(--no-text, #c0392b); border-color: var(--no-text, #c0392b); }
 	tr.is-denied td { background: rgba(192, 57, 43, 0.07); }
 	.adm-subs-actions { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.9rem; flex-wrap: wrap; }
 	.adm-subcount { font-size: 0.85rem; color: var(--muted); margin-right: auto; }

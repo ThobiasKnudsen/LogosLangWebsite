@@ -1,22 +1,18 @@
 name: rebuild
 
 # The site is built from data that lives in the LogosLang repo (docs under docs/, and
-# the roadmap from `roadmap`-labelled issues), so a change there must trigger a rebuild
-# here. Every trigger just POSTs the Cloudflare deploy hook; the rebuild re-fetches the
-# docs (build/build.ts shallow-clones LogosLang) and the roadmap/releases.
+# the download page from its GitHub Releases), so a change there must trigger a
+# rebuild here. Every trigger just POSTs the Cloudflare deploy hook; the rebuild
+# re-fetches the docs (build/build.ts shallow-clones LogosLang) and the releases.
 #
-# repository_dispatch events (all sent by LogosLang, reusing its WEBSITE_DISPATCH_TOKEN):
+# repository_dispatch events (both sent by LogosLang, reusing its WEBSITE_DISPATCH_TOKEN):
 #   - docs-sync         a push to LogosLang's main changed docs/ (docs.yml)
-#   - roadmap-sync      a roadmap issue or milestone changed (roadmap-sync.yml)
 #   - logoslang-release a version tag was pushed and artifacts built (release.yml)
-# Plus a daily schedule as a safety net (milestone due-date changes fire no webhook),
-# and a manual button.
+# Plus a manual button.
 
 on:
   repository_dispatch:
-    types: [docs-sync, roadmap-sync, logoslang-release]
-  schedule:
-    - cron: "17 6 * * *" # daily at 06:17 UTC
+    types: [docs-sync, logoslang-release]
   workflow_dispatch: {} # allow a manual rebuild from the Actions tab
 
 permissions:

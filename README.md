@@ -17,7 +17,6 @@ npm run dev             # dev server at http://localhost:4321 (watch + live-relo
 npm run build           # production build to ./dist
 npm run test:docs-model # unit-test the docs versioning (render) model
 npm run test:releases   # unit-test the release/download model
-npm run test:roadmap    # unit-test the roadmap model
 ```
 
 **Docs live in the [LogosLang](https://github.com/ThobiasKnudsen/LogosLang) repo**
@@ -77,7 +76,7 @@ build/fetch-releases.ts build-time fetch of LogosLang's GitHub Releases (node-on
 build/releases.test.ts unit tests for the release/download model
 build/markdown.ts     markdown-it + Shiki + version-less link resolution
 build/docs-render.ts  server-side render of a docs page (tree, version nav, article)
-build/pages.ts        marketing pages (home hero, vision, roadmap, placeholders)
+build/pages.ts        marketing pages (home, vision, examples, about, download, playground, privacy, 404)
 build/templates.ts    shared HTML shell: menu dock, page margins, footer, <head>
 build/wisdom.ts       the reflections on the Logos that surface in the page margins
 build/showcase.ts     the homepage's tabbed code box, read from content/showcase/
@@ -168,8 +167,7 @@ timeout/terminate kill-switch so runaway user code can't freeze the tab.
 1. **LogosLang repo → Settings → Secrets → Actions:** add `WEBSITE_DISPATCH_TOKEN`, a
    fine-grained PAT scoped to `ThobiasKnudsen/LogosLangWebsite` with
    **Contents: read & write** (the default `GITHUB_TOKEN` cannot dispatch cross-repo).
-   It powers all three cross-repo notifications: `docs-sync`, `roadmap-sync`, and
-   `logoslang-release`.
+   It powers both cross-repo notifications: `docs-sync` and `logoslang-release`.
 2. **This repo → Settings → Secrets → Actions:** add `CLOUDFLARE_DEPLOY_HOOK_URL` (a
    Cloudflare Pages → Settings → Builds & deployments → Deploy hook URL). The `rebuild`
    workflow POSTs it; if unset, that step is skipped.
