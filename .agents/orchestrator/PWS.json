@@ -1,1 +1,26 @@
-[]
+[
+  {
+    "id": "P-thobias-1",
+    "kind": "problem",
+    "status": "open",
+    "text": "A visitor who opened https://logoslang.dev/ got an HTTP 406 error",
+    "program": "Open https://logoslang.dev/ in a web browser. Done by one visitor on 3 October 2026, before 22:40 Norway time; their browser, device, country and exact time are not known.",
+    "output": "The visitor saw an HTTP 406 error, as Thobias relayed it; the exact page text is not known. Not reproduced: 126 GET and HEAD requests from Norway over IPv4, 3 October 2026 21:00 to 21:10 UTC, all through Cloudflare's Oslo edge, answered 200, 301, 308 or 404. They used the full header sets of Chrome, Edge, Safari (iOS and macOS), Firefox, Samsung Internet, the Facebook, Instagram and LinkedIn in-app browsers and rarer browsers; HTTP/1.0 to HTTP/3; many Accept, Accept-Language and Accept-Encoding values, identity refused among them; query strings, cookies, Range, If-None-Match, If-Modified-Since, hard reloads, prefetch headers, referers, http:// and the trailing-dot host. IPv6, other countries and other Cloudflare edges were not tested.",
+    "expected": "The homepage loads (HTTP 200) in a visitor's browser. KNOWLEDGE.md has no rule on HTTP statuses; its opening section says logoslang.dev is served by Cloudflare Pages.",
+    "tier": "live site, Cloudflare Pages",
+    "found": "a visitor of logoslang.dev, relayed by Thobias in chat to orchestrator LogosWebsite on 3 October 2026; the site files on main stood at 2835341",
+    "why": null,
+    "issue": null,
+    "fixed": null,
+    "made": {
+      "at": "2026-10-03T23:11+02:00",
+      "by": "orchestrator LogosWebsite",
+      "model": "claude-opus-5-5",
+      "effort": "xhigh",
+      "commit": "7b9ba63",
+      "run": null,
+      "agent": null
+    },
+    "history": []
+  }
+]
