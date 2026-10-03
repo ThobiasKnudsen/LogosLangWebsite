@@ -1,0 +1,3 @@
+# question files keep the owner's words as typed, line-end spaces included
+questions/*.md whitespace=-blank-at-eol
+history/*.md whitespace=-blank-at-eol
