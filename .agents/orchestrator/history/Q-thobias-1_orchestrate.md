@@ -17,7 +17,7 @@ To reproduce it I need what you know from the visitor, as much as you have:
 
 If you can open Cloudflare's security event log for logoslang.dev at that time, it may name the rule that answered.
 
-**Answer 1:** 
+**Answer 1:** (in chat, 2026-10-03) "just opened logoslang.dev." ... "www.logoslang.dev doesnt give the message 406. it just says the DNS couldnt be found."
 
 ## 2. Should www.logoslang.dev work?
 Found while checking 1: `www.logoslang.dev` has no DNS record, so a visitor who types the www gets "This site can't be reached".
@@ -27,7 +27,7 @@ Found while checking 1: `www.logoslang.dev` has no DNS record, so a visitor who 
 
 Recommended: (a), because many people type www out of habit, and a link someone writes with www would fail for every reader.
 
-**Answer 2:** 
+**Answer 2:** (in chat) "dont really need www."
 
 ## 3. This repo's CLAUDE.md: move its facts to AGENTS.md?
 Every agent the orchestrator starts reads the repo's AGENTS.md for its facts; this repo has none. Its CLAUDE.md holds three things:
@@ -44,7 +44,7 @@ Options:
 
 Recommended: (a), because it follows your 3 October rule that a repo's CLAUDE.md only bridges to its AGENTS.md, and it ends the logging conflict.
 
-**Answer 3:** 
+**Answer 3:** (in chat) "remove the message in repos CLAUDE.md file"
 
 ## 4. Move the site's standing rulings from my memory into KNOWLEDGE.md?
 The site's rulings live only in my auto-memory: the hero line, the margins and the floating dock, the homepage showcase, the quotes in the margins, the "maximally meta" brand, and the pointer to LogosLang's vocabulary. Agents I start do not read my memory, so a worker on the homepage would not know them. `KNOWLEDGE.md` in this repo is empty today.
@@ -54,10 +54,10 @@ The site's rulings live only in my auto-memory: the hero line, the margins and t
 
 Recommended: (a), because the first worker on the homepage needs them, and your rules say never to build from memory alone.
 
-**Answer 4:** 
+**Answer 4:** (in chat, as his point 3) "yes move to KNOWLEDGE.md"
 
 ## Metadata
-- **Status:** open
+- **Status:** answered, relayed 2026-10-03 22:59
 - **Priority:** the only open question in this repo. 1 blocks finding the 406, which a real visitor hit; 2 to 4 are quick setup answers and wait for nothing.
 - **Asked:** 2026-10-03 22:48
 - **Project:** logoslangwebsite, [repo](file:///home/o/Personal/Code/LogosLangWebsite)
