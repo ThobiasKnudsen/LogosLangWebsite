@@ -3,9 +3,9 @@
     "id": "P-thobias-1",
     "kind": "problem",
     "status": "open",
-    "text": "A visitor who opened https://logoslang.dev/ got an HTTP 406 error",
-    "program": "Open https://logoslang.dev/ in a web browser. Done by one visitor on 3 October 2026, before 22:40 Norway time; their browser, device, country and exact time are not known.",
-    "output": "The visitor saw an HTTP 406 error, as Thobias relayed it; the exact page text is not known. Not reproduced: 126 GET and HEAD requests from Norway over IPv4, 3 October 2026 21:00 to 21:10 UTC, all through Cloudflare's Oslo edge, answered 200, 301, 308 or 404. They used the full header sets of Chrome, Edge, Safari (iOS and macOS), Firefox, Samsung Internet, the Facebook, Instagram and LinkedIn in-app browsers and rarer browsers; HTTP/1.0 to HTTP/3; many Accept, Accept-Language and Accept-Encoding values, identity refused among them; query strings, cookies, Range, If-None-Match, If-Modified-Since, hard reloads, prefetch headers, referers, http:// and the trailing-dot host. IPv6, other countries and other Cloudflare edges were not tested.",
+    "text": "A visitor in Switzerland who opened https://logoslang.dev/ got an HTTP 406 error",
+    "program": "Open https://logoslang.dev/ in a web browser. Done by one visitor in Switzerland on 3 October 2026, before 22:40 Norway time; their browser, device and exact time are not known.",
+    "output": "The visitor saw an HTTP 406 error, as Thobias relayed it; the exact page text is not known. Not reproduced: 126 GET and HEAD requests from Norway over IPv4, 3 October 2026 21:00 to 21:10 UTC, all through Cloudflare's Oslo edge, answered 200, 301, 308 or 404. They used the full header sets of Chrome, Edge, Safari (iOS and macOS), Firefox, Samsung Internet, the Facebook, Instagram and LinkedIn in-app browsers and rarer browsers; HTTP/1.0 to HTTP/3; many Accept, Accept-Language and Accept-Encoding values, identity refused among them; query strings, cookies, Range, If-None-Match, If-Modified-Since, hard reloads, prefetch headers, referers, http:// and the trailing-dot host. On 4 October 2026 check-host.net's HTTP check of https://logoslang.dev/ answered 200 from both its Zurich servers (ch1, ch2) and from Austria, Germany, France, the Netherlands and the US. IPv6 was not tested.",
     "expected": "The homepage loads (HTTP 200) in a visitor's browser. KNOWLEDGE.md has no rule on HTTP statuses; its opening section says logoslang.dev is served by Cloudflare Pages.",
     "tier": "live site, Cloudflare Pages",
     "found": "a visitor of logoslang.dev, relayed by Thobias in chat to orchestrator LogosWebsite on 3 October 2026; the site files on main stood at 2835341",
@@ -21,6 +21,34 @@
       "run": null,
       "agent": null
     },
-    "history": []
+    "history": [
+      {
+        "at": "2026-10-04T00:24+02:00",
+        "by": "orchestrator LogosWebsite",
+        "model": "claude-opus-5-5",
+        "effort": "xhigh",
+        "commit": "35ea5eb",
+        "change": "text was \"A visitor who opened https://logoslang.dev/ got an HTTP 406 error\"",
+        "reason": "Thobias, 4 October 2026: \"it didnt work for a person from switzerland\"; the Zurich checks were run after that"
+      },
+      {
+        "at": "2026-10-04T00:24+02:00",
+        "by": "orchestrator LogosWebsite",
+        "model": "claude-opus-5-5",
+        "effort": "xhigh",
+        "commit": "35ea5eb",
+        "change": "program was \"Open https://logoslang.dev/ in a web browser. Done by one visitor on 3 October 2026, before 22:40 Norway time; their browser, device, country and exact time are not known.\"",
+        "reason": "Thobias, 4 October 2026: \"it didnt work for a person from switzerland\"; the Zurich checks were run after that"
+      },
+      {
+        "at": "2026-10-04T00:24+02:00",
+        "by": "orchestrator LogosWebsite",
+        "model": "claude-opus-5-5",
+        "effort": "xhigh",
+        "commit": "35ea5eb",
+        "change": "output was \"The visitor saw an HTTP 406 error, as Thobias relayed it; the exact page text is not known. Not reproduced: 126 GET and HEAD requests from Norway over IPv4, 3 October 2026 21:00 to 21:10 UTC, all through Cloudflare's Oslo edge, answered 200, 301, 308 or 404. They used the full header sets of Chrome, Edge, Safari (iOS and macOS), Firefox, Samsung Internet, the Facebook, Instagram and LinkedIn in-app browsers and rarer browsers; HTTP/1.0 to HTTP/3; many Accept, Accept-Language and Accept-Encoding values, identity refused among them; query strings, cookies, Range, If-None-Match, If-Modified-Since, hard reloads, prefetch headers, referers, http:// and the trailing-dot host. IPv6, other countries and other Cloudflare edges were not tested.\"",
+        "reason": "Thobias, 4 October 2026: \"it didnt work for a person from switzerland\"; the Zurich checks were run after that"
+      }
+    ]
   }
 ]
